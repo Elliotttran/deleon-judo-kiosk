@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Judo Admin">
+<meta name="theme-color" content="#111111">
+<title>DeLeon Judo Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0f0f0;
+  --white: #fff;
+  --text: #111;
+  --text-mid: #444;
+  --text-light: #777;
+  --green: #16a34a;
+  --green-row: #d6f5e0;
+  --green-light: rgba(22,163,74,0.15);
+  --green-mid: rgba(22,163,74,0.35);
+  --red: #c41919;
+  --divider: #e2e2e2;
+  --font: 'Urbanist', sans-serif;
+
+  /* past-date overrides */
+  --past-bg: #111;
+  --past-surface: #1a1a1a;
+  --past-text: #ddd;
+  --past-text-mid: #999;
+  --past-text-light: #666;
+  --past-divider: #333;
+  --past-green-row: rgba(22,163,74,0.15);
+}
+
+body {
+  font-family: var(--font);
+  background: var(--white);
+  color: var(--text);
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  padding-bottom: 90px;
+}
+
+/* ── Tab bar ── */
+.tab-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--white);
+  border-top: 1px solid var(--divider);
+  display: flex;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0 10px;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.tab.active { color: var(--text); }
+.tab svg { width: 26px; height: 26px; }
+.tab.active svg { stroke-width: 2.5; }
+
+/* ── Page containers ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ═══════════════════════════════════════════
+   SIGN IN PAGE
+   ═══════════════════════════════════════════ */
+.si-header {
+  background: var(--white);
+  padding: 28px 24px 0;
+  transition: background 0.25s, color 0.25s;
+}
+
+.si-brand {
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red); text-align: center; margin-bottom: 8px;
+}
+
+.si-date-nav {
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+}
+
+.si-arrow {
+  background: none; border: none;
+  font-size: 32px; font-weight: 300; color: var(--text-mid);
+  cursor: pointer; padding: 8px 18px; line-height: 1;
+  user-select: none; transition: color 0.15s;
+}
+.si-arrow:active { color: var(--text); }
+.si-arrow:disabled { opacity: 0.25; cursor: default; }
+
+.si-date-center { text-align: center; min-width: 170px; }
+
+.si-date {
+  font-size: 42px; font-weight: 900;
+  letter-spacing: -0.03em; line-height: 1;
+  transition: color 0.25s;
+}
+
+.si-weekday {
+  font-size: 15px; font-weight: 600;
+  color: var(--text-light); margin-top: 4px;
+  transition: color 0.25s;
+}
+
+.si-date-tag {
+  display: inline-block;
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 6px;
+  margin-top: 8px;
+}
+
+.si-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 0 20px;
+}
+
+.si-count {
+  font-size: 18px; font-weight: 700; color: var(--text-mid);
+  transition: color 0.25s;
+}
+.si-count .num { color: var(--green); }
+
+.si-actions { display: flex; gap: 10px; }
+
+.btn {
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  border: none; border-radius: 10px; cursor: pointer;
+  padding: 10px 18px; transition: all 0.15s;
+  text-decoration: none; display: inline-block;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-outline {
+  color: var(--text-mid); background: var(--bg);
+  border: 1.5px solid var(--divider);
+}
+
+.btn-outline:hover { border-color: #aaa; }
+
+/* Roster list */
+.si-roster { background: var(--white); min-height: 50vh; padding-bottom: 20px; transition: background 0.25s; }
+
+.si-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--divider);
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  background: var(--white);
+  transition: background 0.15s, border-color 0.25s;
+}
+
+.si-row:last-child { border-bottom: none; }
+.si-row:active { opacity: 0.85; }
+
+.si-row.present {
+  background: var(--green-row);
+  border-bottom-color: #c0e8cc;
+}
+
+.si-num {
+  font-size: 14px; font-weight: 600; color: var(--text-light);
+  min-width: 24px; text-align: right; flex-shrink: 0;
+  transition: color 0.25s;
+}
+
+.si-name {
+  font-size: 20px; font-weight: 700; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+.si-row:not(.present) .si-name { color: var(--text-mid); }
+.si-row.present .si-name { color: var(--text); }
+
+.si-toggle {
+  width: 56px; height: 32px; border-radius: 16px;
+  background: #bbb; position: relative;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.si-toggle::after {
+  content: ''; position: absolute;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #fff; top: 3px; left: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.si-row.present .si-toggle { background: var(--green); }
+.si-row.present .si-toggle::after { transform: translateX(24px); }
+
+/* Past-date mode */
+.si-past .si-header { background: var(--past-bg); }
+.si-past .si-brand { color: #e87070; }
+.si-past .si-date { color: var(--past-text); }
+.si-past .si-weekday { color: var(--past-text-light); }
+.si-past .si-count { color: var(--past-text-mid); }
+.si-past .si-arrow { color: var(--past-text-mid); }
+.si-past .si-roster { background: var(--past-surface); }
+.si-past .si-row { background: var(--past-surface); border-bottom-color: var(--past-divider); }
+.si-past .si-row.present { background: var(--past-green-row); border-bottom-color: rgba(22,163,74,0.15); }
+.si-past .si-row:not(.present) .si-name { color: var(--past-text-mid); }
+.si-past .si-row.present .si-name { color: var(--past-text); }
+.si-past .si-num { color: var(--past-text-light); }
+.si-past .si-toggle { background: #555; }
+.si-past .si-row.present .si-toggle { background: var(--green); }
+.si-past .btn-outline { background: var(--past-divider); border-color: #444; color: var(--past-text-mid); }
+
+/* Dark tab bar in past mode */
+body.past-mode { background: #111; }
+body.past-mode .tab-bar {
+  background: #111;
+  border-top-color: #333;
+}
+body.past-mode .tab { color: #555; }
+body.past-mode .tab.active { color: #ccc; }
+
+/* Cancelled-day mode */
+.si-cancelled .si-roster { opacity: 0.3; pointer-events: none; }
+.si-cancelled .si-count { display: none; }
+.si-cancelled #siToggleAll { display: none; }
+
+.si-cancelled-banner {
+  display: none;
+  font-size: 15px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--red); padding: 0 2px;
+}
+.si-cancelled .si-cancelled-banner { display: block; }
+
+.btn-cancel-active {
+  color: var(--red) !important;
+  border-color: var(--red) !important;
+  background: rgba(196,25,25,0.06) !important;
+}
+
+/* Future-date mode */
+.si-future .si-date-tag { background: #e0e7ff; color: #4338ca; }
+
+/* ═══════════════════════════════════════════
+   ROSTER PAGE
+   ═══════════════════════════════════════════ */
+.ro-header {
+  background: var(--white);
+  padding: 28px 24px 20px;
+}
+
+.ro-title {
+  font-size: 28px; font-weight: 900; margin-bottom: 4px;
+}
+
+.ro-subtitle {
+  font-size: 15px; font-weight: 600; color: var(--text-light);
+  margin-bottom: 20px;
+}
+
+.btn-green {
+  color: #fff; background: var(--green);
+}
+
+.ro-list { background: var(--white); min-height: 50vh; padding-bottom: 20px; }
+
+.ro-add-btn {
+  width: 100%; padding: 16px; font-size: 17px; text-align: center;
+  border-radius: 12px;
+}
+
+.ro-field {
+  text-align: left; margin-bottom: 16px;
+}
+
+.ro-label {
+  display: block; font-size: 13px; font-weight: 700;
+  color: var(--text-light); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 6px;
+}
+
+.ro-modal-input {
+  width: 100%; font-family: var(--font);
+  font-size: 18px; font-weight: 600;
+  padding: 14px 16px; border-radius: 12px;
+  border: 1.5px solid var(--divider);
+  background: var(--bg); color: var(--text);
+  outline: none; transition: border-color 0.15s;
+}
+.ro-modal-input:focus { border-color: var(--green); }
+.ro-modal-input::placeholder { color: #bbb; }
+.ro-modal-input.error { border-color: var(--red); }
+
+.ro-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--divider);
+}
+.ro-row:last-child { border-bottom: none; }
+
+.ro-num {
+  font-size: 14px; font-weight: 600; color: var(--text-light);
+  min-width: 24px; text-align: right; flex-shrink: 0;
+}
+
+.ro-name {
+  font-size: 18px; font-weight: 700; flex: 1; color: var(--text);
+}
+
+.ro-delete {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: #ccc; padding: 4px 8px;
+  transition: color 0.15s; border-radius: 6px;
+}
+.ro-delete:hover { color: var(--red); }
+.ro-delete:active { background: rgba(196,25,25,0.08); }
+
+/* ═══════════════════════════════════════════
+   STATS PAGE
+   ═══════════════════════════════════════════ */
+.st-header {
+  background: var(--white);
+  padding: 28px 24px 20px;
+}
+
+.st-title {
+  font-size: 28px; font-weight: 900; margin-bottom: 16px;
+}
+
+.st-view-toggle {
+  display: flex; gap: 2px; background: var(--bg);
+  border-radius: 12px; padding: 4px; margin-bottom: 20px;
+}
+
+.st-view-btn {
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  padding: 12px 16px; border: none; border-radius: 10px;
+  background: transparent; color: var(--text-light);
+  cursor: pointer; flex: 1; text-align: center;
+  transition: all 0.15s;
+}
+.st-view-btn.active {
+  background: var(--white); color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.st-nav {
+  display: flex; align-items: center; justify-content: center;
+}
+
+.st-arrow {
+  background: none; border: none;
+  font-size: 28px; font-weight: 300; color: var(--text-mid);
+  cursor: pointer; padding: 4px 14px; line-height: 1;
+}
+.st-arrow:disabled { opacity: 0.25; cursor: default; }
+
+.st-nav-center { text-align: center; min-width: 200px; }
+
+.st-nav-label {
+  font-size: 22px; font-weight: 800; text-transform: uppercase;
+}
+
+.st-nav-range {
+  font-size: 13px; font-weight: 600; color: var(--text-light);
+  margin-top: 2px;
+}
+
+/* Cards */
+.st-cards {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 20px;
+}
+
+.st-card {
+  background: var(--white); border-radius: 14px;
+  padding: 20px; border: 1px solid var(--divider);
+}
+
+.st-card-label {
+  font-size: 14px; font-weight: 700; color: var(--text-light);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.st-card-value {
+  font-size: 32px; font-weight: 900;
+}
+
+.st-card-delta {
+  font-size: 14px; font-weight: 700; margin-top: 4px;
+}
+.st-card-delta.up { color: var(--green); }
+.st-card-delta.down { color: var(--red); }
+.st-card-delta.flat { color: var(--text-light); }
+
+/* Trend bars */
+.st-trend { padding: 20px; }
+
+.st-section-title {
+  font-size: 16px; font-weight: 700; color: var(--text-light);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+.st-chart {
+  display: flex; align-items: flex-end; gap: 3px; height: 100px;
+}
+
+.st-bar {
+  flex: 1; background: var(--green-light);
+  border-radius: 4px 4px 0 0; min-height: 4px;
+  position: relative; transition: height 0.3s;
+}
+.st-bar:hover { background: var(--green-mid); }
+.st-bar:hover::after {
+  content: attr(data-tip); position: absolute;
+  bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--text); color: #fff;
+  font-size: 12px; font-weight: 600;
+  padding: 5px 10px; border-radius: 6px;
+  white-space: nowrap; z-index: 10;
+}
+
+.st-labels {
+  display: flex; gap: 3px; padding-top: 6px;
+}
+.st-label {
+  flex: 1; text-align: center;
+  font-size: 13px; font-weight: 600; color: var(--text-light);
+}
+
+/* Per-student table */
+.st-table { padding: 10px 20px 20px; }
+
+.st-table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.st-sort-btn {
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  color: var(--text-light); background: var(--white);
+  border: 1.5px solid var(--divider); border-radius: 10px;
+  padding: 10px 16px; cursor: pointer;
+}
+
+.st-student-row {
+  display: flex; align-items: center;
+  padding: 18px 0; border-bottom: 1px solid var(--divider);
+}
+.st-student-row:last-child { border-bottom: none; }
+
+.st-student-name {
+  font-size: 19px; font-weight: 700;
+  min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+  flex: 1.2;
+}
+
+.st-bar-wrap {
+  flex: 0.7; height: 12px; background: var(--bg);
+  border-radius: 6px; margin: 0 14px; overflow: hidden;
+}
+.st-bar-fill {
+  height: 100%; background: var(--green);
+  border-radius: 6px; transition: width 0.4s;
+}
+
+.st-student-count {
+  font-size: 19px; font-weight: 800; min-width: 60px; text-align: right;
+  color: var(--text);
+}
+
+.st-student-pct {
+  font-size: 15px; font-weight: 700; color: var(--text-light);
+  min-width: 48px; text-align: right;
+}
+
+/* Cycle month cards */
+.st-cycle-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 10px; padding: 20px;
+}
+.st-cycle-month {
+  background: var(--white); border: 1px solid var(--divider);
+  border-radius: 14px; padding: 18px; text-align: center;
+}
+.st-cycle-label { font-size: 15px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; }
+.st-cycle-value { font-size: 28px; font-weight: 900; margin-bottom: 2px; }
+.st-cycle-sub { font-size: 14px; font-weight: 600; color: var(--text-light); }
+
+.st-cycle-total {
+  grid-column: 1 / -1;
+  background: var(--green-row); border: 1px solid var(--green);
+  border-radius: 14px; padding: 20px; text-align: center;
+}
+.st-cycle-total .st-cycle-value { color: var(--green); }
+
+/* Empty */
+.st-empty {
+  text-align: center; padding: 60px 20px;
+  color: var(--text-light); font-size: 17px; font-weight: 600;
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 400; display: flex; align-items: center; justify-content: center;
+  padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+.modal {
+  background: var(--white); border-radius: 20px;
+  padding: 32px 24px 24px; width: 100%; max-width: 400px;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 24px; font-weight: 800; margin-bottom: 10px;
+}
+
+.modal-body {
+  font-size: 17px; font-weight: 500; color: var(--text-mid);
+  margin-bottom: 28px; line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex; gap: 12px;
+}
+
+.modal-btn {
+  flex: 1; font-family: var(--font); font-size: 17px; font-weight: 700;
+  padding: 18px 0; border-radius: 14px; border: none; cursor: pointer;
+  transition: all 0.15s;
+}
+.modal-btn:active { transform: scale(0.97); }
+
+.modal-cancel {
+  background: var(--bg); color: var(--text-mid);
+}
+
+.modal-danger {
+  background: var(--red); color: #fff;
+}
+/* ── PIN Screen ── */
+.pin-screen {
+  position: fixed; inset: 0; z-index: 500;
+  background: #0a0a0a;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.pin-screen.hidden {
+  opacity: 0; pointer-events: none; transform: scale(1.02);
+}
+
+.pin-brand {
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(255,255,255,0.25); margin-bottom: 40px;
+}
+
+.pin-title {
+  font-size: 26px; font-weight: 800; color: #fff;
+  margin-bottom: 8px;
+}
+
+.pin-subtitle {
+  font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.35);
+  margin-bottom: 36px;
+}
+
+.pin-dots {
+  display: flex; gap: 16px; margin-bottom: 44px;
+}
+
+.pin-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2.5px solid rgba(255,255,255,0.2);
+  transition: all 0.15s;
+}
+.pin-dot.filled {
+  background: #fff; border-color: #fff;
+}
+.pin-dot.error {
+  border-color: var(--red); background: var(--red);
+}
+
+.pin-pad {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 14px; width: 100%; max-width: 300px;
+}
+
+.pin-key {
+  font-family: var(--font);
+  font-size: 30px; font-weight: 700; color: #fff;
+  background: rgba(255,255,255,0.07);
+  border: none; border-radius: 18px;
+  aspect-ratio: 1.3;
+  cursor: pointer; transition: background 0.1s;
+  user-select: none; -webkit-user-select: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.pin-key:active { background: rgba(255,255,255,0.18); }
+
+.pin-key-empty {
+  background: transparent !important; cursor: default;
+}
+
+.pin-key-back {
+  font-size: 22px;
+  background: rgba(255,255,255,0.04);
+}
+
+.pin-error-msg {
+  color: var(--red); font-size: 15px; font-weight: 700;
+  margin-top: 24px; min-height: 22px;
+}
+
+/* ── Sync status bar ── */
+.si-sync {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px;
+  font-size: 16px; font-weight: 700;
+  color: var(--text-light);
+  background: var(--white);
+  border-bottom: 1px solid var(--divider);
+}
+
+.si-sync-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  transition: background 0.2s;
+}
+.si-sync-dot.green { background: var(--green); }
+.si-sync-dot.yellow { background: #eab308; }
+.si-sync-dot.red { background: var(--red); }
+
+.si-sync-text { flex: 1; }
+
+.si-sync-retry {
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  color: var(--red); background: rgba(196,25,25,0.06);
+  border: 1px solid rgba(196,25,25,0.2);
+  cursor: pointer; padding: 8px 16px; display: none;
+  border-radius: 8px;
+}
+.si-sync-retry:active { background: rgba(196,25,25,0.12); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+.si-sync.saving .si-sync-dot { animation: pulse-dot 0.8s ease infinite; }
+.si-sync.retrying .si-sync-dot { animation: pulse-dot 1.2s ease infinite; }
+.si-sync.error .si-sync-retry { display: block; }
+
+/* past mode sync bar */
+.si-past .si-sync {
+  background: var(--past-bg); color: var(--past-text-light);
+  border-bottom-color: var(--past-divider);
+}
+.si-past .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.2); }
+
+.toast {
+  position: fixed; bottom: 100px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  font-family: var(--font); font-size: 16px; font-weight: 700;
+  padding: 16px 28px; border-radius: 14px;
+  opacity: 0; transition: all 0.3s; z-index: 300;
+  pointer-events: none;
+  display: flex; align-items: center; gap: 10px;
+  min-width: 200px; justify-content: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.toast-saved {
+  background: var(--green); color: #fff;
+}
+.toast-pending {
+  background: var(--text); color: #fff;
+}
+.toast-error {
+  background: var(--red); color: #fff;
+  pointer-events: auto; cursor: pointer;
+}
+
+.toast-icon {
+  font-size: 20px; line-height: 1;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.toast-spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+</style>
+</head>
+<body>
+
+<div class="pin-screen" id="pinScreen">
+  <div class="pin-brand">Club Sign In</div>
+  <div class="pin-title">Enter PIN</div>
+  <div class="pin-subtitle">4-digit access code</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="dot0"></div>
+    <div class="pin-dot" id="dot1"></div>
+    <div class="pin-dot" id="dot2"></div>
+    <div class="pin-dot" id="dot3"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key pin-key-empty"></button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key pin-key-back" onclick="pinBack()">&#8592;</button>
+  </div>
+  <div class="pin-error-msg" id="pinError"></div>
+</div>
+
+<!-- ════ SIGN IN PAGE ════ -->
+<div class="page active" id="page-signin">
+  <div class="si-sync" id="siSync">
+    <div class="si-sync-dot green" id="siSyncDot"></div>
+    <div class="si-sync-text" id="siSyncText">All saved</div>
+    <button class="si-sync-retry" id="siSyncRetry" onclick="siRetrySync()">Retry</button>
+  </div>
+  <div class="si-header">
+    <div class="si-brand">Club Sign In</div>
+    <div class="si-date-nav">
+      <button class="si-arrow" id="siPrev" onclick="siNav(-1)">&#8249;</button>
+      <div class="si-date-center">
+        <div class="si-date" id="siDate"></div>
+        <div class="si-weekday" id="siWeekday"></div>
+        <div id="siTag"></div>
+      </div>
+      <button class="si-arrow" id="siNext" onclick="siNav(1)">&#8250;</button>
+    </div>
+    <div class="si-meta">
+      <div class="si-count" id="siCount"></div>
+      <div class="si-cancelled-banner">Class Cancelled</div>
+      <div class="si-actions">
+        <button class="btn btn-outline" id="siCancelBtn" onclick="siToggleCancel()">Cancel class</button>
+        <button class="btn btn-outline" id="siToggleAll" onclick="siToggleAll()">Clear all</button>
+      </div>
+    </div>
+  </div>
+  <div class="si-roster" id="siRoster"></div>
+</div>
+
+<!-- ════ ROSTER PAGE ════ -->
+<div class="page" id="page-roster">
+  <div class="ro-header">
+    <div class="ro-title">Roster</div>
+    <div class="ro-subtitle" id="roSubtitle"></div>
+    <button class="btn btn-green ro-add-btn" onclick="roShowAdd()">+ Add Student</button>
+  </div>
+  <div class="ro-list" id="roList"></div>
+</div>
+
+<!-- Add student modal -->
+<div class="modal-overlay" id="roAddOverlay" onclick="roCloseAdd()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="roAddTitle">Add Student</div>
+    <div class="modal-body" id="roAddBody">
+      <div class="ro-field">
+        <label class="ro-label">Last name</label>
+        <input class="ro-modal-input" id="roLastName" type="text" placeholder="e.g. Tanaka" autocomplete="off">
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">First name</label>
+        <input class="ro-modal-input" id="roFirstName" type="text" placeholder="e.g. Yuki" autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-actions" id="roAddActions">
+      <button class="modal-btn modal-cancel" onclick="roCloseAdd()">Cancel</button>
+      <button class="modal-btn btn-green" onclick="roAddConfirm()">Add</button>
+    </div>
+    <!-- Success state -->
+    <div id="roAddSuccess" style="display:none; text-align:center; padding: 10px 0;">
+      <div style="font-size:40px; margin-bottom:12px;">&#10003;</div>
+      <div style="font-size:18px; font-weight:700; margin-bottom:4px;" id="roAddSuccessName"></div>
+      <div style="font-size:14px; color:var(--text-light); font-weight:600;">Added to roster</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ STATS PAGE ════ -->
+<div class="page" id="page-stats">
+  <div class="st-header">
+    <div class="st-title">Stats</div>
+    <div class="st-view-toggle">
+      <button class="st-view-btn active" id="stMonthBtn" onclick="stSetView('month')">Month</button>
+      <button class="st-view-btn" id="stCycleBtn" onclick="stSetView('cycle')">Cycle</button>
+    </div>
+    <div class="st-nav">
+      <button class="st-arrow" id="stPrev" onclick="stNav(-1)">&#8249;</button>
+      <div class="st-nav-center">
+        <div class="st-nav-label" id="stNavLabel"></div>
+        <div class="st-nav-range" id="stNavRange"></div>
+      </div>
+      <button class="st-arrow" id="stNext" onclick="stNav(1)">&#8250;</button>
+    </div>
+  </div>
+  <div id="stContent"></div>
+</div>
+
+<!-- ════ TAB BAR ════ -->
+<nav class="tab-bar">
+  <button class="tab active" onclick="switchTab('signin')" id="tab-signin">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Sign In
+  </button>
+  <button class="tab" onclick="switchTab('roster')" id="tab-roster">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Roster
+  </button>
+  <button class="tab" onclick="switchTab('stats')" id="tab-stats">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="3" width="4" height="18"/></svg>
+    Stats
+  </button>
+</nav>
+
+<div class="modal-overlay" id="modalOverlay" onclick="modalClose()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modalTitle">Confirm</div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-cancel" onclick="modalClose()">Cancel</button>
+      <button class="modal-btn modal-danger" id="modalConfirm">Remove</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════
+// SHARED STATE & HELPERS
+// ═══════════════════════════════════
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+const WRITE_KEY = 'YOUR_WRITE_KEY_HERE';
+
+const CLASS_DAYS = [2, 4]; // Tue, Thu (graded days)
+// const CLASS_DAYS = [1, 2, 4]; // Mon, Tue, Thu — uncomment to include Monday open mat
+const DEFAULT_ROSTER = [
+  'Zhang, Bob'
+];
+
+function getRoster() {
+  try {
+    var r = localStorage.getItem('dojo_roster');
+    if (r) return JSON.parse(r);
+    localStorage.setItem('dojo_roster', JSON.stringify(DEFAULT_ROSTER));
+    return DEFAULT_ROSTER.slice();
+  } catch (e) {
+    return DEFAULT_ROSTER.slice();
+  }
+}
+function setRoster(r) {
+  try { localStorage.setItem('dojo_roster', JSON.stringify(r)); }
+  catch (e) {}
+}
+function getAtt() {
+  try { return JSON.parse(localStorage.getItem('dojo_attendance') || '{}'); }
+  catch (e) { return {}; }
+}
+function setAtt(a) {
+  try { localStorage.setItem('dojo_attendance', JSON.stringify(a)); }
+  catch (e) {}
+}
+function getCancelled() {
+  try { return JSON.parse(localStorage.getItem('dojo_cancelled') || '[]'); }
+  catch (e) { return []; }
+}
+function setCancelled(c) {
+  try { localStorage.setItem('dojo_cancelled', JSON.stringify(c)); }
+  catch (e) {}
+}
+
+function fmtDate(d) {
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1).padStart(2, '0');
+  var day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
+function todayStr() { return fmtDate(new Date()); }
+
+function isDayCancelled(key) { return getCancelled().includes(key); }
+
+var toastTimer = null;
+
+function showToast(msg, state) {
+  if (state === undefined) state = 'saved';
+  var t = document.getElementById('toast');
+  clearTimeout(toastTimer);
+
+  var icon = '';
+  var cls = 'toast show';
+
+  if (state === 'saved') {
+    icon = '<span class="toast-icon">&#10003;</span>';
+    cls += ' toast-saved';
+  } else if (state === 'pending') {
+    icon = '<div class="toast-spinner"></div>';
+    cls += ' toast-pending';
+  } else if (state === 'error') {
+    icon = '<span class="toast-icon">!</span>';
+    cls += ' toast-error';
+  }
+
+  t.className = cls;
+  t.innerHTML = icon + '<span>' + msg + '</span>';
+
+  if (state === 'pending') return; // stays until replaced
+
+  toastTimer = setTimeout(function() {
+    t.className = 'toast';
+  }, state === 'error' ? 4000 : 2000);
+}
+
+// ═══════════════════════════════════
+// SYNC QUEUE SYSTEM
+// ═══════════════════════════════════
+var syncDebounce = null;
+var lastSavedTime = null;
+var SYNC_QUEUE_KEY = 'dojo_sync_queue';
+
+function getSyncQueue() {
+  try { return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+function setSyncQueue(q) {
+  try { localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(q)); }
+  catch (e) {}
+}
+
+function queueChange(change) {
+  var q = getSyncQueue();
+  if (change.action === 'saveAttendance') {
+    var idx = q.findIndex(function(c) { return c.action === 'saveAttendance' && c.date === change.date; });
+    if (idx >= 0) q[idx] = change;
+    else q.push(change);
+  } else {
+    q.push(change);
+  }
+  setSyncQueue(q);
+}
+
+async function flushSyncQueue() {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return true;
+  if (!navigator.onLine) return false;
+  var q = getSyncQueue();
+  if (!q.length) return true;
+  var remaining = [];
+  for (var i = 0; i < q.length; i++) {
+    try {
+      var payload = Object.assign({}, q[i], { key: WRITE_KEY });
+      var res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) remaining.push(q[i]);
+    } catch (e) {
+      remaining.push(q[i]);
+    }
+  }
+  setSyncQueue(remaining);
+  return remaining.length === 0;
+}
+
+function setSyncState(state, msg) {
+  var bar = document.getElementById('siSync');
+  var dot = document.getElementById('siSyncDot');
+  var text = document.getElementById('siSyncText');
+
+  bar.className = 'si-sync' + (state === 'saving' ? ' saving' : '') + (state === 'retrying' ? ' retrying' : '') + (state === 'error' ? ' error' : '');
+  dot.className = 'si-sync-dot ' + ({saved:'green', saving:'green', retrying:'yellow', error:'red'}[state] || 'green');
+  text.textContent = msg;
+}
+
+function formatSavedTime(date) {
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+}
+
+function triggerSync() {
+  clearTimeout(syncDebounce);
+  setSyncState('saving', 'Saving\u2026');
+  syncDebounce = setTimeout(async function() {
+    try {
+      var success = await flushSyncQueue();
+      if (success) {
+        lastSavedTime = new Date();
+        setSyncState('saved', 'Saved ' + formatSavedTime(lastSavedTime));
+      } else {
+        setSyncState('error', 'Save failed');
+      }
+    } catch (e) {
+      setSyncState('error', 'Save failed');
+    }
+  }, 800);
+}
+
+function siRetrySync() {
+  setSyncState('retrying', 'Retrying\u2026');
+  flushSyncQueue().then(function(success) {
+    if (success) {
+      lastSavedTime = new Date();
+      setSyncState('saved', 'Saved ' + formatSavedTime(lastSavedTime));
+    } else {
+      setSyncState('error', 'Save failed');
+    }
+  }).catch(function() {
+    setSyncState('error', 'Save failed');
+  });
+}
+
+// ═══════════════════════════════════
+// SERVER DATA LOADING
+// ═══════════════════════════════════
+async function loadFromServer() {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  if (!navigator.onLine) return;
+  try {
+    var results = await Promise.all([
+      fetch(APPS_SCRIPT_URL + '?action=roster').catch(function() { return null; }),
+      fetch(APPS_SCRIPT_URL + '?action=allAttendance').catch(function() { return null; }),
+      fetch(APPS_SCRIPT_URL + '?action=cancelled').catch(function() { return null; })
+    ]);
+
+    if (results[0] && results[0].ok) {
+      var rData = await results[0].json();
+      if (rData.roster && rData.roster.length) setRoster(rData.roster);
+    }
+
+    if (results[1] && results[1].ok) {
+      var aData = await results[1].json();
+      if (aData.attendance) {
+        var localAtt = getAtt();
+        var queue = getSyncQueue();
+        var dirtyDates = {};
+        queue.forEach(function(c) { if (c.action === 'saveAttendance') dirtyDates[c.date] = true; });
+        var merged = Object.assign({}, aData.attendance);
+        Object.keys(dirtyDates).forEach(function(date) {
+          if (localAtt[date] !== undefined) merged[date] = localAtt[date];
+        });
+        setAtt(merged);
+      }
+    }
+
+    if (results[2] && results[2].ok) {
+      var cData = await results[2].json();
+      if (cData.cancelled) {
+        var queue2 = getSyncQueue();
+        var pendingCancels = {};
+        var pendingRestores = {};
+        queue2.forEach(function(c) {
+          if (c.action === 'cancelClass') pendingCancels[c.date] = true;
+          if (c.action === 'restoreClass') pendingRestores[c.date] = true;
+        });
+        var cancelled = cData.cancelled.slice();
+        Object.keys(pendingCancels).forEach(function(d) { if (cancelled.indexOf(d) === -1) cancelled.push(d); });
+        Object.keys(pendingRestores).forEach(function(d) { cancelled = cancelled.filter(function(x) { return x !== d; }); });
+        setCancelled(cancelled);
+      }
+    }
+
+    if (activeTab === 'signin') siRender();
+    if (activeTab === 'roster') roRender();
+    if (activeTab === 'stats') stRender();
+  } catch (err) {
+    console.warn('Could not load data from server:', err);
+  }
+}
+
+// ═══════════════════════════════════
+// PIN GATE
+// ═══════════════════════════════════
+const ADMIN_PIN = '1970';
+const SESSION_MINUTES = 60;
+var pinEntry = '';
+
+function isUnlocked() {
+  var ts = localStorage.getItem('dojo_pin_ts');
+  if (!ts) return false;
+  return (Date.now() - parseInt(ts)) < SESSION_MINUTES * 60 * 1000;
+}
+
+function unlock() {
+  localStorage.setItem('dojo_pin_ts', String(Date.now()));
+  document.getElementById('pinScreen').classList.add('hidden');
+}
+
+function showPin() {
+  pinEntry = '';
+  pinUpdateDots();
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinScreen').classList.remove('hidden');
+}
+
+function pinPress(digit) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += digit;
+  pinUpdateDots();
+  if (pinEntry.length === 4) {
+    setTimeout(pinSubmit, 200);
+  }
+}
+
+function pinBack() {
+  if (pinEntry.length === 0) return;
+  pinEntry = pinEntry.slice(0, -1);
+  pinUpdateDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function pinUpdateDots() {
+  for (var i = 0; i < 4; i++) {
+    var dot = document.getElementById('dot' + i);
+    dot.className = 'pin-dot' + (i < pinEntry.length ? ' filled' : '');
+  }
+}
+
+function pinSubmit() {
+  if (pinEntry === ADMIN_PIN) {
+    unlock();
+    // Continue to whichever tab triggered the PIN
+    if (activeTab === 'signin') siRender();
+    if (activeTab === 'roster') roRender();
+  } else {
+    // Shake dots red
+    for (var i = 0; i < 4; i++) {
+      document.getElementById('dot' + i).className = 'pin-dot error';
+    }
+    document.getElementById('pinError').textContent = 'Wrong PIN';
+    setTimeout(function() {
+      pinEntry = '';
+      pinUpdateDots();
+    }, 600);
+  }
+}
+
+function requirePin(tabName) {
+  // Stats is always open
+  if (tabName === 'stats') return false;
+  return !isUnlocked();
+}
+
+// ═══════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════
+var activeTab = 'signin';
+
+function switchTab(name) {
+  activeTab = name;
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name !== 'signin') document.body.classList.remove('past-mode');
+
+  if (requirePin(name)) {
+    showPin();
+    return;
+  }
+
+  if (name === 'signin') siRender();
+  if (name === 'roster') roRender();
+  if (name === 'stats') stRender();
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════
+// SIGN IN PAGE
+// ═══════════════════════════════════
+function buildClassDays() {
+  var days = [];
+  var today = new Date(todayStr() + 'T12:00:00');
+  var d = new Date(today);
+  d.setDate(d.getDate() - 90);
+  // Past + today
+  while (d <= today) {
+    if (CLASS_DAYS.includes(d.getDay())) days.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  // Future: 3 weeks out
+  var future = new Date(today);
+  future.setDate(future.getDate() + 21);
+  var next = new Date(today); next.setDate(next.getDate() + 1);
+  while (next <= future) {
+    if (CLASS_DAYS.includes(next.getDay())) days.push(new Date(next));
+    next.setDate(next.getDate() + 1);
+  }
+  return days;
+}
+
+var siDays = buildClassDays();
+var siIdx; // set in init
+
+function siInit() {
+  // Find today or most recent class day
+  var ts = todayStr();
+  var best = siDays.length - 1;
+  for (var i = siDays.length - 1; i >= 0; i--) {
+    if (fmtDate(siDays[i]) <= ts) { best = i; break; }
+  }
+  siIdx = best;
+}
+
+function siRender() {
+  var dt = siDays[siIdx];
+  var key = fmtDate(dt);
+  var ts = todayStr();
+  var isPast = key < ts;
+  var isFuture = key > ts;
+  var isToday = key === ts;
+  var cancelled = isDayCancelled(key);
+
+  var page = document.getElementById('page-signin');
+  var cls = 'page active';
+  if (isPast) cls += ' si-past';
+  if (isFuture) cls += ' si-future';
+  if (cancelled) cls += ' si-cancelled';
+  page.className = cls;
+  document.body.classList.toggle('past-mode', isPast);
+
+  var m = dt.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  var currentYear = new Date(todayStr() + 'T12:00:00').getFullYear();
+  var dateYear = dt.getFullYear();
+  var yearSuffix = dateYear !== currentYear ? " '" + String(dateYear).slice(2) : '';
+  document.getElementById('siDate').textContent = m + ' ' + dt.getDate() + yearSuffix;
+  document.getElementById('siWeekday').textContent = dt.toLocaleDateString('en-US', { weekday: 'long' });
+
+  // Tag
+  var tag = '';
+  if (cancelled) tag = '<span class="si-date-tag" style="background:#fca5a5;color:#7f1d1d;">Cancelled</span>';
+  else if (isToday) tag = '<span class="si-date-tag" style="background:#dcfce7;color:#166534;">Today</span>';
+  else if (isFuture) tag = '<span class="si-date-tag" style="background:#e0e7ff;color:#4338ca;">Upcoming</span>';
+  else if (isPast) tag = '<span class="si-date-tag" style="background:#fbbf24;color:#451a03;">Completed</span>';
+  document.getElementById('siTag').innerHTML = tag;
+
+  document.getElementById('siPrev').disabled = siIdx <= 0;
+  document.getElementById('siNext').disabled = siIdx >= siDays.length - 1;
+
+  var roster = getRoster();
+  var att = getAtt();
+  var present = att[key] || [];
+  var ps = new Set(present);
+  var count = ps.size;
+
+  document.getElementById('siCount').innerHTML =
+    '<span class="num">' + count + '</span> of ' + roster.length + ' present';
+
+  document.getElementById('siToggleAll').textContent = count > 0 ? 'Clear all' : 'Mark all';
+
+  // Cancel button state
+  var cancelBtn = document.getElementById('siCancelBtn');
+  cancelBtn.textContent = cancelled ? 'Restore class' : 'Cancel class';
+  cancelBtn.classList.toggle('btn-cancel-active', cancelled);
+
+  document.getElementById('siRoster').innerHTML = roster.map(function(name, i) {
+    var on = ps.has(name);
+    return '<div class="si-row' + (on ? ' present' : '') + '" onclick="siToggle(\'' + name.replace(/'/g, "\\'") + '\')">' +
+      '<span class="si-num">' + (i + 1) + '</span>' +
+      '<span class="si-name">' + name + '</span>' +
+      '<div class="si-toggle"></div>' +
+    '</div>';
+  }).join('');
+}
+
+function siToggleCancel() {
+  var key = fmtDate(siDays[siIdx]);
+  var cancelled = getCancelled();
+  var isCancelled = cancelled.includes(key);
+  var dt = siDays[siIdx];
+  var dateLabel = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+  if (isCancelled) {
+    // Restore — confirm
+    document.getElementById('modalBody').innerHTML =
+      'Restore class on <strong>' + dateLabel + '</strong>? It will count toward attendance stats again.';
+    document.getElementById('modalTitle').textContent = 'Restore class?';
+    document.getElementById('modalConfirm').textContent = 'Restore';
+    document.getElementById('modalConfirm').className = 'modal-btn btn-green';
+    document.getElementById('modalConfirm').onclick = function() {
+      var c = getCancelled();
+      c.splice(c.indexOf(key), 1);
+      setCancelled(c);
+      queueChange({ action: 'restoreClass', date: key });
+      modalClose();
+      siRender();
+      triggerSync();
+    };
+  } else {
+    // Cancel — confirm
+    document.getElementById('modalBody').innerHTML =
+      'Cancel class on <strong>' + dateLabel + '</strong>? This day will be excluded from attendance stats.';
+    document.getElementById('modalTitle').textContent = 'Cancel class?';
+    document.getElementById('modalConfirm').textContent = 'Cancel class';
+    document.getElementById('modalConfirm').className = 'modal-btn modal-danger';
+    document.getElementById('modalConfirm').onclick = function() {
+      var c = getCancelled();
+      c.push(key);
+      setCancelled(c);
+      queueChange({ action: 'cancelClass', date: key });
+      modalClose();
+      siRender();
+      triggerSync();
+    };
+  }
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function siToggle(name) {
+  var key = fmtDate(siDays[siIdx]);
+  var att = getAtt();
+  var p = att[key] || [];
+  var idx = p.indexOf(name);
+  if (idx >= 0) p.splice(idx, 1); else p.push(name);
+  att[key] = p; setAtt(att); siRender();
+  queueChange({ action: 'saveAttendance', date: key, names: p });
+  triggerSync();
+}
+
+function siToggleAll() {
+  var key = fmtDate(siDays[siIdx]);
+  var ts = todayStr();
+  var isPast = key < ts;
+  var att = getAtt();
+  var p = att[key] || [];
+  var roster = getRoster();
+
+  if (p.length > 0) {
+    if (isPast) {
+      var dt = siDays[siIdx];
+      var dateLabel = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      document.getElementById('modalTitle').textContent = 'Clear all attendance?';
+      document.getElementById('modalBody').innerHTML =
+        'This will remove all ' + p.length + ' check-ins for <strong>' + dateLabel + '</strong>. This class has already been completed.';
+      document.getElementById('modalConfirm').textContent = 'Clear all';
+      document.getElementById('modalConfirm').className = 'modal-btn modal-danger';
+      document.getElementById('modalConfirm').onclick = function() {
+        att[key] = []; setAtt(att); modalClose(); siRender();
+        queueChange({ action: 'saveAttendance', date: key, names: att[key] });
+        triggerSync();
+      };
+      document.getElementById('modalOverlay').classList.add('show');
+    } else {
+      att[key] = []; setAtt(att); siRender();
+      queueChange({ action: 'saveAttendance', date: key, names: att[key] });
+      triggerSync();
+    }
+  } else {
+    att[key] = roster.slice(); setAtt(att); siRender();
+    queueChange({ action: 'saveAttendance', date: key, names: att[key] });
+    triggerSync();
+  }
+}
+
+function siNav(dir) {
+  var n = siIdx + dir;
+  if (n >= 0 && n < siDays.length) { siIdx = n; siRender(); }
+}
+
+// ═══════════════════════════════════
+// ROSTER PAGE
+// ═══════════════════════════════════
+function roRender() {
+  var roster = getRoster();
+  document.getElementById('roSubtitle').textContent = roster.length + ' students';
+  document.getElementById('roList').innerHTML = roster.map(function(name, i) {
+    return '<div class="ro-row">' +
+      '<span class="ro-num">' + (i + 1) + '</span>' +
+      '<span class="ro-name">' + name + '</span>' +
+      '<button class="ro-delete" onclick="roDelete(\'' + name.replace(/'/g, "\\'") + '\')">&#10005;</button>' +
+    '</div>';
+  }).join('');
+}
+
+function roShowAdd() {
+  document.getElementById('roLastName').value = '';
+  document.getElementById('roFirstName').value = '';
+  document.getElementById('roLastName').classList.remove('error');
+  document.getElementById('roFirstName').classList.remove('error');
+  document.getElementById('roAddTitle').textContent = 'Add Student';
+  document.getElementById('roAddBody').style.display = '';
+  document.getElementById('roAddActions').style.display = '';
+  document.getElementById('roAddSuccess').style.display = 'none';
+  document.getElementById('roAddOverlay').classList.add('show');
+  setTimeout(function() { document.getElementById('roLastName').focus(); }, 200);
+}
+
+function roCloseAdd() {
+  document.getElementById('roAddOverlay').classList.remove('show');
+}
+
+function roAddConfirm() {
+  var last = document.getElementById('roLastName').value.trim();
+  var first = document.getElementById('roFirstName').value.trim();
+
+  var valid = true;
+  document.getElementById('roLastName').classList.remove('error');
+  document.getElementById('roFirstName').classList.remove('error');
+
+  if (!last) { document.getElementById('roLastName').classList.add('error'); valid = false; }
+  if (!first) { document.getElementById('roFirstName').classList.add('error'); valid = false; }
+  if (!valid) return;
+
+  var fullName = last + ', ' + first;
+  var roster = getRoster();
+
+  if (roster.includes(fullName)) {
+    showToast('Already on roster', 'error');
+    return;
+  }
+
+  roster.push(fullName);
+  roster.sort(function(a, b) { return a.localeCompare(b); });
+  setRoster(roster);
+  queueChange({ action: 'addStudent', last: last, first: first });
+
+  // Show success state
+  document.getElementById('roAddBody').style.display = 'none';
+  document.getElementById('roAddActions').style.display = 'none';
+  document.getElementById('roAddSuccess').style.display = '';
+  document.getElementById('roAddTitle').textContent = '';
+  document.getElementById('roAddSuccessName').textContent = fullName;
+
+  setTimeout(function() {
+    roCloseAdd();
+    roRender();
+  }, 1200);
+}
+
+var pendingDelete = null;
+
+function roDelete(name) {
+  pendingDelete = name;
+  document.getElementById('modalTitle').textContent = 'Remove student?';
+  document.getElementById('modalBody').innerHTML =
+    '<strong>' + name + '</strong> will be removed from the roster. Their attendance history will be kept.';
+  document.getElementById('modalConfirm').textContent = 'Remove';
+  document.getElementById('modalConfirm').className = 'modal-btn modal-danger';
+  document.getElementById('modalConfirm').onclick = roConfirmDelete;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function modalClose() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  pendingDelete = null;
+}
+
+function roConfirmDelete() {
+  if (!pendingDelete) return;
+  var name = pendingDelete;
+  var roster = getRoster().filter(function(n) { return n !== name; });
+  setRoster(roster);
+  var att = getAtt();
+  var ts = todayStr();
+  Object.keys(att).forEach(function(k) {
+    if (k > ts) att[k] = att[k].filter(function(n) { return n !== name; });
+  });
+  setAtt(att);
+  queueChange({ action: 'removeStudent', name: name });
+  modalClose();
+  roRender();
+  showToast('Removed ' + name);
+}
+
+// ═══════════════════════════════════
+// STATS PAGE
+// ═══════════════════════════════════
+const CYCLES = [
+  { name: 'Winter', label: 'A', startMonth: 10, endMonth: 0, months: [10, 11, 0] },  // Nov-Jan
+  { name: 'Spring', label: 'B', startMonth: 1, endMonth: 3, months: [1, 2, 3] },      // Feb-Apr
+  { name: 'Summer', label: 'C', startMonth: 4, endMonth: 6, months: [4, 5, 6] },      // May-Jul
+  { name: 'Fall',   label: 'D', startMonth: 7, endMonth: 9, months: [7, 8, 9] },      // Aug-Oct
+];
+
+function getCycleForDate(year, month) {
+  for (var i = 0; i < CYCLES.length; i++) {
+    if (CYCLES[i].months.includes(month)) {
+      // Winter cycle spans year boundary
+      var cycleYear = (i === 0 && month <= 0) ? year - 1 : year;
+      var startYear = (i === 0) ? cycleYear : cycleYear;
+      return { idx: i, year: startYear };
+    }
+  }
+  return { idx: 0, year: year };
+}
+
+function getCycleDateRange(cycleIdx, year) {
+  var c = CYCLES[cycleIdx];
+  var sy = (cycleIdx === 0) ? year : year;
+  var ey = (cycleIdx === 0) ? year + 1 : year;
+  var sm = c.months[0];
+  var em = c.months[2];
+  var start = new Date(cycleIdx === 0 ? sy : year, sm, 1);
+  var end = new Date(cycleIdx === 0 ? ey : year, em + 1, 0);
+  return {
+    start: start, end: end,
+    label: start.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' \u2013 ' + end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+  };
+}
+
+function getCycleMonthsWithYear(cycleIdx, year) {
+  var c = CYCLES[cycleIdx];
+  return c.months.map(function(m) {
+    var y = (cycleIdx === 0 && m >= 10) ? year : (cycleIdx === 0 ? year + 1 : year);
+    return { month: m, year: y };
+  });
+}
+
+var now = new Date();
+var stYear = now.getFullYear(), stMonth = now.getMonth();
+var stView = 'month', stSort = 'count';
+var stCycleIdx, stCycleYear;
+
+// Init cycle to current
+(function() {
+  var c = getCycleForDate(now.getFullYear(), now.getMonth());
+  stCycleIdx = c.idx; stCycleYear = c.year;
+})();
+
+function stGetClassDays(year, month) {
+  var days = [], d = new Date(year, month, 1), today = new Date(todayStr() + 'T23:59:59');
+  var cancelled = getCancelled();
+  while (d.getMonth() === month) {
+    var k = fmtDate(d);
+    if (CLASS_DAYS.includes(d.getDay()) && d <= today && !cancelled.includes(k)) days.push(k);
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
+function stCompute(year, month) {
+  var att = getAtt(), days = stGetClassDays(year, month), cc = days.length;
+  if (!cc) return { cc:0, total:0, avg:0, uniq:0, per:[], daily:[] };
+  var sc = {}; var us = new Set(); var total = 0; var daily = [];
+  days.forEach(function(d) {
+    var p = att[d]||[]; daily.push({date:d,count:p.length});
+    total += p.length;
+    p.forEach(function(n) { us.add(n); sc[n]=(sc[n]||0)+1; });
+  });
+  var per = Object.entries(sc).map(function(e) { return {name:e[0],count:e[1],pct:Math.round(e[1]/cc*100)}; });
+  return { cc:cc, total:total, avg: Math.round(total/cc*10)/10, uniq:us.size, per:per, daily:daily };
+}
+
+function stComputeMultiMonth(monthYears) {
+  var allDays = [];
+  monthYears.forEach(function(my) {
+    allDays = allDays.concat(stGetClassDays(my.year, my.month));
+  });
+  var att = getAtt(), cc = allDays.length;
+  if (!cc) return { cc:0, total:0, avg:0, uniq:0, per:[], daily:[] };
+  var sc = {}; var us = new Set(); var total = 0; var daily = [];
+  allDays.forEach(function(d) {
+    var p = att[d]||[]; daily.push({date:d,count:p.length});
+    total += p.length;
+    p.forEach(function(n) { us.add(n); sc[n]=(sc[n]||0)+1; });
+  });
+  var per = Object.entries(sc).map(function(e) { return {name:e[0],count:e[1],pct:Math.round(e[1]/cc*100)}; });
+  return { cc:cc, total:total, avg: Math.round(total/cc*10)/10, uniq:us.size, per:per, daily:daily };
+}
+
+function stRender() {
+  document.getElementById('stMonthBtn').classList.toggle('active', stView==='month');
+  document.getElementById('stCycleBtn').classList.toggle('active', stView==='cycle');
+
+  if (stView === 'month') {
+    var label = new Date(stYear, stMonth).toLocaleDateString('en-US',{month:'long',year:'numeric'}).toUpperCase();
+    var start = new Date(stYear, stMonth, 1);
+    var end = new Date(stYear, stMonth + 1, 0);
+    var range = start.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' \u2013 ' + end.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    document.getElementById('stNavLabel').textContent = label;
+    document.getElementById('stNavRange').textContent = range;
+
+    var isCur = stYear===now.getFullYear() && stMonth===now.getMonth();
+    document.getElementById('stNext').disabled = isCur;
+    document.getElementById('stPrev').disabled = false;
+    stRenderMonth();
+  } else {
+    var c = CYCLES[stCycleIdx];
+    var dr = getCycleDateRange(stCycleIdx, stCycleYear);
+    document.getElementById('stNavLabel').textContent = c.name.toUpperCase();
+    document.getElementById('stNavRange').textContent = dr.label;
+    document.getElementById('stNext').disabled = false;
+    document.getElementById('stPrev').disabled = false;
+    stRenderCycle();
+  }
+}
+
+function stNav(dir) {
+  if (stView === 'month') {
+    stMonth += dir;
+    if (stMonth > 11) { stMonth = 0; stYear++; }
+    if (stMonth < 0) { stMonth = 11; stYear--; }
+  } else {
+    stCycleIdx += dir;
+    if (stCycleIdx > 3) { stCycleIdx = 0; stCycleYear++; }
+    if (stCycleIdx < 0) { stCycleIdx = 3; stCycleYear--; }
+  }
+  stRender();
+}
+
+function dh(v) {
+  if (v===null) return '';
+  if (v>0) return '<div class="st-card-delta up">\u2191 ' + v + '</div>';
+  if (v<0) return '<div class="st-card-delta down">\u2193 ' + Math.abs(v) + '</div>';
+  return '<div class="st-card-delta flat">\u2014</div>';
+}
+
+function stStudentRows(sorted, totalClasses) {
+  return sorted.map(function(x) { return '<div class="st-student-row">' +
+    '<div class="st-student-name">' + x.name + '</div>' +
+    '<div class="st-bar-wrap"><div class="st-bar-fill" style="width:' + x.pct + '%"></div></div>' +
+    '<div class="st-student-count">' + x.count + '/' + totalClasses + '</div>' +
+    '<div class="st-student-pct">' + x.pct + '%</div>' +
+  '</div>'; }).join('');
+}
+
+function stRenderMonth() {
+  var s = stCompute(stYear, stMonth);
+  var pm = stMonth-1, py = stYear; if(pm<0){pm=11;py--;}
+  var ps = stCompute(py, pm);
+
+  if(!s.cc){ document.getElementById('stContent').innerHTML='<div class="st-empty">No class data for this month yet.</div>'; return; }
+
+  var ad = ps.cc>0 ? Math.round((s.avg-ps.avg)*10)/10 : null;
+  var ud = ps.cc>0 ? s.uniq-ps.uniq : null;
+
+  var sorted = s.per.slice();
+  sorted.sort(stSort==='count' ? function(a,b){return b.count-a.count;} : function(a,b){return a.name.localeCompare(b.name);});
+
+  var mx = Math.max.apply(null, s.daily.map(function(d){return d.count;}).concat([1]));
+  var bars = s.daily.map(function(d){
+    var h = Math.max(4,(d.count/mx)*100);
+    var l = new Date(d.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',day:'numeric'});
+    return '<div class="st-bar" style="height:'+h+'%" data-tip="'+l+': '+d.count+'"></div>';
+  }).join('');
+  var labels = s.daily.map(function(d,i){
+    if(s.daily.length>8&&i%2!==0)return'<div class="st-label"></div>';
+    return'<div class="st-label">'+new Date(d.date+'T12:00:00').getDate()+'</div>';
+  }).join('');
+
+  document.getElementById('stContent').innerHTML =
+    '<div class="st-cards">' +
+      '<div class="st-card"><div class="st-card-label">Classes</div><div class="st-card-value">'+s.cc+'</div></div>' +
+      '<div class="st-card"><div class="st-card-label">Avg / Class</div><div class="st-card-value">'+s.avg+'</div>'+dh(ad)+'</div>' +
+      '<div class="st-card"><div class="st-card-label">Students</div><div class="st-card-value">'+s.uniq+'</div>'+dh(ud)+'</div>' +
+      '<div class="st-card"><div class="st-card-label">Check-ins</div><div class="st-card-value">'+s.total+'</div></div>' +
+    '</div>' +
+    '<div class="st-trend">' +
+      '<div class="st-section-title">Attendance by class</div>' +
+      '<div class="st-chart">'+bars+'</div>' +
+      '<div class="st-labels">'+labels+'</div>' +
+    '</div>' +
+    '<div class="st-table">' +
+      '<div class="st-table-header">' +
+        '<div class="st-section-title" style="margin:0">Per student ('+sorted.length+')</div>' +
+        '<button class="st-sort-btn" onclick="stToggleSort()">Sort: '+(stSort==='count'?'# classes':'name')+'</button>' +
+      '</div>' +
+      stStudentRows(sorted, s.cc) +
+    '</div>';
+}
+
+function stRenderCycle() {
+  var monthYears = getCycleMonthsWithYear(stCycleIdx, stCycleYear);
+  var cycleStats = stComputeMultiMonth(monthYears);
+
+  var perMonth = monthYears.map(function(my) { return {
+    label: new Date(my.year, my.month).toLocaleDateString('en-US', {month: 'short'}),
+    s: stCompute(my.year, my.month)
+  }; });
+
+  if (!cycleStats.cc) {
+    document.getElementById('stContent').innerHTML = '<div class="st-empty">No class data for this cycle yet.</div>';
+    return;
+  }
+
+  var sorted = cycleStats.per.slice();
+  sorted.sort(stSort==='count' ? function(a,b){return b.count-a.count;} : function(a,b){return a.name.localeCompare(b.name);});
+
+  var mc = perMonth.map(function(x) { return '<div class="st-cycle-month">' +
+    '<div class="st-cycle-label">' + x.label + '</div>' +
+    '<div class="st-cycle-value">' + (x.s.cc > 0 ? x.s.avg : '\u2014') + '</div>' +
+    '<div class="st-cycle-sub">' + x.s.cc + ' classes</div>' +
+  '</div>'; }).join('');
+
+  document.getElementById('stContent').innerHTML =
+    '<div class="st-cycle-grid">' +
+      mc +
+      '<div class="st-cycle-total">' +
+        '<div class="st-cycle-label">Cycle Total</div>' +
+        '<div class="st-cycle-value">' + cycleStats.avg + '</div>' +
+        '<div class="st-cycle-sub">avg / class \u00b7 ' + cycleStats.cc + ' classes \u00b7 ' + cycleStats.uniq + ' students</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="st-table">' +
+      '<div class="st-table-header">' +
+        '<div class="st-section-title" style="margin:0">Per student (' + sorted.length + ')</div>' +
+        '<button class="st-sort-btn" onclick="stToggleSort()">Sort: ' + (stSort==='count'?'# classes':'name') + '</button>' +
+      '</div>' +
+      stStudentRows(sorted, cycleStats.cc) +
+    '</div>';
+}
+
+function stSetView(v) { stView = v; stRender(); }
+function stToggleSort() { stSort = stSort==='count'?'name':'count'; stRender(); }
+
+// ═══════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') {
+    flushSyncQueue().catch(function() {});
+  }
+});
+
+window.addEventListener('online', function() {
+  flushSyncQueue().then(function(success) {
+    if (success) {
+      lastSavedTime = new Date();
+      setSyncState('saved', 'Synced ' + formatSavedTime(lastSavedTime));
+    }
+  }).catch(function() {});
+});
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+siInit();
+if (isUnlocked()) {
+  document.getElementById('pinScreen').classList.add('hidden');
+  siRender();
+} else {
+  showPin();
+}
+
+loadFromServer();
+flushSyncQueue().then(function(success) {
+  if (success && getSyncQueue().length === 0) {
+    lastSavedTime = new Date();
+    setSyncState('saved', 'Synced ' + formatSavedTime(lastSavedTime));
+  }
+}).catch(function() {});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(function(err) {
+    console.warn('Service worker registration failed:', err);
+  });
+}
+</script>
+</body>
+</html>
