@@ -538,6 +538,97 @@ body.past-mode .tab.active { color: #ccc; }
   color: var(--text-light); font-size: 17px; font-weight: 600;
 }
 
+/* ═══════════════════════════════════════
+   DUES PAGE
+   ═══════════════════════════════════════ */
+.du-header {
+  background: var(--white);
+  padding: 28px 24px 20px;
+}
+.du-title-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.du-title {
+  font-size: 28px; font-weight: 900;
+}
+
+/* Toggle switch */
+.du-toggle {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+}
+.du-toggle input { display: none; }
+.du-toggle-slider {
+  width: 44px; height: 24px; background: var(--divider);
+  border-radius: 12px; position: relative; transition: background 0.2s;
+}
+.du-toggle-slider::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; background: var(--white);
+  border-radius: 50%; transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.du-toggle input:checked + .du-toggle-slider {
+  background: var(--green);
+}
+.du-toggle input:checked + .du-toggle-slider::after {
+  transform: translateX(20px);
+}
+.du-toggle-label {
+  font-size: 14px; font-weight: 700; color: var(--text-light);
+}
+
+/* Summary bar */
+.du-summary {
+  padding: 20px; display: flex; align-items: center; gap: 16px;
+}
+.du-summary-text {
+  font-size: 16px; font-weight: 700; color: var(--text);
+  white-space: nowrap;
+}
+.du-summary-bar {
+  flex: 1; height: 12px; background: var(--bg);
+  border-radius: 6px; overflow: hidden;
+}
+.du-summary-fill {
+  height: 100%; background: var(--green);
+  border-radius: 6px; transition: width 0.4s;
+}
+
+/* Student rows */
+.du-list { padding: 0 20px 20px; }
+
+.du-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 0; border-bottom: 1px solid var(--divider);
+  cursor: pointer;
+}
+.du-row:last-child { border-bottom: none; }
+.du-row:active { background: var(--bg); }
+
+.du-name {
+  flex: 1; font-size: 17px; font-weight: 700;
+  min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+
+.du-badge {
+  font-size: 13px; font-weight: 800; padding: 4px 12px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.du-badge--paid { background: var(--green-row); color: var(--green); }
+.du-badge--unpaid { background: rgba(196,25,25,0.08); color: var(--red); }
+
+.du-date {
+  font-size: 14px; font-weight: 600; color: var(--text-light);
+  min-width: 60px; text-align: right;
+}
+
+.du-overdue {
+  font-size: 12px; font-weight: 800; color: var(--red);
+  white-space: nowrap;
+}
+
 /* ── Modal ── */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.5);
@@ -854,6 +945,28 @@ body.past-mode .tab.active { color: #ccc; }
   <div id="stContent"></div>
 </div>
 
+<!-- ════ DUES PAGE ════ -->
+<div class="page" id="page-dues">
+  <div class="du-header">
+    <div class="du-title-row">
+      <div class="du-title">Dues</div>
+      <label class="du-toggle">
+        <input type="checkbox" id="duesEnabledToggle" checked>
+        <span class="du-toggle-slider"></span>
+        <span class="du-toggle-label">Reminders</span>
+      </label>
+    </div>
+    <div class="st-nav">
+      <button class="st-arrow" id="duPrev" onclick="duNav(-1)">&#8249;</button>
+      <div class="st-nav-center">
+        <div class="st-nav-label" id="duNavLabel"></div>
+      </div>
+      <button class="st-arrow" id="duNext" onclick="duNav(1)">&#8250;</button>
+    </div>
+  </div>
+  <div id="duContent"></div>
+</div>
+
 <!-- ════ TAB BAR ════ -->
 <nav class="tab-bar">
   <button class="tab active" onclick="switchTab('signin')" id="tab-signin">
@@ -867,6 +980,10 @@ body.past-mode .tab.active { color: #ccc; }
   <button class="tab" onclick="switchTab('stats')" id="tab-stats">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="3" width="4" height="18"/></svg>
     Stats
+  </button>
+  <button class="tab" onclick="switchTab('dues')" id="tab-dues">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Dues
   </button>
 </nav>
 
@@ -1077,7 +1194,9 @@ async function loadFromServer() {
     var results = await Promise.all([
       fetch(APPS_SCRIPT_URL + '?action=roster').catch(function() { return null; }),
       fetch(APPS_SCRIPT_URL + '?action=allAttendance').catch(function() { return null; }),
-      fetch(APPS_SCRIPT_URL + '?action=cancelled').catch(function() { return null; })
+      fetch(APPS_SCRIPT_URL + '?action=cancelled').catch(function() { return null; }),
+      fetch(APPS_SCRIPT_URL + '?action=dues').catch(function() { return null; }),
+      fetch(APPS_SCRIPT_URL + '?action=settings').catch(function() { return null; })
     ]);
 
     if (results[0] && results[0].ok) {
@@ -1117,9 +1236,39 @@ async function loadFromServer() {
       }
     }
 
+    // Dues data
+    if (results[3] && results[3].ok) {
+      var dData = await results[3].json();
+      if (dData.dues) {
+        var localDues = getDues();
+        var queue3 = getSyncQueue();
+        var dirtyDuesKeys = {};
+        queue3.forEach(function(c) { if (c.action === 'toggleDues') dirtyDuesKeys[c.month + '|' + c.name] = true; });
+        // Merge server data, keeping local overrides for queued changes
+        Object.keys(dData.dues).forEach(function(month) {
+          if (!localDues[month]) localDues[month] = {};
+          Object.keys(dData.dues[month]).forEach(function(name) {
+            if (!dirtyDuesKeys[month + '|' + name]) {
+              localDues[month][name] = dData.dues[month][name];
+            }
+          });
+        });
+        setDues(localDues);
+      }
+    }
+
+    // Settings
+    if (results[4] && results[4].ok) {
+      var sData = await results[4].json();
+      if (sData.settings && sData.settings.duesEnabled !== undefined) {
+        localStorage.setItem('deleon_dues_enabled', sData.settings.duesEnabled);
+      }
+    }
+
     if (activeTab === 'signin') siRender();
     if (activeTab === 'roster') roRender();
     if (activeTab === 'stats') stRender();
+    if (activeTab === 'dues') duesRender();
   } catch (err) {
     console.warn('Could not load data from server:', err);
   }
@@ -1219,6 +1368,7 @@ function switchTab(name) {
   if (name === 'signin') siRender();
   if (name === 'roster') roRender();
   if (name === 'stats') stRender();
+  if (name === 'dues') duesRender();
   window.scrollTo(0, 0);
 }
 
@@ -1829,6 +1979,140 @@ function stSortLabel() {
   if (stSort === 'name') return 'name';
   return 'last seen';
 }
+
+// ═══════════════════════════════════
+// DUES PAGE
+// ═══════════════════════════════════
+var DUES_KEY = 'dojo_dues';
+var duYear = new Date().getFullYear();
+var duMonth = new Date().getMonth(); // 0-indexed
+
+function getDues() {
+  try { return JSON.parse(localStorage.getItem(DUES_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function setDues(d) {
+  try { localStorage.setItem(DUES_KEY, JSON.stringify(d)); }
+  catch (e) {}
+}
+
+function duMonthKey(y, m) {
+  return y + '-' + String(m + 1).padStart(2, '0');
+}
+
+function duesRender() {
+  var mk = duMonthKey(duYear, duMonth);
+  var label = new Date(duYear, duMonth).toLocaleDateString('en-US', {month:'long', year:'numeric'}).toUpperCase();
+  document.getElementById('duNavLabel').textContent = label;
+
+  var isNow = duYear === new Date().getFullYear() && duMonth === new Date().getMonth();
+  document.getElementById('duNext').disabled = isNow;
+
+  // Load toggle state
+  var enabled = localStorage.getItem('deleon_dues_enabled') !== 'false';
+  document.getElementById('duesEnabledToggle').checked = enabled;
+
+  var roster = getRoster();
+  var dues = getDues();
+  var monthDues = dues[mk] || {};
+
+  if (!roster.length) {
+    document.getElementById('duContent').innerHTML = '<div class="st-empty">No students on roster.</div>';
+    return;
+  }
+
+  // Count paid
+  var paidCount = 0;
+  roster.forEach(function(name) {
+    if (monthDues[name] && monthDues[name].paid) paidCount++;
+  });
+  var pct = Math.round(paidCount / roster.length * 100);
+
+  // Calculate consecutive unpaid months per student
+  function getConsecutiveUnpaid(name) {
+    var count = 0;
+    var y = new Date().getFullYear();
+    var m = new Date().getMonth();
+    for (var i = 0; i < 12; i++) {
+      m--;
+      if (m < 0) { m = 11; y--; }
+      var k = duMonthKey(y, m);
+      var md = dues[k] || {};
+      if (md[name] && md[name].paid) break;
+      count++;
+    }
+    return count;
+  }
+
+  // Build rows
+  var rows = roster.map(function(name) {
+    var entry = monthDues[name];
+    var paid = entry && entry.paid;
+    var dateStr = '';
+    if (paid && entry.date) {
+      var d = new Date(entry.date + 'T12:00:00');
+      dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+    }
+    var overdue = 0;
+    if (!paid) overdue = getConsecutiveUnpaid(name);
+
+    return '<div class="du-row" onclick="duToggle(\'' + name.replace(/'/g, "\\'") + '\')">' +
+      '<div class="du-name">' + name + '</div>' +
+      (overdue > 1 ? '<div class="du-overdue">' + overdue + 'mo overdue</div>' : '') +
+      '<div class="du-badge ' + (paid ? 'du-badge--paid' : 'du-badge--unpaid') + '">' + (paid ? 'Paid' : 'Unpaid') + '</div>' +
+      (dateStr ? '<div class="du-date">' + dateStr + '</div>' : '') +
+    '</div>';
+  }).join('');
+
+  document.getElementById('duContent').innerHTML =
+    '<div class="du-summary">' +
+      '<div class="du-summary-text">' + paidCount + ' of ' + roster.length + ' paid</div>' +
+      '<div class="du-summary-bar"><div class="du-summary-fill" style="width:' + pct + '%"></div></div>' +
+    '</div>' +
+    '<div class="du-list">' + rows + '</div>';
+}
+
+function duNav(dir) {
+  duMonth += dir;
+  if (duMonth > 11) { duMonth = 0; duYear++; }
+  if (duMonth < 0) { duMonth = 11; duYear--; }
+  duesRender();
+}
+
+function duToggle(name) {
+  var mk = duMonthKey(duYear, duMonth);
+  var dues = getDues();
+  if (!dues[mk]) dues[mk] = {};
+  var entry = dues[mk][name];
+  var nowPaid = !(entry && entry.paid);
+  dues[mk][name] = {
+    paid: nowPaid,
+    date: nowPaid ? todayStr() : '',
+    source: 'admin'
+  };
+  setDues(dues);
+  queueChange({
+    action: 'toggleDues',
+    name: name,
+    month: mk,
+    paid: nowPaid,
+    date: todayStr()
+  });
+  triggerSync();
+  duesRender();
+}
+
+// Toggle handler
+document.getElementById('duesEnabledToggle').addEventListener('change', function() {
+  var enabled = this.checked;
+  localStorage.setItem('deleon_dues_enabled', enabled ? 'true' : 'false');
+  queueChange({
+    action: 'setSetting',
+    settingKey: 'duesEnabled',
+    settingValue: enabled ? 'true' : 'false'
+  });
+  triggerSync();
+});
 
 // ═══════════════════════════════════
 // EVENT LISTENERS

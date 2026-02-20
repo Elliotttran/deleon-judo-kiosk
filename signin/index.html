@@ -334,15 +334,24 @@
       background: none;
       border: none;
       font-family: var(--font);
-      font-size: 14px;
+      font-size: 17px;
       font-weight: 600;
       color: var(--text-secondary);
       cursor: pointer;
-      padding: 8px 0;
+      padding: 10px 0;
+    }
+
+    .custom-select__other span {
+      color: var(--red);
+      text-decoration: underline;
     }
 
     .custom-select__other:active {
       color: var(--text);
+    }
+
+    .custom-select__other:active span {
+      color: var(--red-hover);
     }
 
     body.picker-open {
@@ -386,67 +395,6 @@
     input::placeholder {
       color: #b0b0b0;
       font-weight: 500;
-    }
-
-    /* ── Payment Section ─────────────────────────────── */
-    .payment-section {
-      display: none;
-      margin-bottom: 20px;
-    }
-
-    .payment-section.visible {
-      display: block;
-    }
-
-    .payment-section label.section-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.8px;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
-    }
-
-    .radio-group {
-      display: flex;
-      gap: 10px;
-    }
-
-    .radio-option { flex: 1; }
-
-    .radio-option input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .radio-option label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 48px;
-      border-radius: var(--radius-sm);
-      background: var(--input-bg);
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 2px solid transparent;
-      text-transform: none;
-    }
-
-    .radio-option input[type="radio"]:checked + label {
-      background: var(--red);
-      color: var(--white);
-      border-color: var(--red);
-    }
-
-    .radio-option input[type="radio"]:focus-visible + label {
-      outline: 2px solid var(--red);
-      outline-offset: 2px;
     }
 
     /* ── Submit Button ───────────────────────────────── */
@@ -738,6 +686,17 @@
     .sheet__btn--compact { margin-top: 8px; }
     .sheet__btn--snug    { margin-top: 12px; }
 
+    /* Dues prompt */
+    .dues-state { display: none; }
+    .dues-state.active { display: block; text-align: center; }
+    .dues-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--yellow); color: var(--black);
+      font-size: 32px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+    }
+
     /* ── Footer ──────────────────────────────────────── */
     .footer {
       text-align: center;
@@ -766,11 +725,22 @@
       font-size: 14px;
       font-weight: 600;
       z-index: 100;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, opacity 0.3s ease;
       white-space: nowrap;
     }
 
     .toast.visible { transform: translateX(-50%) translateY(0); }
+
+    .toast.toast--dues {
+      white-space: normal;
+      width: 90vw;
+      max-width: 500px;
+      padding: 20px 32px;
+      font-size: 18px;
+      border-radius: 16px;
+      text-align: center;
+      line-height: 1.4;
+    }
 
     /* ── Offline Banner ──────────────────────────────── */
     .offline-banner {
@@ -884,7 +854,7 @@
       .custom-select__back svg { width: 28px; height: 28px; }
       .custom-select__item { height: 64px; font-size: 20px; padding: 0 28px; }
       .custom-select__footer { padding: 20px 28px; }
-      .custom-select__other { font-size: 16px; }
+      .custom-select__other { font-size: 18px; }
       input[type="text"] { height: 64px; font-size: 20px; padding: 0 20px; }
       .submit-btn { height: 70px; font-size: 22px; margin-top: 24px; }
       .form-group { margin-bottom: 24px; }
@@ -919,7 +889,7 @@
       .custom-select__back svg { width: 28px; height: 28px; }
       .custom-select__item { height: 60px; font-size: 20px; padding: 0 28px; }
       .custom-select__footer { padding: 20px 28px; }
-      .custom-select__other { font-size: 16px; }
+      .custom-select__other { font-size: 18px; }
       input[type="text"] { height: 62px; font-size: 20px; }
       .submit-btn { height: 68px; font-size: 21px; }
       .sheet { max-width: 440px; }
@@ -963,22 +933,8 @@
           </div>
           <div class="custom-select__list" id="selectList"></div>
           <div class="custom-select__footer">
-            <button type="button" class="custom-select__other" id="otherBtn">Not on the list? Tap here</button>
+            <button type="button" class="custom-select__other" id="otherBtn">Not on the list? <span>Tap here</span></button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="payment-section" id="paymentSection">
-      <label class="section-label">Did you pay this month's dues?</label>
-      <div class="radio-group" role="radiogroup" aria-label="Monthly payment status">
-        <div class="radio-option">
-          <input type="radio" id="paidYes" name="paid" value="Yes">
-          <label for="paidYes">Yes</label>
-        </div>
-        <div class="radio-option">
-          <input type="radio" id="paidNo" name="paid" value="No">
-          <label for="paidNo">Not yet</label>
         </div>
       </div>
     </div>
@@ -1046,6 +1002,25 @@
   <button type="button" class="sheet__btn sheet__btn--snug" id="newStudentCancel">Cancel</button>
 </div>
 
+<!-- Dues Prompt Modal -->
+<div class="sheet-overlay" id="duesOverlay"></div>
+<div class="sheet" id="duesSheet" role="dialog" aria-modal="true" aria-label="Dues reminder">
+  <!-- Heads-up variant (days 24-31) -->
+  <div class="dues-state" id="duesHeadsUp">
+    <div class="dues-icon">$</div>
+    <div class="sheet__title sheet__title--spaced">Dues Reminder</div>
+    <div class="sheet__message">Monthly dues are coming up next week. Please bring your payment!</div>
+    <button type="button" class="sheet__btn" id="duesHeadsUpDismiss">Got it</button>
+  </div>
+  <!-- Payment check variant (days 1-10) -->
+  <div class="dues-state" id="duesPayCheck">
+    <div class="dues-icon">$</div>
+    <div class="sheet__title sheet__title--spaced">Have you paid this month's dues?</div>
+    <button type="button" class="sheet__btn--retry sheet__btn--compact" id="duesPaidYes">Yes, I've paid</button>
+    <button type="button" class="sheet__btn sheet__btn--snug" id="duesPaidNo">Not yet</button>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
 <script>
@@ -1080,8 +1055,6 @@ function updateDateTime() {
 }
 updateDateTime();
 setInterval(updateDateTime, 60000);
-
-if (new Date().getDate() <= 7) document.getElementById('paymentSection').classList.add('visible');
 
 function getClassName() {
   var day = new Date().getDay();
@@ -1275,12 +1248,50 @@ newStudentContinue.addEventListener('click', function() {
 
 document.getElementById('newStudentCancel').addEventListener('click', closeNewStudentModal);
 
-function showToast(msg, duration) {
+function showToast(msg, duration, extraClass) {
   duration = duration || 3000;
   var toast = document.getElementById('toast');
   toast.textContent = msg;
+  toast.className = 'toast';
+  if (extraClass) toast.classList.add(extraClass);
   toast.classList.add('visible');
-  setTimeout(function() { toast.classList.remove('visible'); }, duration);
+  setTimeout(function() {
+    toast.classList.remove('visible');
+    setTimeout(function() { toast.className = 'toast'; }, 300);
+  }, duration);
+}
+
+// ═══════════════════════════════════════════════════
+// DUES TRACKING
+// ═══════════════════════════════════════════════════
+var DUES_CACHE_KEY = 'deleon_dues';
+
+function getDuesCache() {
+  try { return JSON.parse(localStorage.getItem(DUES_CACHE_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+
+function isDuesPaid(firstName, lastName, monthKey) {
+  var cache = getDuesCache();
+  return cache[monthKey] && cache[monthKey][firstName + '|' + lastName];
+}
+
+function setDuesPaid(firstName, lastName, monthKey) {
+  var cache = getDuesCache();
+  if (!cache[monthKey]) cache[monthKey] = {};
+  cache[monthKey][firstName + '|' + lastName] = true;
+  try { localStorage.setItem(DUES_CACHE_KEY, JSON.stringify(cache)); }
+  catch (e) {}
+}
+
+function isDuesEnabled() {
+  var v = localStorage.getItem('deleon_dues_enabled');
+  return v !== 'false'; // default true
+}
+
+function getCurrentMonthKey() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 }
 
 // ═══════════════════════════════════════════════════
@@ -1458,12 +1469,67 @@ function hideSheet() {
   }, 200);
 }
 
+// ── Dues prompt after successful sign-in ──
+var duesSheet = document.getElementById('duesSheet');
+var duesOverlay = document.getElementById('duesOverlay');
+var pendingDuesEntry = null; // stores {firstName, lastName} for dues recording
+
+function shouldShowDuesPrompt(firstName, lastName) {
+  if (!isDuesEnabled()) return false;
+  var day = new Date().getDate();
+  if (day >= 24) return 'headsup';
+  if (day <= 22) { // TODO: revert to day <= 10 after testing
+    if (isDuesPaid(firstName, lastName, getCurrentMonthKey())) return false;
+    return 'paycheck';
+  }
+  return false;
+}
+
+function showDuesPrompt(variant) {
+  document.getElementById('duesHeadsUp').classList.remove('active');
+  document.getElementById('duesPayCheck').classList.remove('active');
+  if (variant === 'headsup') {
+    document.getElementById('duesHeadsUp').classList.add('active');
+  } else {
+    document.getElementById('duesPayCheck').classList.add('active');
+  }
+  duesOverlay.classList.add('visible');
+  duesSheet.classList.remove('visible', 'closing');
+  void duesSheet.offsetWidth;
+  duesSheet.classList.add('visible');
+}
+
+function closeDuesPrompt() {
+  duesSheet.classList.add('closing');
+  duesOverlay.classList.remove('visible');
+  setTimeout(function() {
+    duesSheet.classList.remove('visible', 'closing');
+    pendingDuesEntry = null;
+  }, 200);
+}
+
+function hideSheetWithDuesCheck() {
+  if (!lastEntry) { hideSheet(); return; }
+  var fn = lastEntry.firstName;
+  var ln = lastEntry.lastName;
+  var variant = shouldShowDuesPrompt(fn, ln);
+
+  hideSheet();
+
+  if (variant) {
+    pendingDuesEntry = { firstName: fn, lastName: ln };
+    setTimeout(function() { showDuesPrompt(variant); }, 300);
+  }
+}
+
 // ═══════════════════════════════════════════════════
 // KEYBOARD / ACCESSIBILITY
 // ═══════════════════════════════════════════════════
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    if (newStudentSheet.classList.contains('visible')) {
+    if (duesSheet.classList.contains('visible')) {
+      closeDuesPrompt();
+    } else if (newStudentSheet.classList.contains('visible')) {
       closeNewStudentModal();
     } else if (customSelect.classList.contains('open')) {
       closeDropdown();
@@ -1489,14 +1555,12 @@ submitBtn.addEventListener('click', async function(e) {
     var firstName = parts[0];
     var lastName = parts[1];
 
-    var paidRadio = document.querySelector('input[name="paid"]:checked');
     var now = new Date();
     lastEntry = {
       action: isNew ? 'new_student' : 'checkin',
       date: fmtDate(now),
       time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-      class: getClassName(), firstName: firstName, lastName: lastName,
-      paid: paidRadio ? paidRadio.value : ''
+      class: getClassName(), firstName: firstName, lastName: lastName
     };
 
     submitBtn.classList.add('loading'); submitBtn.disabled = true;
@@ -1549,7 +1613,33 @@ submitBtn.addEventListener('click', async function(e) {
 // ═══════════════════════════════════════════════════
 // RETRY / CLOSE HANDLERS
 // ═══════════════════════════════════════════════════
-document.getElementById('resetBtn').addEventListener('click', hideSheet);
+document.getElementById('resetBtn').addEventListener('click', hideSheetWithDuesCheck);
+
+// Dues prompt handlers
+document.getElementById('duesHeadsUpDismiss').addEventListener('click', closeDuesPrompt);
+document.getElementById('duesPaidNo').addEventListener('click', function() {
+  closeDuesPrompt();
+  showToast('No worries! Reminder: monthly dues are due the first week of the month.', 4500, 'toast--dues');
+});
+document.getElementById('duesPaidYes').addEventListener('click', function() {
+  if (pendingDuesEntry) {
+    var fn = pendingDuesEntry.firstName;
+    var ln = pendingDuesEntry.lastName;
+    setDuesPaid(fn, ln, getCurrentMonthKey());
+    saveToQueue({
+      action: 'recordDues',
+      firstName: fn,
+      lastName: ln,
+      month: getCurrentMonthKey(),
+      date: fmtDate(new Date())
+    });
+    if (navigator.onLine && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+      flushQueue().catch(function() {});
+    }
+  }
+  closeDuesPrompt();
+  showToast('Thanks! Payment recorded.', 3500, 'toast--dues');
+});
 document.getElementById('errorDoneBtn').addEventListener('click', hideSheet);
 document.getElementById('retryBtn').addEventListener('click', async function() {
   if (!lastEntry) { hideSheet(); return; }
@@ -1585,6 +1675,7 @@ document.getElementById('retryBtn').addEventListener('click', async function() {
   }
 });
 sheetOverlay.addEventListener('click', hideSheet);
+duesOverlay.addEventListener('click', closeDuesPrompt);
 
 // ═══════════════════════════════════════════════════
 // INIT

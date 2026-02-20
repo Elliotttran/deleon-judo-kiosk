@@ -5,7 +5,7 @@
 // Serves both signin (student kiosk) and admin (attendance tracker).
 //
 // SETUP:
-// 1. Create a Google Sheet with tabs: Roster, Attendance, Check-ins, New Students, Cancelled
+// 1. Create a Google Sheet with tabs: Roster, Attendance, Check-ins, New Students, Cancelled, Dues, Settings
 // 2. Extensions > Apps Script > paste this code
 // 3. Project Settings > Script Properties > add WRITE_KEY (any secret string)
 // 4. Deploy > New Deployment > Web App > Execute as: Me, Access: Anyone
@@ -18,6 +18,8 @@ const TAB_ATTENDANCE = 'Attendance';
 const TAB_CHECKINS = 'Check-ins';
 const TAB_NEW_STUDENTS = 'New Students';
 const TAB_CANCELLED = 'Cancelled';
+const TAB_DUES = 'Dues';
+const TAB_SETTINGS = 'Settings';
 
 // ── Helpers ──────────────────────────────────────────────
 
@@ -33,7 +35,9 @@ function getSheet(name) {
     'Attendance':   [['Date', 'Names']],
     'Check-ins':    [['Date', 'Name', 'Timestamp', 'Class', 'Paid']],
     'New Students': [['First Name', 'Last Name', 'Date', 'Time', 'Class', 'Status']],
-    'Cancelled':    [['Date', 'Timestamp']]
+    'Cancelled':    [['Date', 'Timestamp']],
+    'Dues':         [['Month', 'Student Name', 'Paid', 'Date Confirmed', 'Source']],
+    'Settings':     [['Key', 'Value']]
   };
   if (headers[name]) {
     sheet.getRange(1, 1, 1, headers[name][0].length).setValues(headers[name]);
@@ -64,6 +68,8 @@ function doGet(e) {
       case 'allattendance':  return handleGetAllAttendance();
       case 'cancelled':      return handleGetCancelled();
       case 'newstudents':    return handleGetNewStudents();
+      case 'dues':           return handleGetDues();
+      case 'settings':       return handleGetSettings();
       case 'ping':           return json({ ok: true, ts: new Date().toISOString() });
       default:               return json({ error: 'Unknown action: ' + action });
     }
@@ -202,6 +208,7 @@ function doPost(e) {
     // Public endpoints (from student kiosk — no key required)
     if (action === 'checkin')      return handleCheckin(body);
     if (action === 'new_student')  return handleNewStudent(body);
+    if (action === 'recorddues')   return handleRecordDues(body);
 
     // Protected endpoints (admin — require WRITE_KEY)
     if (!verifyKey(body.key)) return json({ error: 'Invalid write key' });
@@ -212,6 +219,8 @@ function doPost(e) {
       case 'saveattendance':  return handleSaveAttendance(body);
       case 'cancelclass':     return handleCancelClass(body);
       case 'restoreclass':    return handleRestoreClass(body);
+      case 'toggledues':      return handleToggleDues(body);
+      case 'setsetting':      return handleSetSetting(body);
       default:                return json({ error: 'Unknown action: ' + action });
     }
   } catch (err) {
@@ -355,5 +364,123 @@ function handleRestoreClass(body) {
       break;
     }
   }
+  return json({ ok: true });
+}
+
+// ── Dues ────────────────────────────────────────────────
+
+function handleGetDues() {
+  var sheet = getSheet(TAB_DUES);
+  var lastRow = sheet.getLastRow();
+  var dues = {};
+
+  if (lastRow >= 2) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+    for (var i = 0; i < data.length; i++) {
+      var month = data[i][0];
+      var name = data[i][1];
+      if (!month || !name) continue;
+      if (!dues[month]) dues[month] = {};
+      dues[month][name] = {
+        paid: data[i][2] === true || data[i][2] === 'TRUE' || data[i][2] === true,
+        date: data[i][3] || '',
+        source: data[i][4] || ''
+      };
+    }
+  }
+
+  return json({ dues: dues });
+}
+
+// Public: student self-reports payment from signin kiosk
+function handleRecordDues(body) {
+  var name = body.lastName + ', ' + body.firstName;
+  var month = body.month;
+  if (!month) return json({ error: 'month required' });
+
+  var sheet = getSheet(TAB_DUES);
+  var lastRow = sheet.getLastRow();
+
+  // Update existing row if present
+  if (lastRow >= 2) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+    for (var i = 0; i < data.length; i++) {
+      if (data[i][0] === month && data[i][1] === name) {
+        sheet.getRange(i + 2, 3).setValue(true);
+        sheet.getRange(i + 2, 4).setValue(body.date || new Date().toISOString());
+        sheet.getRange(i + 2, 5).setValue('self');
+        return json({ ok: true });
+      }
+    }
+  }
+
+  sheet.appendRow([month, name, true, body.date || new Date().toISOString(), 'self']);
+  return json({ ok: true });
+}
+
+// Protected: admin toggles dues status
+function handleToggleDues(body) {
+  var name = body.name;
+  var month = body.month;
+  var paid = body.paid;
+  if (!month || !name) return json({ error: 'month and name required' });
+
+  var sheet = getSheet(TAB_DUES);
+  var lastRow = sheet.getLastRow();
+
+  // Update existing row
+  if (lastRow >= 2) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+    for (var i = 0; i < data.length; i++) {
+      if (data[i][0] === month && data[i][1] === name) {
+        sheet.getRange(i + 2, 3).setValue(paid);
+        sheet.getRange(i + 2, 4).setValue(body.date || new Date().toISOString());
+        sheet.getRange(i + 2, 5).setValue('admin');
+        return json({ ok: true });
+      }
+    }
+  }
+
+  sheet.appendRow([month, name, paid, body.date || new Date().toISOString(), 'admin']);
+  return json({ ok: true });
+}
+
+// ── Settings ────────────────────────────────────────────
+
+function handleGetSettings() {
+  var sheet = getSheet(TAB_SETTINGS);
+  var lastRow = sheet.getLastRow();
+  var settings = {};
+
+  if (lastRow >= 2) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+    for (var i = 0; i < data.length; i++) {
+      if (data[i][0]) settings[data[i][0]] = data[i][1];
+    }
+  }
+
+  return json({ settings: settings });
+}
+
+function handleSetSetting(body) {
+  var key = body.settingKey;
+  var value = body.settingValue;
+  if (!key) return json({ error: 'settingKey required' });
+
+  var sheet = getSheet(TAB_SETTINGS);
+  var lastRow = sheet.getLastRow();
+
+  // Update existing
+  if (lastRow >= 2) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < data.length; i++) {
+      if (data[i][0] === key) {
+        sheet.getRange(i + 2, 2).setValue(value);
+        return json({ ok: true });
+      }
+    }
+  }
+
+  sheet.appendRow([key, value]);
   return json({ ok: true });
 }
