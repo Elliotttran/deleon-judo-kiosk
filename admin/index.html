@@ -473,7 +473,7 @@ body.past-mode .tab.active { color: #ccc; }
   font-size: 19px; font-weight: 700;
   min-width: 0; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
-  flex: 1.2;
+  flex: 1;
 }
 
 .st-bar-wrap {
@@ -495,6 +495,22 @@ body.past-mode .tab.active { color: #ccc; }
   min-width: 48px; text-align: right;
 }
 
+.st-student-lastseen {
+  font-size: 14px; font-weight: 600; color: var(--text-light);
+  min-width: 62px; text-align: right; padding-left: 10px;
+}
+
+.st-student-row--absent {
+  background: rgba(196, 25, 25, 0.06);
+  border-radius: 8px;
+  margin: 0 -8px; padding-left: 8px; padding-right: 8px;
+}
+.st-student-row--absent .st-student-lastseen {
+  color: var(--red); font-weight: 700;
+}
+
+.st-section-title--inline { margin: 0; }
+
 /* Cycle month cards */
 .st-cycle-grid {
   display: grid; grid-template-columns: repeat(3,1fr);
@@ -507,6 +523,7 @@ body.past-mode .tab.active { color: #ccc; }
 .st-cycle-label { font-size: 15px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; }
 .st-cycle-value { font-size: 28px; font-weight: 900; margin-bottom: 2px; }
 .st-cycle-sub { font-size: 14px; font-weight: 600; color: var(--text-light); }
+.st-cycle-month-stats { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
 
 .st-cycle-total {
   grid-column: 1 / -1;
@@ -1511,6 +1528,7 @@ const CYCLES = [
   { name: 'Summer', label: 'C', startMonth: 4, endMonth: 6, months: [4, 5, 6] },      // May-Jul
   { name: 'Fall',   label: 'D', startMonth: 7, endMonth: 9, months: [7, 8, 9] },      // Aug-Oct
 ];
+const BELT_MIN_CLASSES = 30;
 
 function getCycleForDate(year, month) {
   for (var i = 0; i < CYCLES.length; i++) {
@@ -1571,13 +1589,18 @@ function stGetClassDays(year, month) {
 function stCompute(year, month) {
   var att = getAtt(), days = stGetClassDays(year, month), cc = days.length;
   if (!cc) return { cc:0, total:0, avg:0, uniq:0, per:[], daily:[] };
-  var sc = {}; var us = new Set(); var total = 0; var daily = [];
+  var sc = {}; var ls = {}; var us = new Set(); var total = 0; var daily = [];
   days.forEach(function(d) {
     var p = att[d]||[]; daily.push({date:d,count:p.length});
     total += p.length;
-    p.forEach(function(n) { us.add(n); sc[n]=(sc[n]||0)+1; });
+    p.forEach(function(n) {
+      us.add(n); sc[n]=(sc[n]||0)+1;
+      if (!ls[n] || d > ls[n]) ls[n] = d;
+    });
   });
-  var per = Object.entries(sc).map(function(e) { return {name:e[0],count:e[1],pct:Math.round(e[1]/cc*100)}; });
+  var per = Object.entries(sc).map(function(e) {
+    return {name:e[0], count:e[1], pct:Math.round(e[1]/cc*100), lastSeen:ls[e[0]]||null};
+  });
   return { cc:cc, total:total, avg: Math.round(total/cc*10)/10, uniq:us.size, per:per, daily:daily };
 }
 
@@ -1588,13 +1611,18 @@ function stComputeMultiMonth(monthYears) {
   });
   var att = getAtt(), cc = allDays.length;
   if (!cc) return { cc:0, total:0, avg:0, uniq:0, per:[], daily:[] };
-  var sc = {}; var us = new Set(); var total = 0; var daily = [];
+  var sc = {}; var ls = {}; var us = new Set(); var total = 0; var daily = [];
   allDays.forEach(function(d) {
     var p = att[d]||[]; daily.push({date:d,count:p.length});
     total += p.length;
-    p.forEach(function(n) { us.add(n); sc[n]=(sc[n]||0)+1; });
+    p.forEach(function(n) {
+      us.add(n); sc[n]=(sc[n]||0)+1;
+      if (!ls[n] || d > ls[n]) ls[n] = d;
+    });
   });
-  var per = Object.entries(sc).map(function(e) { return {name:e[0],count:e[1],pct:Math.round(e[1]/cc*100)}; });
+  var per = Object.entries(sc).map(function(e) {
+    return {name:e[0], count:e[1], pct:Math.round(e[1]/cc*100), lastSeen:ls[e[0]]||null};
+  });
   return { cc:cc, total:total, avg: Math.round(total/cc*10)/10, uniq:us.size, per:per, daily:daily };
 }
 
@@ -1645,13 +1673,35 @@ function dh(v) {
   return '<div class="st-card-delta flat">\u2014</div>';
 }
 
-function stStudentRows(sorted, totalClasses) {
-  return sorted.map(function(x) { return '<div class="st-student-row">' +
-    '<div class="st-student-name">' + x.name + '</div>' +
-    '<div class="st-bar-wrap"><div class="st-bar-fill" style="width:' + x.pct + '%"></div></div>' +
-    '<div class="st-student-count">' + x.count + '/' + totalClasses + '</div>' +
-    '<div class="st-student-pct">' + x.pct + '%</div>' +
-  '</div>'; }).join('');
+function stStudentRows(sorted, totalClasses, opts) {
+  if (!opts) opts = {};
+  var today = new Date(todayStr() + 'T12:00:00');
+  var twoWeeksAgo = new Date(today);
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  var twoWeeksStr = fmtDate(twoWeeksAgo);
+
+  return sorted.map(function(x) {
+    var absent = x.lastSeen && x.lastSeen < twoWeeksStr;
+    var rowCls = 'st-student-row' + (absent ? ' st-student-row--absent' : '');
+
+    var lsDisplay = '\u2014';
+    if (x.lastSeen) {
+      var lsDate = new Date(x.lastSeen + 'T12:00:00');
+      lsDisplay = lsDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+    }
+
+    var barPct = opts.beltReadiness ? Math.min(100, Math.round(x.count / BELT_MIN_CLASSES * 100)) : x.pct;
+    var countLabel = opts.beltReadiness ? x.count + '/' + BELT_MIN_CLASSES : x.count + '/' + totalClasses;
+    var pctLabel = (opts.beltReadiness ? barPct : x.pct) + '%';
+
+    return '<div class="' + rowCls + '">' +
+      '<div class="st-student-name">' + x.name + '</div>' +
+      '<div class="st-bar-wrap"><div class="st-bar-fill" style="width:' + barPct + '%"></div></div>' +
+      '<div class="st-student-count">' + countLabel + '</div>' +
+      '<div class="st-student-pct">' + pctLabel + '</div>' +
+      '<div class="st-student-lastseen">' + lsDisplay + '</div>' +
+    '</div>';
+  }).join('');
 }
 
 function stRenderMonth() {
@@ -1661,11 +1711,24 @@ function stRenderMonth() {
 
   if(!s.cc){ document.getElementById('stContent').innerHTML='<div class="st-empty">No class data for this month yet.</div>'; return; }
 
+  var td = ps.cc>0 ? s.total - ps.total : null;
+  var ud = ps.cc>0 ? s.uniq - ps.uniq : null;
+  var cd = ps.cc>0 ? s.cc - ps.cc : null;
   var ad = ps.cc>0 ? Math.round((s.avg-ps.avg)*10)/10 : null;
-  var ud = ps.cc>0 ? s.uniq-ps.uniq : null;
 
   var sorted = s.per.slice();
-  sorted.sort(stSort==='count' ? function(a,b){return b.count-a.count;} : function(a,b){return a.name.localeCompare(b.name);});
+  if (stSort === 'count') {
+    sorted.sort(function(a,b) { return b.count - a.count; });
+  } else if (stSort === 'name') {
+    sorted.sort(function(a,b) { return a.name.localeCompare(b.name); });
+  } else {
+    sorted.sort(function(a,b) {
+      if (!a.lastSeen && !b.lastSeen) return 0;
+      if (!a.lastSeen) return 1;
+      if (!b.lastSeen) return -1;
+      return b.lastSeen.localeCompare(a.lastSeen);
+    });
+  }
 
   var mx = Math.max.apply(null, s.daily.map(function(d){return d.count;}).concat([1]));
   var bars = s.daily.map(function(d){
@@ -1680,10 +1743,10 @@ function stRenderMonth() {
 
   document.getElementById('stContent').innerHTML =
     '<div class="st-cards">' +
-      '<div class="st-card"><div class="st-card-label">Classes</div><div class="st-card-value">'+s.cc+'</div></div>' +
-      '<div class="st-card"><div class="st-card-label">Avg / Class</div><div class="st-card-value">'+s.avg+'</div>'+dh(ad)+'</div>' +
+      '<div class="st-card"><div class="st-card-label">Total Check-ins</div><div class="st-card-value">'+s.total+'</div>'+dh(td)+'</div>' +
       '<div class="st-card"><div class="st-card-label">Students</div><div class="st-card-value">'+s.uniq+'</div>'+dh(ud)+'</div>' +
-      '<div class="st-card"><div class="st-card-label">Check-ins</div><div class="st-card-value">'+s.total+'</div></div>' +
+      '<div class="st-card"><div class="st-card-label">Classes Held</div><div class="st-card-value">'+s.cc+'</div>'+dh(cd)+'</div>' +
+      '<div class="st-card"><div class="st-card-label">Avg Class Size</div><div class="st-card-value">'+s.avg+'</div>'+dh(ad)+'</div>' +
     '</div>' +
     '<div class="st-trend">' +
       '<div class="st-section-title">Attendance by class</div>' +
@@ -1692,8 +1755,8 @@ function stRenderMonth() {
     '</div>' +
     '<div class="st-table">' +
       '<div class="st-table-header">' +
-        '<div class="st-section-title" style="margin:0">Per student ('+sorted.length+')</div>' +
-        '<button class="st-sort-btn" onclick="stToggleSort()">Sort: '+(stSort==='count'?'# classes':'name')+'</button>' +
+        '<div class="st-section-title st-section-title--inline">Per student ('+sorted.length+')</div>' +
+        '<button class="st-sort-btn" onclick="stToggleSort()">Sort: '+stSortLabel()+'</button>' +
       '</div>' +
       stStudentRows(sorted, s.cc) +
     '</div>';
@@ -1714,12 +1777,26 @@ function stRenderCycle() {
   }
 
   var sorted = cycleStats.per.slice();
-  sorted.sort(stSort==='count' ? function(a,b){return b.count-a.count;} : function(a,b){return a.name.localeCompare(b.name);});
+  if (stSort === 'count') {
+    sorted.sort(function(a,b) { return b.count - a.count; });
+  } else if (stSort === 'name') {
+    sorted.sort(function(a,b) { return a.name.localeCompare(b.name); });
+  } else {
+    sorted.sort(function(a,b) {
+      if (!a.lastSeen && !b.lastSeen) return 0;
+      if (!a.lastSeen) return 1;
+      if (!b.lastSeen) return -1;
+      return b.lastSeen.localeCompare(a.lastSeen);
+    });
+  }
 
   var mc = perMonth.map(function(x) { return '<div class="st-cycle-month">' +
     '<div class="st-cycle-label">' + x.label + '</div>' +
-    '<div class="st-cycle-value">' + (x.s.cc > 0 ? x.s.avg : '\u2014') + '</div>' +
-    '<div class="st-cycle-sub">' + x.s.cc + ' classes</div>' +
+    (x.s.cc > 0
+      ? '<div class="st-cycle-month-stats">' + x.s.total + ' check-ins</div>' +
+        '<div class="st-cycle-sub">' + x.s.cc + ' classes</div>'
+      : '<div class="st-cycle-value">\u2014</div>' +
+        '<div class="st-cycle-sub">No classes</div>') +
   '</div>'; }).join('');
 
   document.getElementById('stContent').innerHTML =
@@ -1727,21 +1804,31 @@ function stRenderCycle() {
       mc +
       '<div class="st-cycle-total">' +
         '<div class="st-cycle-label">Cycle Total</div>' +
-        '<div class="st-cycle-value">' + cycleStats.avg + '</div>' +
-        '<div class="st-cycle-sub">avg / class \u00b7 ' + cycleStats.cc + ' classes \u00b7 ' + cycleStats.uniq + ' students</div>' +
+        '<div class="st-cycle-value">' + cycleStats.total + '</div>' +
+        '<div class="st-cycle-sub">' + cycleStats.total + ' check-ins \u00b7 ' + cycleStats.cc + ' classes \u00b7 ' + cycleStats.uniq + ' students \u00b7 ~' + cycleStats.avg + ' per class</div>' +
       '</div>' +
     '</div>' +
     '<div class="st-table">' +
       '<div class="st-table-header">' +
-        '<div class="st-section-title" style="margin:0">Per student (' + sorted.length + ')</div>' +
-        '<button class="st-sort-btn" onclick="stToggleSort()">Sort: ' + (stSort==='count'?'# classes':'name') + '</button>' +
+        '<div class="st-section-title st-section-title--inline">Per student (' + sorted.length + ')</div>' +
+        '<button class="st-sort-btn" onclick="stToggleSort()">Sort: ' + stSortLabel() + '</button>' +
       '</div>' +
-      stStudentRows(sorted, cycleStats.cc) +
+      stStudentRows(sorted, cycleStats.cc, {beltReadiness: true}) +
     '</div>';
 }
 
 function stSetView(v) { stView = v; stRender(); }
-function stToggleSort() { stSort = stSort==='count'?'name':'count'; stRender(); }
+function stToggleSort() {
+  if (stSort === 'count') stSort = 'name';
+  else if (stSort === 'name') stSort = 'lastseen';
+  else stSort = 'count';
+  stRender();
+}
+function stSortLabel() {
+  if (stSort === 'count') return '# classes';
+  if (stSort === 'name') return 'name';
+  return 'last seen';
+}
 
 // ═══════════════════════════════════
 // EVENT LISTENERS
