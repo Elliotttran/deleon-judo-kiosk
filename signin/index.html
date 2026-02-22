@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#C41E3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -31,13 +31,16 @@
       --font: 'Urbanist', -apple-system, sans-serif;
     }
 
-    html { -webkit-text-size-adjust: 100%; }
+    html {
+      -webkit-text-size-adjust: 100%;
+      height: 100%;
+    }
 
     body {
       font-family: var(--font);
-      background: var(--white);
+      background: #F7F5F2;
       color: var(--text);
-      min-height: 100dvh;
+      min-height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -47,116 +50,161 @@
     .container {
       width: 100%;
       max-width: 440px;
-      padding: 32px 24px 48px;
+      padding: 72px 24px 100px;
+      padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    /* ── Header ──────────────────────────────────────── */
-    .header {
-      text-align: center;
-      margin-bottom: 36px;
+    /* ── App Bar ─────────────────────────────────────── */
+    .app-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      padding-top: calc(12px + env(safe-area-inset-top, 0px));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      z-index: 30;
     }
 
-    .header__label {
-      font-size: 21px;
-      font-weight: 900;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 6px;
+    .app-bar__logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
-    .header__title {
-      font-size: 57px;
-      font-weight: 900;
-      color: var(--black);
-      letter-spacing: -0.5px;
-      line-height: 1.1;
+    .app-bar__title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: var(--text);
     }
 
-    .header__subtitle {
-      font-family: 'Mochiy Pop One', sans-serif;
-      font-size: 20px;
-      font-weight: 400;
-      color: var(--text-secondary);
-      margin-top: 5px;
-      letter-spacing: 1.5px;
-    }
-
-    /* ── Date Box (skeuomorphic calendar) ───────────── */
+    /* ── Date Box (日めくり calendar) ──────────────── */
     .date-box {
-      width: 164px;
-      border-radius: 16px;
+      width: 66%;
+      border-radius: 6px;
       margin-top: 8px;
       margin-bottom: 40px;
       overflow: hidden;
+      background: #f0efed;
+      border: 1px solid rgba(0,0,0,0.08);
       box-shadow:
-        0 8px 24px rgba(0,0,0,0.12),
-        0 2px 6px rgba(0,0,0,0.08),
-        0 1px 0 rgba(255,255,255,0.6) inset;
-      border: 1px solid rgba(0,0,0,0.06);
+        0 8px 24px rgba(0,0,0,0.10),
+        0 2px 6px rgba(0,0,0,0.06);
     }
 
-    .date-box__tab {
-      background: var(--red);
-      background: linear-gradient(180deg, #d42640 0%, #b01830 100%);
-      padding: 10px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow:
-        0 1px 0 rgba(255,255,255,0.15) inset,
-        0 -1px 3px rgba(0,0,0,0.1) inset;
-      border-bottom: 1px solid #8e1020;
-    }
-
-    .date-box__month-en {
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.95);
-    }
-
-    .date-box__month-jp {
-      font-family: 'Mochiy Pop One', sans-serif;
-      font-size: 13px;
-      font-weight: 400;
-      color: rgba(255,255,255,0.85);
+    .date-box__top-edge {
+      height: 6px;
+      background: linear-gradient(180deg, #d4d3d0 0%, #e8e7e4 100%);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
     }
 
     .date-box__body {
       background: #fff;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
-      padding: 16px 0 20px;
+      margin: 6px;
+      margin-top: 0;
+      display: grid;
+      grid-template-columns: 40px 1fr 40px;
+      grid-template-rows: auto 1fr;
+      position: relative;
+    }
+
+    .date-box__center {
+      grid-column: 1 / -1;
+      grid-row: 1;
       text-align: center;
-      box-shadow:
-        0 2px 8px rgba(0,0,0,0.04) inset;
+      padding: 64px 24px 60px;
+    }
+
+    .date-box__month {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--text);
+      position: relative;
+      display: inline-block;
+    }
+
+    .date-box__month::before {
+      content: '';
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(196, 30, 58, 0.15);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
     }
 
     .date-box__date {
-      font-size: 56px;
+      font-size: 140px;
       font-weight: 900;
       color: var(--black);
-      line-height: 1;
-      letter-spacing: -1px;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.05);
+      line-height: 0.9;
+      letter-spacing: -5px;
     }
 
-    .date-box__weekday {
-      font-size: 15px;
-      font-weight: 700;
+    .date-box__jp-left {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      font-size: 16px;
+      font-weight: 600;
       color: var(--text-secondary);
-      margin-top: 4px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
+      letter-spacing: 4px;
+      padding: 16px 0;
+      z-index: 1;
     }
 
-    .date-box__weekday-jp {
-      font-family: 'Mochiy Pop One', sans-serif;
-      font-weight: 400;
+    .date-box__jp-right {
+      grid-column: 3;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 4px;
+      padding: 16px 0;
+      z-index: 1;
+    }
+
+    .date-box__footer {
+      grid-column: 1 / -1;
+      display: flex;
+      border-top: 1px solid #e8e7e4;
+    }
+
+    .date-box__footer-cell {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .date-box__footer-cell + .date-box__footer-cell {
+      border-left: 1px solid #e8e7e4;
     }
 
     /* ── Form ────────────────────────────────────────── */
@@ -165,7 +213,7 @@
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 0;
     }
 
     .form-group label.field-label {
@@ -187,14 +235,14 @@
     .custom-select__trigger {
       width: 100%;
       height: 58px;
-      padding: 0 44px 0 18px;
+      padding: 0 44px 0 24px;
       font-family: var(--font);
       font-size: 18px;
       font-weight: 600;
       color: var(--text);
       background: var(--white);
       border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-full);
       text-align: left;
       cursor: pointer;
       transition: border-color 0.2s;
@@ -326,6 +374,7 @@
     .custom-select__footer {
       flex-shrink: 0;
       padding: 16px 24px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       border-top: 1px solid var(--border);
       text-align: center;
     }
@@ -403,7 +452,7 @@
       height: 64px;
       border: none;
       border-radius: var(--radius-full);
-      background: linear-gradient(90deg, var(--red), #e8334a, var(--yellow), #e8334a, var(--red));
+      background: linear-gradient(90deg, var(--red), #d42a4a, #e8a0b0, #d42a4a, var(--red));
       background-size: 300% 100%;
       color: var(--white);
       font-family: var(--font);
@@ -412,7 +461,7 @@
       letter-spacing: 0.3px;
       cursor: pointer;
       transition: transform 0.1s;
-      margin-top: 20px;
+      margin-top: 16px;
       box-shadow: 0 4px 16px rgba(196, 30, 58, 0.25);
       animation: btn-gradient 4s ease infinite;
     }
@@ -813,15 +862,22 @@
       }
     }
 
+    /* ── Phones (under 768px portrait) ───────────────── */
+    @media (max-width: 767px) and (orientation: portrait) {
+      .date-box { width: 80%; }
+      .date-box__center { padding: 40px 24px 36px; }
+      .date-box__date { font-size: 120px; }
+    }
+
     /* ── Small phones (under 380px) ──────────────────── */
     @media (max-width: 380px) {
-      .container { padding: 24px 16px 36px; }
-      .header__label { font-size: 16px; letter-spacing: 3px; }
-      .header__title { font-size: 40px; }
-      .header__subtitle { font-size: 16px; }
-      .date-box { width: 140px; }
-      .date-box__date { font-size: 44px; }
-      .date-box__weekday { font-size: 13px; }
+      .container { padding: 48px 16px 72px; }
+      .date-box { width: 90%; }
+      .date-box__date { font-size: 100px; }
+      .date-box__center { padding: 32px 16px 28px; }
+      .date-box__month { font-size: 13px; }
+      .date-box__jp-left, .date-box__jp-right { font-size: 13px; }
+      .date-box__footer-cell { font-size: 12px; }
       .custom-select__trigger { height: 52px; font-size: 16px; }
       .custom-select__item { height: 48px; font-size: 16px; padding: 0 16px; }
       input[type="text"] { height: 52px; font-size: 16px; }
@@ -836,27 +892,24 @@
       body { align-items: flex-start; }
       .container {
         max-width: 560px;
-        padding: 16px 24px 24px;
+        padding: 48px 24px 72px;
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
         gap: 0 32px;
       }
-      .header {
-        width: 100%;
-        margin-bottom: 16px;
-      }
-      .header__title { font-size: 36px; }
-      .header__label { font-size: 16px; }
-      .header__subtitle { font-size: 15px; }
       .date-box {
-        width: 130px;
+        width: 160px;
         margin-top: 0;
         margin-bottom: 0;
         align-self: center;
       }
-      .date-box__date { font-size: 40px; }
-      .date-box__body { padding: 12px 0 16px; }
+      .date-box__date { font-size: 48px; }
+      .date-box__month { font-size: 9px; letter-spacing: 2px; }
+      .date-box__jp-left, .date-box__jp-right { font-size: 10px; display: none; }
+      .date-box__footer-cell { font-size: 9px; padding: 6px 0; }
+      .date-box__center { padding: 12px 8px 8px; }
+      .date-box__body { grid-template-columns: 1fr; }
       .form-area {
         flex: 1;
         min-width: 240px;
@@ -876,23 +929,18 @@
     @media (min-width: 768px) and (orientation: portrait) {
       .container {
         max-width: 520px;
-        padding: 48px 32px 64px;
+        padding: 56px 32px 80px;
       }
-      .header { margin-bottom: 44px; }
-      .header__label { font-size: 24px; letter-spacing: 5px; }
-      .header__title { font-size: 68px; }
-      .header__subtitle { font-size: 24px; margin-top: 8px; }
       .date-box {
-        width: 190px;
-        border-radius: 18px;
+        width: 100%;
+        border-radius: 8px;
         margin-bottom: 48px;
       }
-      .date-box__tab { padding: 12px 20px; }
-      .date-box__month-en { font-size: 14px; }
-      .date-box__month-jp { font-size: 15px; }
-      .date-box__date { font-size: 64px; }
-      .date-box__weekday { font-size: 17px; }
-      .date-box__body { padding: 20px 0 24px; }
+      .date-box__month { font-size: 19px; }
+      .date-box__date { font-size: 180px; }
+      .date-box__jp-left, .date-box__jp-right { font-size: 18px; }
+      .date-box__footer-cell { font-size: 16px; }
+      .date-box__center { padding: 64px 40px 60px; }
       .custom-select__trigger { height: 64px; font-size: 20px; padding: 0 48px 0 20px; }
       .custom-select__header { padding: 20px 24px; }
       .custom-select__dropdown-title { font-size: 22px; }
@@ -914,20 +962,18 @@
     @media (min-width: 1024px) and (orientation: landscape) {
       .container {
         max-width: 560px;
-        padding: 48px 40px 64px;
+        padding: 56px 40px 80px;
       }
-      .header { margin-bottom: 40px; }
-      .header__label { font-size: 22px; }
-      .header__title { font-size: 64px; }
-      .header__subtitle { font-size: 22px; }
       .date-box {
-        width: 180px;
-        border-radius: 18px;
+        width: 100%;
+        border-radius: 8px;
         margin-bottom: 44px;
       }
-      .date-box__date { font-size: 60px; }
-      .date-box__weekday { font-size: 16px; }
-      .date-box__body { padding: 20px 0 24px; }
+      .date-box__month { font-size: 19px; }
+      .date-box__date { font-size: 180px; }
+      .date-box__jp-left, .date-box__jp-right { font-size: 18px; }
+      .date-box__footer-cell { font-size: 16px; }
+      .date-box__center { padding: 64px 40px 60px; }
       .custom-select__trigger { height: 62px; font-size: 20px; }
       .custom-select__header { padding: 20px 24px; }
       .custom-select__dropdown-title { font-size: 21px; }
@@ -953,6 +999,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 8px 16px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
       font-size: 12px;
       font-weight: 600;
       color: var(--text-secondary);
@@ -995,23 +1042,27 @@
   </div>
 </div>
 
-<div class="container">
-  <header class="header" role="banner">
-    <div class="header__label">DeLeon Judo Club</div>
-    <h1 class="header__title">CLUB SIGN IN</h1>
-    <div class="header__subtitle">デレオン柔道会</div>
-  </header>
+<header class="app-bar" role="banner">
+  <img class="app-bar__logo" src="logo.svg" alt="" aria-hidden="true">
+  <div class="app-bar__title">DeLeon Judo Club</div>
+</header>
 
+<div class="container">
   <div class="offline-banner" id="offlineBanner" role="alert">You're offline — check-in will sync when reconnected.</div>
 
   <div class="date-box" aria-label="Current class date">
-    <div class="date-box__tab">
-      <span class="date-box__month-en" id="monthDisplayEn"></span>
-      <span class="date-box__month-jp" id="monthDisplayJp"></span>
-    </div>
+    <div class="date-box__top-edge"></div>
     <div class="date-box__body">
-      <div class="date-box__date" id="dateDisplay"></div>
-      <div class="date-box__weekday" id="weekdayDisplay"></div>
+      <div class="date-box__jp-left" id="jpLeftDisplay"></div>
+      <div class="date-box__center">
+        <div class="date-box__month" id="monthDisplay"></div>
+        <div class="date-box__date" id="dateDisplay"></div>
+      </div>
+      <div class="date-box__jp-right" id="jpRightDisplay"></div>
+      <div class="date-box__footer">
+        <div class="date-box__footer-cell" id="weekdayDisplay"></div>
+        <div class="date-box__footer-cell" id="yearDisplay"></div>
+      </div>
     </div>
   </div>
 
@@ -1041,9 +1092,7 @@
     </button>
   </form>
 
-  <footer class="footer">
-    <div class="footer__location">Petaluma, CA</div>
-  </footer>
+  <footer class="footer"></footer>
 </div>
 
 <!-- Bottom Sheet -->
@@ -1152,10 +1201,13 @@ function updateDateTime() {
   var now = new Date();
   var dayIdx = now.getDay();
   var monthIdx = now.getMonth();
-  document.getElementById('monthDisplayEn').textContent = MONTHS_EN[monthIdx];
-  document.getElementById('monthDisplayJp').textContent = MONTHS_JP[monthIdx];
-  document.getElementById('dateDisplay').textContent = now.getDate();
-  document.getElementById('weekdayDisplay').textContent = DAYS_EN[dayIdx] + ' ' + DAYS_JP[dayIdx];
+  var date = now.getDate();
+  document.getElementById('yearDisplay').textContent = now.getFullYear();
+  document.getElementById('monthDisplay').textContent = MONTHS_EN[monthIdx];
+  document.getElementById('dateDisplay').textContent = date;
+  document.getElementById('weekdayDisplay').textContent = DAYS_EN[dayIdx];
+  document.getElementById('jpLeftDisplay').textContent = DAYS_JP[dayIdx] + '曜日';
+  document.getElementById('jpRightDisplay').textContent = (monthIdx + 1) + '月' + date + '日';
 }
 updateDateTime();
 setInterval(updateDateTime, 60000);
