@@ -81,7 +81,8 @@ body {
 
 /* ── Page containers ── */
 .page { display: none; }
-.page.active { display: block; }
+.page.active { display: flex; flex-direction: column; min-height: calc(100dvh - 90px); }
+.si-past.page.active { background: var(--past-bg); }
 
 /* ═══════════════════════════════════════════
    SIGN IN PAGE
@@ -89,6 +90,7 @@ body {
 .si-header {
   background: var(--white);
   padding: 28px 24px 0;
+  width: 100%;
   transition: background 0.25s, color 0.25s;
 }
 
@@ -163,7 +165,7 @@ body {
 .btn-outline:hover { border-color: #aaa; }
 
 /* Roster list */
-.si-roster { background: var(--white); min-height: 50vh; padding-bottom: 20px; transition: background 0.25s; }
+.si-roster { background: var(--white); flex: 1; width: 100%; padding-bottom: 20px; transition: background 0.25s; }
 
 .si-row {
   display: flex; align-items: center; gap: 14px;
@@ -218,8 +220,8 @@ body {
 .si-past .si-weekday { color: var(--past-text-light); }
 .si-past .si-count { color: var(--past-text-mid); }
 .si-past .si-arrow { color: var(--past-text-mid); }
-.si-past .si-roster { background: var(--past-surface); }
-.si-past .si-row { background: var(--past-surface); border-bottom-color: var(--past-divider); }
+.si-past .si-roster { background: var(--past-bg); }
+.si-past .si-row { background: var(--past-bg); border-bottom-color: var(--past-divider); }
 .si-past .si-row.present { background: var(--past-green-row); border-bottom-color: rgba(22,163,74,0.15); }
 .si-past .si-row:not(.present) .si-name { color: var(--past-text-mid); }
 .si-past .si-row.present .si-name { color: var(--past-text); }
@@ -280,7 +282,7 @@ body.past-mode .tab.active { color: #ccc; }
   color: #fff; background: var(--green);
 }
 
-.ro-list { background: var(--white); min-height: 50vh; padding-bottom: 20px; }
+.ro-list { background: var(--white); flex: 1; padding-bottom: 20px; }
 
 .ro-add-btn {
   width: 100%; padding: 16px; font-size: 17px; text-align: center;
@@ -757,7 +759,7 @@ body.past-mode .tab.active { color: #ccc; }
 /* ── Sync status bar ── */
 .si-sync {
   display: flex; align-items: center; gap: 10px;
-  padding: 14px 24px;
+  padding: 14px 24px; width: 100%;
   font-size: 16px; font-weight: 700;
   color: var(--text-light);
   background: var(--white);
@@ -773,6 +775,7 @@ body.past-mode .tab.active { color: #ccc; }
 .si-sync-dot.red { background: var(--red); }
 
 .si-sync-text { flex: 1; }
+.si-sync-version { font-size: 13px; font-weight: 500; color: #bbb; }
 
 .si-sync-retry {
   font-family: var(--font); font-size: 15px; font-weight: 700;
@@ -919,6 +922,7 @@ body.past-mode .tab.active { color: #ccc; }
     <div class="si-sync-dot green" id="siSyncDot"></div>
     <div class="si-sync-text" id="siSyncText">All saved</div>
     <button class="si-sync-retry" id="siSyncRetry" onclick="siRetrySync()">Retry</button>
+    <div class="si-sync-version" id="siSyncVersion"></div>
   </div>
   <div class="si-header">
     <div class="si-brand">Club Sign In</div>
@@ -959,12 +963,12 @@ body.past-mode .tab.active { color: #ccc; }
     <div class="modal-title" id="roAddTitle">Add Student</div>
     <div class="modal-body" id="roAddBody">
       <div class="ro-field">
-        <label class="ro-label">Last name</label>
-        <input class="ro-modal-input" id="roLastName" type="text" placeholder="e.g. Tanaka" autocomplete="off">
+        <label class="ro-label">First name</label>
+        <input class="ro-modal-input" id="roFirstName" type="text" placeholder="e.g. Yuki" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" data-form-type="other" data-lpignore="true">
       </div>
       <div class="ro-field">
-        <label class="ro-label">First name</label>
-        <input class="ro-modal-input" id="roFirstName" type="text" placeholder="e.g. Yuki" autocomplete="off">
+        <label class="ro-label">Last name</label>
+        <input class="ro-modal-input" id="roLastName" type="text" placeholder="e.g. Tanaka" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" data-form-type="other" data-lpignore="true">
       </div>
     </div>
     <div class="modal-actions" id="roAddActions">
@@ -1059,6 +1063,7 @@ body.past-mode .tab.active { color: #ccc; }
 // ═══════════════════════════════════
 // SHARED STATE & HELPERS
 // ═══════════════════════════════════
+const APP_VERSION = 'v1.1';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 const WRITE_KEY = '1970';
 
@@ -1642,33 +1647,33 @@ var editingStudent = null;
 
 function roShowAdd() {
   editingStudent = null;
-  document.getElementById('roLastName').value = '';
   document.getElementById('roFirstName').value = '';
-  document.getElementById('roLastName').classList.remove('error');
+  document.getElementById('roLastName').value = '';
   document.getElementById('roFirstName').classList.remove('error');
+  document.getElementById('roLastName').classList.remove('error');
   document.getElementById('roAddTitle').textContent = 'Add Student';
   document.getElementById('roAddBtn').textContent = 'Add';
   document.getElementById('roAddBody').style.display = '';
   document.getElementById('roAddActions').style.display = '';
   document.getElementById('roAddSuccess').style.display = 'none';
   document.getElementById('roAddOverlay').classList.add('show');
-  setTimeout(function() { document.getElementById('roLastName').focus(); }, 200);
+  setTimeout(function() { document.getElementById('roFirstName').focus(); }, 200);
 }
 
 function roEdit(name) {
   editingStudent = name;
   var parts = name.split(', ');
-  document.getElementById('roLastName').value = parts[0] || '';
   document.getElementById('roFirstName').value = parts[1] || '';
-  document.getElementById('roLastName').classList.remove('error');
+  document.getElementById('roLastName').value = parts[0] || '';
   document.getElementById('roFirstName').classList.remove('error');
+  document.getElementById('roLastName').classList.remove('error');
   document.getElementById('roAddTitle').textContent = 'Edit Student';
   document.getElementById('roAddBtn').textContent = 'Save';
   document.getElementById('roAddBody').style.display = '';
   document.getElementById('roAddActions').style.display = '';
   document.getElementById('roAddSuccess').style.display = 'none';
   document.getElementById('roAddOverlay').classList.add('show');
-  setTimeout(function() { document.getElementById('roLastName').focus(); }, 200);
+  setTimeout(function() { document.getElementById('roFirstName').focus(); }, 200);
 }
 
 function roEditConfirm() {
@@ -2270,6 +2275,7 @@ window.addEventListener('online', function() {
 // INIT
 // ═══════════════════════════════════
 siInit();
+document.getElementById('siSyncVersion').textContent = APP_VERSION;
 if (isUnlocked()) {
   document.getElementById('pinScreen').classList.add('hidden');
   siRender();

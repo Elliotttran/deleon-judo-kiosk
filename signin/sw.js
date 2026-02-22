@@ -1,5 +1,5 @@
 // DeLeon Judo Club — Sign-In Service Worker
-const CACHE_NAME = 'deleon-signin-v4';
+const CACHE_NAME = 'deleon-signin-v5';
 const STATIC_ASSETS = ['./', './index.html'];
 
 self.addEventListener('install', function (event) {
