@@ -1027,7 +1027,7 @@
 // ═══════════════════════════════════════════════════
 // CONFIG — paste your deployed Apps Script URL here
 // ═══════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 
 // ═══════════════════════════════════════════════════
 // DATE & TIME
@@ -1118,7 +1118,7 @@ async function loadRoster() {
   }
 }
 
-if (APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+if (APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') {
   loadRoster();
 } else {
   console.warn('DeLeon Judo: APPS_SCRIPT_URL not configured. Set it to your deployed Apps Script URL.');
@@ -1317,7 +1317,7 @@ function saveToQueue(entry) {
 }
 
 async function flushQueue() {
-  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') return;
   var q = getQueue();
   if (!q.length) return;
   var remaining = [];
@@ -1478,7 +1478,7 @@ function shouldShowDuesPrompt(firstName, lastName) {
   if (!isDuesEnabled()) return false;
   var day = new Date().getDate();
   if (day >= 24) return 'headsup';
-  if (day <= 22) { // TODO: revert to day <= 10 after testing
+  if (day <= 10) {
     if (isDuesPaid(firstName, lastName, getCurrentMonthKey())) return false;
     return 'paycheck';
   }
@@ -1566,7 +1566,7 @@ submitBtn.addEventListener('click', async function(e) {
     submitBtn.classList.add('loading'); submitBtn.disabled = true;
     showSheet('waiting');
 
-    if (navigator.onLine && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+    if (navigator.onLine && APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') {
       var controller = new AbortController();
       var timeout = setTimeout(function() { controller.abort(); }, 8000);
       try {
@@ -1633,7 +1633,7 @@ document.getElementById('duesPaidYes').addEventListener('click', function() {
       month: getCurrentMonthKey(),
       date: fmtDate(new Date())
     });
-    if (navigator.onLine && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+    if (navigator.onLine && APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') {
       flushQueue().catch(function() {});
     }
   }
@@ -1649,7 +1649,7 @@ document.getElementById('retryBtn').addEventListener('click', async function() {
   showSheet('waiting');
 
   try {
-    if (navigator.onLine && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+    if (navigator.onLine && APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') {
       var controller = new AbortController();
       var timeout = setTimeout(function() { controller.abort(); }, 8000);
       try {
@@ -1681,7 +1681,7 @@ duesOverlay.addEventListener('click', closeDuesPrompt);
 // INIT
 // ═══════════════════════════════════════════════════
 try {
-  if (navigator.onLine && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') flushQueue().catch(function() {});
+  if (navigator.onLine && APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') flushQueue().catch(function() {});
 } catch (e) { /* init flush error */ }
 
 if ('serviceWorker' in navigator) {

@@ -1004,7 +1004,7 @@ body.past-mode .tab.active { color: #ccc; }
 // ═══════════════════════════════════
 // SHARED STATE & HELPERS
 // ═══════════════════════════════════
-const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 const WRITE_KEY = 'YOUR_WRITE_KEY_HERE';
 
 const CLASS_DAYS = [2, 4]; // Tue, Thu (graded days)
@@ -1116,7 +1116,7 @@ function queueChange(change) {
 }
 
 async function flushSyncQueue() {
-  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return true;
+  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') return true;
   if (!navigator.onLine) return false;
   var q = getSyncQueue();
   if (!q.length) return true;
@@ -1188,7 +1188,7 @@ function siRetrySync() {
 // SERVER DATA LOADING
 // ═══════════════════════════════════
 async function loadFromServer() {
-  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') return;
   if (!navigator.onLine) return;
   try {
     var results = await Promise.all([
