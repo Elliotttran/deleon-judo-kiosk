@@ -1,7 +1,7 @@
 {
-  "name": "DeLeon Judo Club",
+  "name": "DeLeon Judo Club - Kiosk Sign In",
   "short_name": "Judo Sign In",
-  "description": "Student check-in for DeLeon Judo Club",
+  "description": "DeLeon Judo Club - Kiosk Sign In",
   "start_url": "/signin/",
   "scope": "/signin/",
   "display": "standalone",
@@ -10,8 +10,8 @@
   "theme_color": "#C41E3A",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23C41E3A'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='260' fill='white'%3E%E6%9F%94%3C/text%3E%3C/svg%3E",
-      "sizes": "512x512",
+      "src": "logo.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
