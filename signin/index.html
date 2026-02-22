@@ -1,1947 +1,2600 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#C41E3A">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Judo Sign In">
-  <link rel="manifest" href="manifest.json">
-  <title>DeLeon Judo Club – Sign In</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Urbanist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --red: #C41E3A;
-      --red-hover: #a8182f;
-      --black: #1a1a1a;
-      --yellow: #FFD700;
-      --white: #ffffff;
-      --input-bg: #f8f8f8;
-      --text: #2d2d2d;
-      --text-secondary: #717171;
-      --border: #ddd;
-      --radius-sm: 12px;
-      --radius-lg: 16px;
-      --radius-full: 28px;
-      --font: 'Urbanist', -apple-system, sans-serif;
-    }
-
-    html {
-      -webkit-text-size-adjust: 100%;
-      height: 100%;
-    }
-
-    body {
-      font-family: var(--font);
-      background: #F7F5F2;
-      color: var(--text);
-      min-height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 440px;
-      padding: 72px 24px 100px;
-      padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    /* ── App Bar ─────────────────────────────────────── */
-    .app-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 16px;
-      padding-top: calc(12px + env(safe-area-inset-top, 0px));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      z-index: 30;
-    }
-
-    .app-bar__logo {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .app-bar__title {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.3px;
-      color: var(--text);
-    }
-
-    /* ── Date Box (日めくり calendar) ──────────────── */
-    .date-box {
-      width: 66%;
-      border-radius: 6px;
-      margin-top: 8px;
-      margin-bottom: 40px;
-      overflow: hidden;
-      background: #f0efed;
-      border: 1px solid rgba(0,0,0,0.08);
-      box-shadow:
-        0 8px 24px rgba(0,0,0,0.10),
-        0 2px 6px rgba(0,0,0,0.06);
-    }
-
-    .date-box__top-edge {
-      height: 6px;
-      background: linear-gradient(180deg, #d4d3d0 0%, #e8e7e4 100%);
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-    }
-
-    .date-box__body {
-      background: #fff;
-      margin: 6px;
-      margin-top: 0;
-      display: grid;
-      grid-template-columns: 40px 1fr 40px;
-      grid-template-rows: auto 1fr;
-      position: relative;
-    }
-
-    .date-box__center {
-      grid-column: 1 / -1;
-      grid-row: 1;
-      text-align: center;
-      padding: 64px 24px 60px;
-    }
-
-    .date-box__month {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--text);
-      position: relative;
-      display: inline-block;
-    }
-
-    .date-box__month::before {
-      content: '';
-      position: absolute;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(196, 30, 58, 0.15);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 0;
-    }
-
-    .date-box__date {
-      font-size: 140px;
-      font-weight: 900;
-      color: var(--black);
-      line-height: 0.9;
-      letter-spacing: -5px;
-    }
-
-    .date-box__jp-left {
-      grid-column: 1;
-      grid-row: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      writing-mode: vertical-rl;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      letter-spacing: 4px;
-      padding: 16px 0;
-      z-index: 1;
-    }
-
-    .date-box__jp-right {
-      grid-column: 3;
-      grid-row: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      writing-mode: vertical-rl;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      letter-spacing: 4px;
-      padding: 16px 0;
-      z-index: 1;
-    }
-
-    .date-box__footer {
-      grid-column: 1 / -1;
-      display: flex;
-      border-top: 1px solid #e8e7e4;
-    }
-
-    .date-box__footer-cell {
-      flex: 1;
-      text-align: center;
-      padding: 12px 0;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-    }
-
-    .date-box__footer-cell + .date-box__footer-cell {
-      border-left: 1px solid #e8e7e4;
-    }
-
-    /* ── Form ────────────────────────────────────────── */
-    .form-area {
-      width: 100%;
-    }
-
-    .form-group {
-      margin-bottom: 0;
-    }
-
-    .form-group label.field-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.8px;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-
-    /* Custom Select */
-    .custom-select {
-      position: relative;
-      width: 100%;
-    }
-
-    .custom-select__trigger {
-      width: 100%;
-      height: 58px;
-      padding: 0 44px 0 24px;
-      font-family: var(--font);
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text);
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-full);
-      text-align: left;
-      cursor: pointer;
-      transition: border-color 0.2s;
-      position: relative;
-    }
-
-    .custom-select__trigger::after {
-      content: '';
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 6px solid var(--red);
-      pointer-events: none;
-      transition: transform 0.2s;
-    }
-
-    .custom-select.open .custom-select__trigger::after {
-      transform: translateY(-50%) rotate(180deg);
-    }
-
-    .custom-select__trigger.placeholder {
-      color: var(--text-secondary);
-    }
-
-    .custom-select__trigger:focus {
-      border-color: var(--yellow);
-      outline: none;
-    }
-
-    .custom-select__dropdown {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: var(--white);
-      z-index: 40;
-      flex-direction: column;
-    }
-
-    .custom-select.open .custom-select__dropdown {
-      display: flex;
-      animation: panelSlideUp 0.25s ease-out;
-    }
-
-    @keyframes panelSlideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-
-    .custom-select__header {
-      display: flex;
-      align-items: center;
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .custom-select__back {
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      cursor: pointer;
-      margin-right: 8px;
-      border-radius: 50%;
-      transition: background 0.15s;
-    }
-
-    .custom-select__back:active {
-      background: #f0f0f0;
-    }
-
-    .custom-select__back svg {
-      width: 24px;
-      height: 24px;
-      stroke: var(--text);
-      stroke-width: 2.5;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .custom-select__dropdown-title {
-      font-family: var(--font);
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--text);
-    }
-
-    .custom-select__list {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .custom-select__item {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      height: 56px;
-      padding: 0 24px;
-      font-family: var(--font);
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text);
-      background: none;
-      border: none;
-      border-bottom: 1px solid #f0f0f0;
-      cursor: pointer;
-      text-align: left;
-      transition: background 0.15s;
-    }
-
-    .custom-select__item:last-child {
-      border-bottom: none;
-    }
-
-    .custom-select__item:active {
-      background: #f0f0f0;
-    }
-
-    .custom-select__footer {
-      flex-shrink: 0;
-      padding: 16px 24px;
-      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-      border-top: 1px solid var(--border);
-      text-align: center;
-    }
-
-    .custom-select__other {
-      background: none;
-      border: none;
-      font-family: var(--font);
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 10px 0;
-    }
-
-    .custom-select__other span {
-      color: var(--red);
-      text-decoration: underline;
-    }
-
-    .custom-select__other:active {
-      color: var(--text);
-    }
-
-    .custom-select__other:active span {
-      color: var(--red-hover);
-    }
-
-    body.picker-open {
-      overflow: hidden;
-    }
-
-    /* Text inputs */
-    input[type="text"] {
-      width: 100%;
-      height: 58px;
-      padding: 0 16px;
-      font-family: var(--font);
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text);
-      background: var(--input-bg);
-      border: 2px solid transparent;
-      border-radius: var(--radius-sm);
-      outline: none;
-      appearance: none;
-      -webkit-appearance: none;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus {
-      border-color: transparent;
-      outline: none;
-      background:
-        linear-gradient(var(--input-bg), var(--input-bg)) padding-box,
-        linear-gradient(90deg, var(--red), var(--yellow), var(--red), var(--yellow)) border-box;
-      background-size: 100% 100%, 300% 100%;
-      animation: gradient-border 3s ease infinite;
-    }
-
-    @keyframes gradient-border {
-      0%   { background-position: 0 0, 0% 0; }
-      50%  { background-position: 0 0, 100% 0; }
-      100% { background-position: 0 0, 0% 0; }
-    }
-
-    input::placeholder {
-      color: #b0b0b0;
-      font-weight: 500;
-    }
-
-    /* ── Submit Button ───────────────────────────────── */
-    .submit-btn {
-      width: 100%;
-      height: 64px;
-      border: none;
-      border-radius: var(--radius-full);
-      background: linear-gradient(90deg, var(--red), #d42a4a, #e8a0b0, #d42a4a, var(--red));
-      background-size: 300% 100%;
-      color: var(--white);
-      font-family: var(--font);
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      transition: transform 0.1s;
-      margin-top: 16px;
-      box-shadow: 0 4px 16px rgba(196, 30, 58, 0.25);
-      animation: btn-gradient 4s ease infinite;
-    }
-
-    @keyframes btn-gradient {
-      0%   { background-position: 0% 0; }
-      50%  { background-position: 100% 0; }
-      100% { background-position: 0% 0; }
-    }
-
-    .submit-btn:hover { background-size: 300% 100%; }
-    .submit-btn:active { transform: scale(0.985); }
-
-    .submit-btn:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-      animation: none;
-      background: var(--red);
-    }
-
-    /* Button states */
-    .submit-btn .btn-text-ready { display: none; }
-    .submit-btn .btn-text-waiting { display: inline; }
-
-    .submit-btn.ready .btn-text-ready { display: inline; }
-    .submit-btn.ready .btn-text-waiting { display: none; }
-
-    .submit-btn.ready {
-      animation: comeAlive 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-                 btn-gradient 4s ease infinite;
-    }
-
-    @keyframes comeAlive {
-      0% { transform: scale(0.95); opacity: 0.5; }
-      50% { transform: scale(1.04); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .submit-btn .spinner {
-      display: none;
-      width: 22px;
-      height: 22px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: var(--white);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
-    .submit-btn.loading .btn-text-waiting { display: none; }
-    .submit-btn.loading .btn-text-ready { display: none; }
-    .submit-btn.loading .spinner { display: inline-block; }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Modal Overlay ─────────────────────────────────── */
-    .sheet-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0);
-      z-index: 50;
-      pointer-events: none;
-      transition: background 0.3s ease;
-    }
-
-    .sheet-overlay.visible {
-      background: rgba(0,0,0,0.4);
-      pointer-events: auto;
-    }
-
-    /* ── Modal ────────────────────────────────────────── */
-    .sheet {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      z-index: 51;
-      background: var(--white);
-      border-radius: 20px;
-      padding: 40px 36px 36px;
-      transform: translate(-50%, -50%) scale(0);
-      opacity: 0;
-      width: calc(100% - 48px);
-      max-width: 400px;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.16);
-      pointer-events: none;
-    }
-
-    .sheet.visible {
-      animation: modalPop 0.5s cubic-bezier(0.34, 1.9, 0.64, 1) forwards;
-      pointer-events: auto;
-    }
-
-    .sheet.visible.subtle {
-      animation: modalFade 0.25s ease-out forwards;
-    }
-
-    @keyframes modalFade {
-      0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0; }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-
-    @keyframes modalPop {
-      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-      60% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
-      80% { transform: translate(-50%, -50%) scale(0.97); }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-
-    /* Error shake */
-    .sheet.shake {
-      animation: modalPop 0.5s cubic-bezier(0.34, 1.9, 0.64, 1) forwards,
-                 shake 0.4s 0.1s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translate(-50%, -50%) scale(1) translateX(0); }
-      20% { transform: translate(-50%, -50%) scale(1) translateX(-18px); }
-      40% { transform: translate(-50%, -50%) scale(1) translateX(16px); }
-      60% { transform: translate(-50%, -50%) scale(1) translateX(-10px); }
-      80% { transform: translate(-50%, -50%) scale(1) translateX(4px); }
-    }
-
-    .sheet.closing {
-      animation: modalClose 0.2s ease-in forwards;
-      pointer-events: none;
-    }
-
-    @keyframes modalClose {
-      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-      100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
-    }
-
-    /* ── Confetti ─────────────────────────────────────── */
-    .confetti-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 52;
-      pointer-events: none;
-    }
-
-    .sheet__icon {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      background: var(--red);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      animation: popIn 0.4s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    }
-
-    @keyframes popIn {
-      0% { transform: scale(0); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .sheet__icon svg {
-      width: 36px;
-      height: 36px;
-      stroke: var(--white);
-      stroke-width: 3;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .sheet__title {
-      text-align: center;
-      font-size: 26px;
-      font-weight: 900;
-      color: var(--black);
-      margin-bottom: 6px;
-    }
-
-    .sheet__message {
-      text-align: center;
-      font-size: 20px;
-      color: var(--text-secondary);
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
-    .sheet__message .success-name {
-      color: var(--red);
-      font-weight: 700;
-    }
-
-    .sheet__btn {
-      display: block;
-      width: 100%;
-      height: 56px;
-      margin-top: 28px;
-      border: none;
-      border-radius: var(--radius-full);
-      background: var(--black);
-      color: var(--white);
-      font-family: var(--font);
-      font-size: 18px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .sheet__btn:hover { background: #333; }
-    .sheet__btn:active { transform: scale(0.97); }
-
-    /* Sheet states */
-    .sheet__state { display: none; }
-    .sheet__state.active { display: block; }
-
-    .sheet__icon--error {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      background: var(--black);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-    }
-
-    .sheet__icon--error svg {
-      width: 36px;
-      height: 36px;
-      stroke: var(--white);
-      stroke-width: 3;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .sheet__spinner-wrap {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .sheet__spinner {
-      width: 48px;
-      height: 48px;
-      border: 4px solid var(--border);
-      border-top-color: var(--red);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    .sheet__btn--retry {
-      display: block;
-      width: 100%;
-      height: 56px;
-      margin-top: 28px;
-      border: none;
-      border-radius: var(--radius-full);
-      background: var(--red);
-      color: var(--white);
-      font-family: var(--font);
-      font-size: 18px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .sheet__btn--retry:hover { background: var(--red-hover); }
-    .sheet__btn--retry:active { transform: scale(0.97); }
-
-    /* Sheet spacing modifiers */
-    .sheet__title--spaced { margin-bottom: 24px; }
-    .sheet__btn--follow  { margin-top: 14px; }
-    .sheet__btn--compact { margin-top: 8px; }
-    .sheet__btn--snug    { margin-top: 12px; }
-
-    /* Dues prompt */
-    .dues-state { display: none; }
-    .dues-state.active { display: block; text-align: center; }
-    .dues-icon {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: var(--yellow); color: var(--black);
-      font-size: 32px; font-weight: 900;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px;
-    }
-
-    /* ── Footer ──────────────────────────────────────── */
-    .footer {
-      text-align: center;
-      margin-top: 44px;
-    }
-
-    .footer__location {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--red);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    /* ── Error Toast ─────────────────────────────────── */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--black);
-      color: var(--white);
-      padding: 14px 24px;
-      border-radius: var(--radius-full);
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 600;
-      z-index: 100;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      white-space: nowrap;
-    }
-
-    .toast.visible { transform: translateX(-50%) translateY(0); }
-
-    .toast.toast--dues {
-      white-space: normal;
-      width: 90vw;
-      max-width: 500px;
-      padding: 20px 32px;
-      font-size: 18px;
-      border-radius: 16px;
-      text-align: center;
-      line-height: 1.4;
-    }
-
-    /* ── Pull to Refresh ─────────────────────────────── */
-    .ptr {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      z-index: 50;
-      pointer-events: none;
-    }
-
-    .ptr__indicator {
-      background: var(--white);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      transform: translateY(-50px);
-      transition: transform 0.2s ease;
-    }
-
-    .ptr__indicator svg {
-      width: 20px;
-      height: 20px;
-      stroke: var(--red);
-      fill: none;
-      stroke-width: 2.5;
-      stroke-linecap: round;
-    }
-
-    .ptr--loading .ptr__indicator {
-      transform: translateY(16px);
-    }
-
-    .ptr--loading .ptr__indicator svg {
-      animation: ptr-spin 0.8s linear infinite;
-    }
-
-    @keyframes ptr-spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* ── Offline Banner ──────────────────────────────── */
-    .offline-banner {
-      display: none;
-      background: var(--yellow);
-      color: var(--black);
-      text-align: center;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      border-radius: var(--radius-sm);
-      margin-bottom: 16px;
-      width: 100%;
-    }
-
-    .offline-banner.visible { display: block; }
-
-    :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#C41E3A" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Judo Sign In" />
+    <link rel="manifest" href="manifest.json" />
+    <title>DeLeon Judo Club – Sign In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Urbanist:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-    }
 
-    /* ── Phones (under 768px portrait) ───────────────── */
-    @media (max-width: 767px) and (orientation: portrait) {
-      .date-box { width: 80%; }
-      .date-box__center { padding: 40px 24px 36px; }
-      .date-box__date { font-size: 120px; }
-    }
+      :root {
+        --red: #c41e3a;
+        --red-hover: #a8182f;
+        --black: #1a1a1a;
+        --yellow: #ffd700;
+        --white: #ffffff;
+        --input-bg: #f8f8f8;
+        --text: #2d2d2d;
+        --text-secondary: #717171;
+        --border: #ddd;
+        --radius-sm: 12px;
+        --radius-lg: 16px;
+        --radius-full: 28px;
+        --font: "Urbanist", -apple-system, sans-serif;
+      }
 
-    /* ── Small phones (under 380px) ──────────────────── */
-    @media (max-width: 380px) {
-      .container { padding: 48px 16px 72px; }
-      .date-box { width: 90%; }
-      .date-box__date { font-size: 100px; }
-      .date-box__center { padding: 32px 16px 28px; }
-      .date-box__month { font-size: 13px; }
-      .date-box__jp-left, .date-box__jp-right { font-size: 13px; }
-      .date-box__footer-cell { font-size: 12px; }
-      .custom-select__trigger { height: 52px; font-size: 16px; }
-      .custom-select__item { height: 48px; font-size: 16px; padding: 0 16px; }
-      input[type="text"] { height: 52px; font-size: 16px; }
-      .submit-btn { height: 56px; font-size: 17px; }
-      .sheet { padding: 16px 24px 36px; }
-      .sheet__title { font-size: 22px; }
-      .sheet__message { font-size: 17px; }
-    }
+      html {
+        -webkit-text-size-adjust: 100%;
+        height: 100%;
+      }
 
-    /* ── Phone landscape ─────────────────────────────── */
-    @media (max-height: 500px) and (orientation: landscape) {
-      body { align-items: flex-start; }
-      .container {
-        max-width: 560px;
-        padding: 48px 24px 72px;
-        flex-direction: row;
-        flex-wrap: wrap;
+      body {
+        font-family: var(--font);
+        background: #f7f5f2;
+        color: var(--text);
+        min-height: 100%;
+        display: flex;
         justify-content: center;
-        gap: 0 32px;
+        align-items: center;
+        -webkit-font-smoothing: antialiased;
       }
+
+      .container {
+        width: 100%;
+        max-width: 440px;
+        padding: 72px 24px 100px;
+        padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* ── App Bar ─────────────────────────────────────── */
+      .app-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 16px;
+        padding-top: calc(12px + env(safe-area-inset-top, 0px));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        z-index: 30;
+      }
+
+      .app-bar__logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .app-bar__title {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        color: var(--text);
+      }
+
+      /* ── Date Box (日めくり calendar) ──────────────── */
       .date-box {
-        width: 160px;
+        width: 66%;
+        border-radius: 6px;
+        margin-top: 8px;
+        margin-bottom: 40px;
+        overflow: hidden;
+        background: #f0efed;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow:
+          0 8px 24px rgba(0, 0, 0, 0.1),
+          0 2px 6px rgba(0, 0, 0, 0.06);
+      }
+
+      .date-box__top-edge {
+        height: 6px;
+        background: linear-gradient(180deg, #d4d3d0 0%, #e8e7e4 100%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      .date-box__body {
+        background: #fff;
+        margin: 6px;
         margin-top: 0;
-        margin-bottom: 0;
-        align-self: center;
+        display: grid;
+        grid-template-columns: 40px 1fr 40px;
+        grid-template-rows: auto 1fr;
+        position: relative;
       }
-      .date-box__date { font-size: 48px; }
-      .date-box__month { font-size: 9px; letter-spacing: 2px; }
-      .date-box__jp-left, .date-box__jp-right { font-size: 10px; display: none; }
-      .date-box__footer-cell { font-size: 9px; padding: 6px 0; }
-      .date-box__center { padding: 12px 8px 8px; }
-      .date-box__body { grid-template-columns: 1fr; }
-      .form-area {
+
+      .date-box__center {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        text-align: center;
+        padding: 64px 24px 60px;
+      }
+
+      .date-box__month {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--text);
+        position: relative;
+        display: inline-block;
+      }
+
+      .date-box__month::before {
+        content: "";
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(196, 30, 58, 0.15);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
+      }
+
+      .date-box__date {
+        font-size: 140px;
+        font-weight: 900;
+        color: var(--black);
+        line-height: 0.9;
+        letter-spacing: -5px;
+      }
+
+      .date-box__jp-left {
+        grid-column: 1;
+        grid-row: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        writing-mode: vertical-rl;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        letter-spacing: 4px;
+        padding: 16px 0;
+        z-index: 1;
+      }
+
+      .date-box__jp-right {
+        grid-column: 3;
+        grid-row: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        writing-mode: vertical-rl;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        letter-spacing: 4px;
+        padding: 16px 0;
+        z-index: 1;
+      }
+
+      .date-box__footer {
+        grid-column: 1 / -1;
+        display: flex;
+        border-top: 1px solid #e8e7e4;
+      }
+
+      .date-box__footer-cell {
         flex: 1;
-        min-width: 240px;
+        text-align: center;
+        padding: 12px 0;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
       }
-      .form-group { margin-bottom: 12px; }
-      .submit-btn { margin-top: 12px; height: 52px; }
-      .footer { width: 100%; margin-top: 16px; }
-      .sheet { padding: 28px 28px 24px; }
-      .sheet__icon, .sheet__icon--error { width: 48px; height: 48px; margin-bottom: 12px; }
-      .sheet__icon svg, .sheet__icon--error svg { width: 24px; height: 24px; }
-      .sheet__title { font-size: 22px; }
-      .sheet__message { font-size: 17px; }
-      .sheet__btn, .sheet__btn--retry { height: 48px; margin-top: 16px; }
-    }
 
-    /* ── Tablet portrait (768px+) ────────────────────── */
-    @media (min-width: 768px) and (orientation: portrait) {
-      .container {
-        max-width: 520px;
-        padding: 56px 32px 80px;
+      .date-box__footer-cell + .date-box__footer-cell {
+        border-left: 1px solid #e8e7e4;
       }
-      .date-box {
+
+      /* ── Form ────────────────────────────────────────── */
+      .form-area {
         width: 100%;
-        border-radius: 8px;
-        margin-bottom: 48px;
       }
-      .date-box__month { font-size: 19px; }
-      .date-box__date { font-size: 180px; }
-      .date-box__jp-left, .date-box__jp-right { font-size: 18px; }
-      .date-box__footer-cell { font-size: 16px; }
-      .date-box__center { padding: 64px 40px 60px; }
-      .custom-select__trigger { height: 64px; font-size: 20px; padding: 0 48px 0 20px; }
-      .custom-select__header { padding: 20px 24px; }
-      .custom-select__dropdown-title { font-size: 22px; }
-      .custom-select__back { width: 48px; height: 48px; }
-      .custom-select__back svg { width: 28px; height: 28px; }
-      .custom-select__item { height: 64px; font-size: 20px; padding: 0 28px; }
-      .custom-select__footer { padding: 20px 28px; }
-      .custom-select__other { font-size: 18px; }
-      input[type="text"] { height: 64px; font-size: 20px; padding: 0 20px; }
-      .submit-btn { height: 70px; font-size: 22px; margin-top: 24px; }
-      .form-group { margin-bottom: 24px; }
-      .sheet { padding: 44px 40px 40px; max-width: 440px; }
-      .sheet__title { font-size: 30px; }
-      .sheet__message { font-size: 22px; }
-      .sheet__btn, .sheet__btn--retry { height: 64px; font-size: 20px; }
-    }
 
-    /* ── Tablet landscape (1024px+) ──────────────────── */
-    @media (min-width: 1024px) and (orientation: landscape) {
-      .container {
-        max-width: 560px;
-        padding: 56px 40px 80px;
+      .form-group {
+        margin-bottom: 0;
       }
-      .date-box {
+
+      .form-group label.field-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+
+      /* Custom Select */
+      .custom-select {
+        position: relative;
         width: 100%;
-        border-radius: 8px;
-        margin-bottom: 44px;
       }
-      .date-box__month { font-size: 19px; }
-      .date-box__date { font-size: 180px; }
-      .date-box__jp-left, .date-box__jp-right { font-size: 18px; }
-      .date-box__footer-cell { font-size: 16px; }
-      .date-box__center { padding: 64px 40px 60px; }
-      .custom-select__trigger { height: 62px; font-size: 20px; }
-      .custom-select__header { padding: 20px 24px; }
-      .custom-select__dropdown-title { font-size: 21px; }
-      .custom-select__back { width: 48px; height: 48px; }
-      .custom-select__back svg { width: 28px; height: 28px; }
-      .custom-select__item { height: 60px; font-size: 20px; padding: 0 28px; }
-      .custom-select__footer { padding: 20px 28px; }
-      .custom-select__other { font-size: 18px; }
-      input[type="text"] { height: 62px; font-size: 20px; }
-      .submit-btn { height: 68px; font-size: 21px; }
-      .sheet { max-width: 440px; }
-      .sheet__title { font-size: 28px; }
-      .sheet__message { font-size: 21px; }
-    }
 
-    /* ── Status Bar ─────────────────────────────────── */
-    .status-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 16px;
-      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      background: rgba(248,248,248,0.95);
-      border-top: 1px solid var(--border);
-      z-index: 40;
-    }
-    .status-bar__left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .status-bar__dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #ccc;
-      flex-shrink: 0;
-    }
-    .status-bar__dot.green { background: #16a34a; }
-    .status-bar__dot.yellow { background: #eab308; }
-    .status-bar__dot.red { background: #c41919; }
-    .status-bar__dot.pulsing { animation: status-pulse 0.8s ease infinite; }
-    @keyframes status-pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-    .status-bar__version {
-      color: #bbb;
-      font-size: 11px;
-      font-weight: 500;
-    }
-  </style>
-</head>
-<body>
+      .custom-select__trigger {
+        width: 100%;
+        height: 58px;
+        padding: 0 44px 0 24px;
+        font-family: var(--font);
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--white);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-full);
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 0.2s;
+        position: relative;
+      }
 
-<div class="ptr" id="ptr">
-  <div class="ptr__indicator">
-    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.22-8.56"/><polyline points="21 3 21 9 15 9"/></svg>
-  </div>
-</div>
+      .custom-select__trigger::after {
+        content: "";
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid var(--red);
+        pointer-events: none;
+        transition: transform 0.2s;
+      }
 
-<header class="app-bar" role="banner">
-  <img class="app-bar__logo" src="logo.svg" alt="" aria-hidden="true">
-  <div class="app-bar__title">DeLeon Judo Club</div>
-</header>
+      .custom-select.open .custom-select__trigger::after {
+        transform: translateY(-50%) rotate(180deg);
+      }
 
-<div class="container">
-  <div class="offline-banner" id="offlineBanner" role="alert">You're offline — check-in will sync when reconnected.</div>
+      .custom-select__trigger.placeholder {
+        color: var(--text-secondary);
+      }
 
-  <div class="date-box" aria-label="Current class date">
-    <div class="date-box__top-edge"></div>
-    <div class="date-box__body">
-      <div class="date-box__jp-left" id="jpLeftDisplay"></div>
-      <div class="date-box__center">
-        <div class="date-box__month" id="monthDisplay"></div>
-        <div class="date-box__date" id="dateDisplay"></div>
-      </div>
-      <div class="date-box__jp-right" id="jpRightDisplay"></div>
-      <div class="date-box__footer">
-        <div class="date-box__footer-cell" id="weekdayDisplay"></div>
-        <div class="date-box__footer-cell" id="yearDisplay"></div>
+      .custom-select__trigger:focus {
+        border-color: var(--yellow);
+        outline: none;
+      }
+
+      .custom-select__dropdown {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--white);
+        z-index: 40;
+        flex-direction: column;
+      }
+
+      .custom-select.open .custom-select__dropdown {
+        display: flex;
+        animation: panelSlideUp 0.25s ease-out;
+      }
+
+      @keyframes panelSlideUp {
+        from {
+          transform: translateY(100%);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
+
+      .custom-select__header {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+
+      .custom-select__back {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
+        margin-right: 8px;
+        border-radius: 50%;
+        transition: background 0.15s;
+      }
+
+      .custom-select__back:active {
+        background: #f0f0f0;
+      }
+
+      .custom-select__back svg {
+        width: 24px;
+        height: 24px;
+        stroke: var(--text);
+        stroke-width: 2.5;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .custom-select__dropdown-title {
+        font-family: var(--font);
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .custom-select__list {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .custom-select__item {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 56px;
+        padding: 0 24px;
+        font-family: var(--font);
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        background: none;
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s;
+      }
+
+      .custom-select__item:last-child {
+        border-bottom: none;
+      }
+
+      .custom-select__item:active {
+        background: #f0f0f0;
+      }
+
+      .custom-select__footer {
+        flex-shrink: 0;
+        padding: 16px 24px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid var(--border);
+        text-align: center;
+      }
+
+      .custom-select__other {
+        background: none;
+        border: none;
+        font-family: var(--font);
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 10px 0;
+      }
+
+      .custom-select__other span {
+        color: var(--red);
+        text-decoration: underline;
+      }
+
+      .custom-select__other:active {
+        color: var(--text);
+      }
+
+      .custom-select__other:active span {
+        color: var(--red-hover);
+      }
+
+      body.picker-open {
+        overflow: hidden;
+      }
+
+      /* Text inputs */
+      input[type="text"] {
+        width: 100%;
+        height: 58px;
+        padding: 0 16px;
+        font-family: var(--font);
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--input-bg);
+        border: 2px solid transparent;
+        border-radius: var(--radius-sm);
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        transition: border-color 0.2s;
+      }
+
+      input[type="text"]:focus {
+        border-color: transparent;
+        outline: none;
+        background:
+          linear-gradient(var(--input-bg), var(--input-bg)) padding-box,
+          linear-gradient(
+              90deg,
+              var(--red),
+              var(--yellow),
+              var(--red),
+              var(--yellow)
+            )
+            border-box;
+        background-size:
+          100% 100%,
+          300% 100%;
+        animation: gradient-border 3s ease infinite;
+      }
+
+      @keyframes gradient-border {
+        0% {
+          background-position:
+            0 0,
+            0% 0;
+        }
+        50% {
+          background-position:
+            0 0,
+            100% 0;
+        }
+        100% {
+          background-position:
+            0 0,
+            0% 0;
+        }
+      }
+
+      input::placeholder {
+        color: #b0b0b0;
+        font-weight: 500;
+      }
+
+      /* ── Submit Button ───────────────────────────────── */
+      .submit-btn {
+        width: 100%;
+        height: 64px;
+        border: none;
+        border-radius: var(--radius-full);
+        background: linear-gradient(
+          90deg,
+          var(--red),
+          #d42a4a,
+          #e8a0b0,
+          #d42a4a,
+          var(--red)
+        );
+        background-size: 300% 100%;
+        color: var(--white);
+        font-family: var(--font);
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        cursor: pointer;
+        transition: transform 0.1s;
+        margin-top: 16px;
+        box-shadow: 0 4px 16px rgba(196, 30, 58, 0.25);
+        animation: btn-gradient 4s ease infinite;
+      }
+
+      @keyframes btn-gradient {
+        0% {
+          background-position: 0% 0;
+        }
+        50% {
+          background-position: 100% 0;
+        }
+        100% {
+          background-position: 0% 0;
+        }
+      }
+
+      .submit-btn:hover {
+        background-size: 300% 100%;
+      }
+      .submit-btn:active {
+        transform: scale(0.985);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+        animation: none;
+        background: var(--red);
+      }
+
+      /* Button states */
+      .submit-btn .btn-text-ready {
+        display: none;
+      }
+      .submit-btn .btn-text-waiting {
+        display: inline;
+      }
+
+      .submit-btn.ready .btn-text-ready {
+        display: inline;
+      }
+      .submit-btn.ready .btn-text-waiting {
+        display: none;
+      }
+
+      .submit-btn.ready {
+        animation:
+          comeAlive 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+          btn-gradient 4s ease infinite;
+      }
+
+      @keyframes comeAlive {
+        0% {
+          transform: scale(0.95);
+          opacity: 0.5;
+        }
+        50% {
+          transform: scale(1.04);
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .submit-btn .spinner {
+        display: none;
+        width: 22px;
+        height: 22px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top-color: var(--white);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+
+      .submit-btn.loading .btn-text-waiting {
+        display: none;
+      }
+      .submit-btn.loading .btn-text-ready {
+        display: none;
+      }
+      .submit-btn.loading .spinner {
+        display: inline-block;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Modal Overlay ─────────────────────────────────── */
+      .sheet-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0);
+        z-index: 50;
+        pointer-events: none;
+        transition: background 0.3s ease;
+      }
+
+      .sheet-overlay.visible {
+        background: rgba(0, 0, 0, 0.4);
+        pointer-events: auto;
+      }
+
+      /* ── Modal ────────────────────────────────────────── */
+      .sheet {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        z-index: 51;
+        background: var(--white);
+        border-radius: 20px;
+        padding: 40px 36px 36px;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        width: calc(100% - 48px);
+        max-width: 400px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.16);
+        pointer-events: none;
+      }
+
+      .sheet.visible {
+        animation: modalPop 0.5s cubic-bezier(0.34, 1.9, 0.64, 1) forwards;
+        pointer-events: auto;
+      }
+
+      .sheet.visible.subtle {
+        animation: modalFade 0.25s ease-out forwards;
+      }
+
+      @keyframes modalFade {
+        0% {
+          transform: translate(-50%, -50%) scale(0.95);
+          opacity: 0;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes modalPop {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0;
+        }
+        60% {
+          transform: translate(-50%, -50%) scale(1.08);
+          opacity: 1;
+        }
+        80% {
+          transform: translate(-50%, -50%) scale(0.97);
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+      }
+
+      /* Error shake */
+      .sheet.shake {
+        animation:
+          modalPop 0.5s cubic-bezier(0.34, 1.9, 0.64, 1) forwards,
+          shake 0.4s 0.1s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1) translateX(0);
+        }
+        20% {
+          transform: translate(-50%, -50%) scale(1) translateX(-18px);
+        }
+        40% {
+          transform: translate(-50%, -50%) scale(1) translateX(16px);
+        }
+        60% {
+          transform: translate(-50%, -50%) scale(1) translateX(-10px);
+        }
+        80% {
+          transform: translate(-50%, -50%) scale(1) translateX(4px);
+        }
+      }
+
+      .sheet.closing {
+        animation: modalClose 0.2s ease-in forwards;
+        pointer-events: none;
+      }
+
+      @keyframes modalClose {
+        0% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(0.9);
+          opacity: 0;
+        }
+      }
+
+      /* ── Confetti ─────────────────────────────────────── */
+      .confetti-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 52;
+        pointer-events: none;
+      }
+
+      .sheet__icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--red);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        animation: popIn 0.4s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+
+      @keyframes popIn {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .sheet__icon svg {
+        width: 36px;
+        height: 36px;
+        stroke: var(--white);
+        stroke-width: 3;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .sheet__title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: 900;
+        color: var(--black);
+        margin-bottom: 6px;
+      }
+
+      .sheet__message {
+        text-align: center;
+        font-size: 20px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .sheet__message .success-name {
+        color: var(--red);
+        font-weight: 700;
+      }
+
+      .sheet__btn {
+        display: block;
+        width: 100%;
+        height: 56px;
+        margin-top: 28px;
+        border: none;
+        border-radius: var(--radius-full);
+        background: var(--black);
+        color: var(--white);
+        font-family: var(--font);
+        font-size: 18px;
+        font-weight: 800;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+      }
+
+      .sheet__btn:hover {
+        background: #333;
+      }
+      .sheet__btn:active {
+        transform: scale(0.97);
+      }
+
+      /* Sheet states */
+      .sheet__state {
+        display: none;
+      }
+      .sheet__state.active {
+        display: block;
+      }
+
+      .sheet__icon--error {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--black);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+
+      .sheet__icon--error svg {
+        width: 36px;
+        height: 36px;
+        stroke: var(--white);
+        stroke-width: 3;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .sheet__spinner-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .sheet__spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid var(--border);
+        border-top-color: var(--red);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      .sheet__btn--retry {
+        display: block;
+        width: 100%;
+        height: 56px;
+        margin-top: 28px;
+        border: none;
+        border-radius: var(--radius-full);
+        background: var(--red);
+        color: var(--white);
+        font-family: var(--font);
+        font-size: 18px;
+        font-weight: 800;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+      }
+
+      .sheet__btn--retry:hover {
+        background: var(--red-hover);
+      }
+      .sheet__btn--retry:active {
+        transform: scale(0.97);
+      }
+
+      /* Sheet spacing modifiers */
+      .sheet__title--spaced {
+        margin-bottom: 24px;
+      }
+      .sheet__btn--follow {
+        margin-top: 14px;
+      }
+      .sheet__btn--compact {
+        margin-top: 8px;
+      }
+      .sheet__btn--snug {
+        margin-top: 12px;
+      }
+
+      /* Dues prompt */
+      .dues-state {
+        display: none;
+      }
+      .dues-state.active {
+        display: block;
+        text-align: center;
+      }
+      .dues-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--yellow);
+        color: var(--black);
+        font-size: 32px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+
+      /* ── Footer ──────────────────────────────────────── */
+      .footer {
+        text-align: center;
+        margin-top: 44px;
+      }
+
+      .footer__location {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--red);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      /* ── Error Toast ─────────────────────────────────── */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        background: var(--black);
+        color: var(--white);
+        padding: 14px 24px;
+        border-radius: var(--radius-full);
+        font-family: var(--font);
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 100;
+        transition:
+          transform 0.3s ease,
+          opacity 0.3s ease;
+        white-space: nowrap;
+      }
+
+      .toast.visible {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .toast.toast--dues {
+        white-space: normal;
+        width: 90vw;
+        max-width: 500px;
+        padding: 20px 32px;
+        font-size: 18px;
+        border-radius: 16px;
+        text-align: center;
+        line-height: 1.4;
+      }
+
+      /* ── Pull to Refresh ─────────────────────────────── */
+      .ptr {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        z-index: 50;
+        pointer-events: none;
+      }
+
+      .ptr__indicator {
+        background: var(--white);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transform: translateY(-50px);
+        transition: transform 0.2s ease;
+      }
+
+      .ptr__indicator svg {
+        width: 20px;
+        height: 20px;
+        stroke: var(--red);
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+      }
+
+      .ptr--loading .ptr__indicator {
+        transform: translateY(16px);
+      }
+
+      .ptr--loading .ptr__indicator svg {
+        animation: ptr-spin 0.8s linear infinite;
+      }
+
+      @keyframes ptr-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Offline Banner ──────────────────────────────── */
+      .offline-banner {
+        display: none;
+        background: var(--yellow);
+        color: var(--black);
+        text-align: center;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: var(--radius-sm);
+        margin-bottom: 16px;
+        width: 100%;
+      }
+
+      .offline-banner.visible {
+        display: block;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--red);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* ── Phones (under 768px portrait) ───────────────── */
+      @media (max-width: 767px) and (orientation: portrait) {
+        .date-box {
+          width: 80%;
+        }
+        .date-box__center {
+          padding: 40px 24px 36px;
+        }
+        .date-box__date {
+          font-size: 120px;
+        }
+      }
+
+      /* ── Small phones (under 380px) ──────────────────── */
+      @media (max-width: 380px) {
+        .container {
+          padding: 48px 16px 72px;
+        }
+        .date-box {
+          width: 90%;
+        }
+        .date-box__date {
+          font-size: 100px;
+        }
+        .date-box__center {
+          padding: 32px 16px 28px;
+        }
+        .date-box__month {
+          font-size: 13px;
+        }
+        .date-box__jp-left,
+        .date-box__jp-right {
+          font-size: 13px;
+        }
+        .date-box__footer-cell {
+          font-size: 12px;
+        }
+        .custom-select__trigger {
+          height: 52px;
+          font-size: 16px;
+        }
+        .custom-select__item {
+          height: 48px;
+          font-size: 16px;
+          padding: 0 16px;
+        }
+        input[type="text"] {
+          height: 52px;
+          font-size: 16px;
+        }
+        .submit-btn {
+          height: 56px;
+          font-size: 17px;
+        }
+        .sheet {
+          padding: 16px 24px 36px;
+        }
+        .sheet__title {
+          font-size: 22px;
+        }
+        .sheet__message {
+          font-size: 17px;
+        }
+      }
+
+      /* ── Phone landscape ─────────────────────────────── */
+      @media (max-height: 500px) and (orientation: landscape) {
+        body {
+          align-items: flex-start;
+        }
+        .container {
+          max-width: 560px;
+          padding: 48px 24px 72px;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0 32px;
+        }
+        .date-box {
+          width: 160px;
+          margin-top: 0;
+          margin-bottom: 0;
+          align-self: center;
+        }
+        .date-box__date {
+          font-size: 48px;
+        }
+        .date-box__month {
+          font-size: 9px;
+          letter-spacing: 2px;
+        }
+        .date-box__jp-left,
+        .date-box__jp-right {
+          font-size: 10px;
+          display: none;
+        }
+        .date-box__footer-cell {
+          font-size: 9px;
+          padding: 6px 0;
+        }
+        .date-box__center {
+          padding: 12px 8px 8px;
+        }
+        .date-box__body {
+          grid-template-columns: 1fr;
+        }
+        .form-area {
+          flex: 1;
+          min-width: 240px;
+        }
+        .form-group {
+          margin-bottom: 12px;
+        }
+        .submit-btn {
+          margin-top: 12px;
+          height: 52px;
+        }
+        .footer {
+          width: 100%;
+          margin-top: 16px;
+        }
+        .sheet {
+          padding: 28px 28px 24px;
+        }
+        .sheet__icon,
+        .sheet__icon--error {
+          width: 48px;
+          height: 48px;
+          margin-bottom: 12px;
+        }
+        .sheet__icon svg,
+        .sheet__icon--error svg {
+          width: 24px;
+          height: 24px;
+        }
+        .sheet__title {
+          font-size: 22px;
+        }
+        .sheet__message {
+          font-size: 17px;
+        }
+        .sheet__btn,
+        .sheet__btn--retry {
+          height: 48px;
+          margin-top: 16px;
+        }
+      }
+
+      /* ── Tablet portrait (768px+) ────────────────────── */
+      @media (min-width: 768px) and (orientation: portrait) {
+        .container {
+          max-width: 520px;
+          padding: 56px 32px 80px;
+        }
+        .date-box {
+          width: 100%;
+          border-radius: 8px;
+          margin-bottom: 48px;
+        }
+        .date-box__month {
+          font-size: 19px;
+        }
+        .date-box__date {
+          font-size: 180px;
+        }
+        .date-box__jp-left,
+        .date-box__jp-right {
+          font-size: 18px;
+        }
+        .date-box__footer-cell {
+          font-size: 16px;
+        }
+        .date-box__center {
+          padding: 64px 40px 60px;
+        }
+        .custom-select__trigger {
+          height: 64px;
+          font-size: 20px;
+          padding: 0 48px 0 20px;
+        }
+        .custom-select__header {
+          padding: 20px 24px;
+        }
+        .custom-select__dropdown-title {
+          font-size: 22px;
+        }
+        .custom-select__back {
+          width: 48px;
+          height: 48px;
+        }
+        .custom-select__back svg {
+          width: 28px;
+          height: 28px;
+        }
+        .custom-select__item {
+          height: 64px;
+          font-size: 20px;
+          padding: 0 28px;
+        }
+        .custom-select__footer {
+          padding: 20px 28px;
+        }
+        .custom-select__other {
+          font-size: 18px;
+        }
+        input[type="text"] {
+          height: 64px;
+          font-size: 20px;
+          padding: 0 20px;
+        }
+        .submit-btn {
+          height: 70px;
+          font-size: 22px;
+          margin-top: 24px;
+        }
+        .form-group {
+          margin-bottom: 24px;
+        }
+        .sheet {
+          padding: 44px 40px 40px;
+          max-width: 440px;
+        }
+        .sheet__title {
+          font-size: 30px;
+        }
+        .sheet__message {
+          font-size: 22px;
+        }
+        .sheet__btn,
+        .sheet__btn--retry {
+          height: 64px;
+          font-size: 20px;
+        }
+      }
+
+      /* ── Tablet landscape (1024px+) ──────────────────── */
+      @media (min-width: 1024px) and (orientation: landscape) {
+        .container {
+          max-width: 560px;
+          padding: 56px 40px 80px;
+        }
+        .date-box {
+          width: 100%;
+          border-radius: 8px;
+          margin-bottom: 44px;
+        }
+        .date-box__month {
+          font-size: 19px;
+        }
+        .date-box__date {
+          font-size: 180px;
+        }
+        .date-box__jp-left,
+        .date-box__jp-right {
+          font-size: 18px;
+        }
+        .date-box__footer-cell {
+          font-size: 16px;
+        }
+        .date-box__center {
+          padding: 64px 40px 60px;
+        }
+        .custom-select__trigger {
+          height: 62px;
+          font-size: 20px;
+        }
+        .custom-select__header {
+          padding: 20px 24px;
+        }
+        .custom-select__dropdown-title {
+          font-size: 21px;
+        }
+        .custom-select__back {
+          width: 48px;
+          height: 48px;
+        }
+        .custom-select__back svg {
+          width: 28px;
+          height: 28px;
+        }
+        .custom-select__item {
+          height: 60px;
+          font-size: 20px;
+          padding: 0 28px;
+        }
+        .custom-select__footer {
+          padding: 20px 28px;
+        }
+        .custom-select__other {
+          font-size: 18px;
+        }
+        input[type="text"] {
+          height: 62px;
+          font-size: 20px;
+        }
+        .submit-btn {
+          height: 68px;
+          font-size: 21px;
+        }
+        .sheet {
+          max-width: 440px;
+        }
+        .sheet__title {
+          font-size: 28px;
+        }
+        .sheet__message {
+          font-size: 21px;
+        }
+      }
+
+      /* ── Status Bar ─────────────────────────────────── */
+      .status-bar {
+        width: 100%;
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+      .status-bar__left {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .status-bar__dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ccc;
+        flex-shrink: 0;
+      }
+      .status-bar__dot.green {
+        background: #16a34a;
+      }
+      .status-bar__dot.yellow {
+        background: #eab308;
+      }
+      .status-bar__dot.red {
+        background: #c41919;
+      }
+      .status-bar__dot.pulsing {
+        animation: status-pulse 0.8s ease infinite;
+      }
+      @keyframes status-pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.2;
+        }
+      }
+      .status-bar__version {
+        color: #bbb;
+        font-size: 11px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ptr" id="ptr">
+      <div class="ptr__indicator">
+        <svg viewBox="0 0 24 24">
+          <path d="M21 12a9 9 0 1 1-6.22-8.56" />
+          <polyline points="21 3 21 9 15 9" />
+        </svg>
       </div>
     </div>
-  </div>
 
-  <form id="checkinForm" class="form-area" novalidate>
-    <div class="form-group">
-      <div class="custom-select" id="customSelect">
-        <button type="button" class="custom-select__trigger placeholder" id="selectTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Select your name">Select your name…</button>
-        <div class="custom-select__dropdown" id="selectDropdown" role="listbox" aria-label="Student names">
-          <div class="custom-select__header">
-            <button type="button" class="custom-select__back" id="selectBack" aria-label="Go back">
-              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            </button>
-            <span class="custom-select__dropdown-title">Select Your Name</span>
+    <header class="app-bar" role="banner">
+      <img class="app-bar__logo" src="logo.svg" alt="" aria-hidden="true" />
+      <div class="app-bar__title">DeLeon Judo Club</div>
+    </header>
+
+    <div class="container">
+      <div class="offline-banner" id="offlineBanner" role="alert">
+        You're offline — check-in will sync when reconnected.
+      </div>
+
+      <div class="date-box" aria-label="Current class date">
+        <div class="date-box__top-edge"></div>
+        <div class="date-box__body">
+          <div class="date-box__jp-left" id="jpLeftDisplay"></div>
+          <div class="date-box__center">
+            <div class="date-box__month" id="monthDisplay"></div>
+            <div class="date-box__date" id="dateDisplay"></div>
           </div>
-          <div class="custom-select__list" id="selectList"></div>
-          <div class="custom-select__footer">
-            <button type="button" class="custom-select__other" id="otherBtn">Not on the list? <span>Tap here</span></button>
+          <div class="date-box__jp-right" id="jpRightDisplay"></div>
+          <div class="date-box__footer">
+            <div class="date-box__footer-cell" id="weekdayDisplay"></div>
+            <div class="date-box__footer-cell" id="yearDisplay"></div>
           </div>
         </div>
       </div>
+
+      <form id="checkinForm" class="form-area" novalidate>
+        <div class="form-group">
+          <div class="custom-select" id="customSelect">
+            <button
+              type="button"
+              class="custom-select__trigger placeholder"
+              id="selectTrigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-label="Select your name"
+            >
+              Select your name…
+            </button>
+            <div
+              class="custom-select__dropdown"
+              id="selectDropdown"
+              role="listbox"
+              aria-label="Student names"
+            >
+              <div class="custom-select__header">
+                <button
+                  type="button"
+                  class="custom-select__back"
+                  id="selectBack"
+                  aria-label="Go back"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <span class="custom-select__dropdown-title"
+                  >Select Your Name</span
+                >
+              </div>
+              <div class="custom-select__list" id="selectList"></div>
+              <div class="custom-select__footer">
+                <button
+                  type="button"
+                  class="custom-select__other"
+                  id="otherBtn"
+                >
+                  Not on the list? <span>Tap here</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="submit-btn"
+          id="submitBtn"
+          disabled
+          aria-label="Sign in"
+        >
+          <span class="btn-text-waiting">Select your name to sign in</span>
+          <span class="btn-text-ready">Sign In - I'm Here!</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="status-bar" id="statusBar">
+        <div class="status-bar__left">
+          <div class="status-bar__dot" id="statusDot"></div>
+          <div class="status-bar__text" id="statusText">Loading...</div>
+        </div>
+        <div class="status-bar__version">v1.0</div>
+      </div>
     </div>
 
-    <button type="button" class="submit-btn" id="submitBtn" disabled aria-label="Sign in">
-      <span class="btn-text-waiting">Select your name to sign in</span>
-      <span class="btn-text-ready">Sign In - I'm Here!</span>
-      <span class="spinner" aria-hidden="true"></span>
-    </button>
-  </form>
+    <!-- Bottom Sheet -->
+    <div class="sheet-overlay" id="sheetOverlay"></div>
+    <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+    <div
+      class="sheet"
+      id="sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Check-in status"
+    >
+      <div class="sheet__handle"></div>
 
-  <footer class="footer"></footer>
-</div>
+      <!-- Waiting State -->
+      <div class="sheet__state" id="sheetWaiting">
+        <div class="sheet__spinner-wrap">
+          <div class="sheet__spinner"></div>
+        </div>
+        <div class="sheet__title">Signing you in…</div>
+        <div class="sheet__message">One moment</div>
+      </div>
 
-<!-- Bottom Sheet -->
-<div class="sheet-overlay" id="sheetOverlay"></div>
-<canvas class="confetti-canvas" id="confettiCanvas"></canvas>
-<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Check-in status">
-  <div class="sheet__handle"></div>
+      <!-- Success State -->
+      <div class="sheet__state" id="sheetSuccess">
+        <div class="sheet__icon">
+          <svg viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="sheet__title" role="status">You're Checked In!</div>
+        <div class="sheet__message">
+          Welcome, <span class="success-name" id="successName"></span>. Have a
+          great class! 🥋
+        </div>
+        <button class="sheet__btn" id="resetBtn">Done</button>
+      </div>
 
-  <!-- Waiting State -->
-  <div class="sheet__state" id="sheetWaiting">
-    <div class="sheet__spinner-wrap"><div class="sheet__spinner"></div></div>
-    <div class="sheet__title">Signing you in…</div>
-    <div class="sheet__message">One moment</div>
-  </div>
-
-  <!-- Success State -->
-  <div class="sheet__state" id="sheetSuccess">
-    <div class="sheet__icon">
-      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      <!-- Error State -->
+      <div class="sheet__state" id="sheetError">
+        <div class="sheet__icon--error">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </div>
+        <div class="sheet__title" role="alert">Couldn't sign you in</div>
+        <div class="sheet__message">
+          Give it another try. If this keeps happening, let a sensei know.
+        </div>
+        <button class="sheet__btn--retry" id="retryBtn">Try Again</button>
+        <button class="sheet__btn sheet__btn--follow" id="errorDoneBtn">
+          Done
+        </button>
+      </div>
     </div>
-    <div class="sheet__title" role="status">You're Checked In!</div>
-    <div class="sheet__message">Welcome, <span class="success-name" id="successName"></span>. Have a great class! 🥋</div>
-    <button class="sheet__btn" id="resetBtn">Done</button>
-  </div>
 
-  <!-- Error State -->
-  <div class="sheet__state" id="sheetError">
-    <div class="sheet__icon--error">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    <!-- New Student Modal -->
+    <div class="sheet-overlay" id="newStudentOverlay"></div>
+    <div
+      class="sheet"
+      id="newStudentSheet"
+      role="dialog"
+      aria-modal="true"
+      aria-label="New student"
+    >
+      <div class="sheet__title sheet__title--spaced">New Student</div>
+      <div class="form-group">
+        <label class="field-label" for="firstName">First Name</label>
+        <input
+          type="text"
+          id="firstName"
+          placeholder="First name"
+          autocomplete="given-name"
+          autocapitalize="words"
+        />
+      </div>
+      <div class="form-group">
+        <label class="field-label" for="lastName">Last Name</label>
+        <input
+          type="text"
+          id="lastName"
+          placeholder="Last name"
+          autocomplete="family-name"
+          autocapitalize="words"
+        />
+      </div>
+      <button
+        type="button"
+        class="sheet__btn--retry sheet__btn--compact"
+        id="newStudentContinue"
+        disabled
+      >
+        Continue
+      </button>
+      <button
+        type="button"
+        class="sheet__btn sheet__btn--snug"
+        id="newStudentCancel"
+      >
+        Cancel
+      </button>
     </div>
-    <div class="sheet__title" role="alert">Couldn't sign you in</div>
-    <div class="sheet__message">Give it another try. If this keeps happening, let a sensei know.</div>
-    <button class="sheet__btn--retry" id="retryBtn">Try Again</button>
-    <button class="sheet__btn sheet__btn--follow" id="errorDoneBtn">Done</button>
-  </div>
-</div>
 
-<!-- New Student Modal -->
-<div class="sheet-overlay" id="newStudentOverlay"></div>
-<div class="sheet" id="newStudentSheet" role="dialog" aria-modal="true" aria-label="New student">
-  <div class="sheet__title sheet__title--spaced">New Student</div>
-  <div class="form-group">
-    <label class="field-label" for="firstName">First Name</label>
-    <input type="text" id="firstName" placeholder="First name" autocomplete="given-name" autocapitalize="words">
-  </div>
-  <div class="form-group">
-    <label class="field-label" for="lastName">Last Name</label>
-    <input type="text" id="lastName" placeholder="Last name" autocomplete="family-name" autocapitalize="words">
-  </div>
-  <button type="button" class="sheet__btn--retry sheet__btn--compact" id="newStudentContinue" disabled>Continue</button>
-  <button type="button" class="sheet__btn sheet__btn--snug" id="newStudentCancel">Cancel</button>
-</div>
+    <!-- Dues Prompt Modal -->
+    <div class="sheet-overlay" id="duesOverlay"></div>
+    <div
+      class="sheet"
+      id="duesSheet"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Dues reminder"
+    >
+      <!-- Heads-up variant (days 24-31) -->
+      <div class="dues-state" id="duesHeadsUp">
+        <div class="dues-icon">$</div>
+        <div class="sheet__title sheet__title--spaced">Dues Reminder</div>
+        <div class="sheet__message">
+          Monthly dues are coming up next week. Please bring your payment!
+        </div>
+        <button type="button" class="sheet__btn" id="duesHeadsUpDismiss">
+          Got it
+        </button>
+      </div>
+      <!-- Payment check variant (days 1-10) -->
+      <div class="dues-state" id="duesPayCheck">
+        <div class="dues-icon">$</div>
+        <div class="sheet__title sheet__title--spaced">
+          Have you paid this month's dues?
+        </div>
+        <button
+          type="button"
+          class="sheet__btn--retry sheet__btn--compact"
+          id="duesPaidYes"
+        >
+          Yes, I've paid
+        </button>
+        <button
+          type="button"
+          class="sheet__btn sheet__btn--snug"
+          id="duesPaidNo"
+        >
+          Not yet
+        </button>
+      </div>
+    </div>
 
-<!-- Dues Prompt Modal -->
-<div class="sheet-overlay" id="duesOverlay"></div>
-<div class="sheet" id="duesSheet" role="dialog" aria-modal="true" aria-label="Dues reminder">
-  <!-- Heads-up variant (days 24-31) -->
-  <div class="dues-state" id="duesHeadsUp">
-    <div class="dues-icon">$</div>
-    <div class="sheet__title sheet__title--spaced">Dues Reminder</div>
-    <div class="sheet__message">Monthly dues are coming up next week. Please bring your payment!</div>
-    <button type="button" class="sheet__btn" id="duesHeadsUpDismiss">Got it</button>
-  </div>
-  <!-- Payment check variant (days 1-10) -->
-  <div class="dues-state" id="duesPayCheck">
-    <div class="dues-icon">$</div>
-    <div class="sheet__title sheet__title--spaced">Have you paid this month's dues?</div>
-    <button type="button" class="sheet__btn--retry sheet__btn--compact" id="duesPaidYes">Yes, I've paid</button>
-    <button type="button" class="sheet__btn sheet__btn--snug" id="duesPaidNo">Not yet</button>
-  </div>
-</div>
+    <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
-<div class="status-bar" id="statusBar">
-  <div class="status-bar__left">
-    <div class="status-bar__dot" id="statusDot"></div>
-    <div class="status-bar__text" id="statusText">Loading...</div>
-  </div>
-  <div class="status-bar__version">v1.0</div>
-</div>
+    <script>
+      // ═══════════════════════════════════════════════════
+      // CONFIG — paste your deployed Apps Script URL here
+      // ═══════════════════════════════════════════════════
+      const APP_VERSION = "v1.1";
+      const APPS_SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec";
 
-<div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+      // ═══════════════════════════════════════════════════
+      // DATE & TIME
+      // ═══════════════════════════════════════════════════
+      const DAYS_EN = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const DAYS_JP = ["日", "月", "火", "水", "木", "金", "土"];
+      const MONTHS_EN = [
+        "JANUARY",
+        "FEBRUARY",
+        "MARCH",
+        "APRIL",
+        "MAY",
+        "JUNE",
+        "JULY",
+        "AUGUST",
+        "SEPTEMBER",
+        "OCTOBER",
+        "NOVEMBER",
+        "DECEMBER",
+      ];
+      const MONTHS_JP = [
+        "一月",
+        "二月",
+        "三月",
+        "四月",
+        "五月",
+        "六月",
+        "七月",
+        "八月",
+        "九月",
+        "十月",
+        "十一月",
+        "十二月",
+      ];
 
-<script>
-// ═══════════════════════════════════════════════════
-// CONFIG — paste your deployed Apps Script URL here
-// ═══════════════════════════════════════════════════
-const APP_VERSION = 'v1.1';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
-
-// ═══════════════════════════════════════════════════
-// DATE & TIME
-// ═══════════════════════════════════════════════════
-const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const DAYS_JP = ['日','月','火','水','木','金','土'];
-const MONTHS_EN = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
-const MONTHS_JP = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
-
-function fmtDate(d) {
-  var y = d.getFullYear();
-  var m = String(d.getMonth() + 1).padStart(2, '0');
-  var day = String(d.getDate()).padStart(2, '0');
-  return y + '-' + m + '-' + day;
-}
-
-function updateDateTime() {
-  var now = new Date();
-  var dayIdx = now.getDay();
-  var monthIdx = now.getMonth();
-  var date = now.getDate();
-  document.getElementById('yearDisplay').textContent = now.getFullYear();
-  document.getElementById('monthDisplay').textContent = MONTHS_EN[monthIdx];
-  document.getElementById('dateDisplay').textContent = date;
-  document.getElementById('weekdayDisplay').textContent = DAYS_EN[dayIdx];
-  document.getElementById('jpLeftDisplay').textContent = DAYS_JP[dayIdx] + '曜日';
-  document.getElementById('jpRightDisplay').textContent = (monthIdx + 1) + '月' + date + '日';
-}
-updateDateTime();
-setInterval(updateDateTime, 60000);
-
-function getClassName() {
-  var day = new Date().getDay();
-  if (day === 1) return 'Monday (Optional)';
-  if (day === 2) return 'Tuesday';
-  if (day === 4) return 'Thursday';
-  return DAYS_EN[day];
-}
-
-// ═══════════════════════════════════════════════════
-// STATUS BAR
-// ═══════════════════════════════════════════════════
-function setStatus(color, text, pulsing) {
-  var dot = document.getElementById('statusDot');
-  var txt = document.getElementById('statusText');
-  dot.className = 'status-bar__dot ' + color + (pulsing ? ' pulsing' : '');
-  txt.textContent = text;
-}
-
-function formatTime(date) {
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
-}
-
-// ═══════════════════════════════════════════════════
-// ROSTER — cached locally, refreshed from server
-// ═══════════════════════════════════════════════════
-var ROSTER_CACHE_KEY = 'deleon_roster_cache';
-
-function getCachedRoster() {
-  try { return JSON.parse(localStorage.getItem(ROSTER_CACHE_KEY) || '[]'); }
-  catch (e) { return []; }
-}
-
-function setCachedRoster(students) {
-  try { localStorage.setItem(ROSTER_CACHE_KEY, JSON.stringify(students)); }
-  catch (e) { /* storage full or unavailable */ }
-}
-
-function populateDropdown(students) {
-  var list = document.getElementById('selectList');
-  list.innerHTML = '';
-  students.forEach(function(s) {
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'custom-select__item';
-    btn.setAttribute('role', 'option');
-    btn.dataset.value = s.firstName + '|' + s.lastName;
-    btn.textContent = s.firstName + ' ' + s.lastName;
-    btn.addEventListener('click', function() {
-      selectStudent(s.firstName + '|' + s.lastName, s.firstName + ' ' + s.lastName);
-    });
-    list.appendChild(btn);
-  });
-}
-
-async function loadRoster() {
-  // Show cached roster immediately
-  var cached = getCachedRoster();
-  if (cached.length) populateDropdown(cached);
-
-  setStatus('green', 'Updating\u2026', true);
-
-  // Fetch fresh in background
-  try {
-    var controller = new AbortController();
-    var timeout = setTimeout(function() { controller.abort(); }, 10000);
-    var res = await fetch(APPS_SCRIPT_URL + '?action=roster', { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) throw new Error('Network error');
-    var data = await res.json();
-    if (data.students && data.students.length) {
-      setCachedRoster(data.students);
-      populateDropdown(data.students);
-    }
-    setStatus('green', 'Refreshed ' + formatTime(new Date()), false);
-  } catch (err) {
-    console.warn('Could not load roster from server:', err);
-    if (cached.length) {
-      setStatus('yellow', 'Using cached roster', false);
-    } else {
-      setStatus('red', 'Could not load roster', false);
-    }
-  }
-}
-
-loadRoster();
-
-// Fetch dues setting from server
-(async function() {
-  try {
-    var res = await fetch(APPS_SCRIPT_URL + '?action=settings');
-    if (res.ok) {
-      var data = await res.json();
-      if (data.settings && data.settings.duesEnabled !== undefined) {
-        localStorage.setItem('deleon_dues_enabled', data.settings.duesEnabled);
+      function fmtDate(d) {
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
       }
-    }
-  } catch (e) {}
-})();
 
-// ═══════════════════════════════════════════════════
-// FORM HANDLERS
-// ═══════════════════════════════════════════════════
-var customSelect = document.getElementById('customSelect');
-var selectTrigger = document.getElementById('selectTrigger');
-var selectDropdown = document.getElementById('selectDropdown');
-var otherBtn = document.getElementById('otherBtn');
-var submitBtn = document.getElementById('submitBtn');
-var selectedValue = '';
-var isNewStudent = false;
+      function updateDateTime() {
+        var now = new Date();
+        var dayIdx = now.getDay();
+        var monthIdx = now.getMonth();
+        var date = now.getDate();
+        document.getElementById("yearDisplay").textContent = now.getFullYear();
+        document.getElementById("monthDisplay").textContent =
+          MONTHS_EN[monthIdx];
+        document.getElementById("dateDisplay").textContent = date;
+        document.getElementById("weekdayDisplay").textContent = DAYS_EN[dayIdx];
+        document.getElementById("jpLeftDisplay").textContent =
+          DAYS_JP[dayIdx] + "曜日";
+        document.getElementById("jpRightDisplay").textContent =
+          monthIdx + 1 + "月" + date + "日";
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 60000);
 
-// New student modal elements
-var newStudentSheet = document.getElementById('newStudentSheet');
-var newStudentOverlay = document.getElementById('newStudentOverlay');
-var firstNameInput = document.getElementById('firstName');
-var lastNameInput = document.getElementById('lastName');
-var newStudentContinue = document.getElementById('newStudentContinue');
+      function getClassName() {
+        var day = new Date().getDay();
+        if (day === 1) return "Monday (Optional)";
+        if (day === 2) return "Tuesday";
+        if (day === 4) return "Thursday";
+        return DAYS_EN[day];
+      }
 
-function openDropdown() {
-  customSelect.classList.add('open');
-  selectTrigger.setAttribute('aria-expanded', 'true');
-  document.body.classList.add('picker-open');
-}
+      // ═══════════════════════════════════════════════════
+      // STATUS BAR
+      // ═══════════════════════════════════════════════════
+      function setStatus(color, text, pulsing) {
+        var dot = document.getElementById("statusDot");
+        var txt = document.getElementById("statusText");
+        dot.className =
+          "status-bar__dot " + color + (pulsing ? " pulsing" : "");
+        txt.textContent = text;
+      }
 
-function closeDropdown() {
-  customSelect.classList.remove('open');
-  selectTrigger.setAttribute('aria-expanded', 'false');
-  document.body.classList.remove('picker-open');
-}
+      function formatTime(date) {
+        return date
+          .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+          .toLowerCase();
+      }
 
-function selectStudent(value, displayName) {
-  selectedValue = value;
-  isNewStudent = false;
-  selectTrigger.textContent = displayName;
-  selectTrigger.classList.remove('placeholder');
-  closeDropdown();
-  submitBtn.disabled = false;
-  submitBtn.classList.add('ready');
-}
+      // ═══════════════════════════════════════════════════
+      // ROSTER — cached locally, refreshed from server
+      // ═══════════════════════════════════════════════════
+      var ROSTER_CACHE_KEY = "deleon_roster_cache";
 
-function selectOther() {
-  closeDropdown();
-  openNewStudentModal();
-}
+      function getCachedRoster() {
+        try {
+          return JSON.parse(localStorage.getItem(ROSTER_CACHE_KEY) || "[]");
+        } catch (e) {
+          return [];
+        }
+      }
 
-function resetSelection() {
-  selectedValue = '';
-  isNewStudent = false;
-  selectTrigger.textContent = 'Select your name\u2026';
-  selectTrigger.classList.add('placeholder');
-}
+      function setCachedRoster(students) {
+        try {
+          localStorage.setItem(ROSTER_CACHE_KEY, JSON.stringify(students));
+        } catch (e) {
+          /* storage full or unavailable */
+        }
+      }
 
-// ── Name picker triggers ──
-selectTrigger.addEventListener('click', function() {
-  if (customSelect.classList.contains('open')) {
-    closeDropdown();
-  } else {
-    openDropdown();
-  }
-});
-
-otherBtn.addEventListener('click', selectOther);
-document.getElementById('selectBack').addEventListener('click', function() {
-  closeDropdown();
-  resetSelection();
-  submitBtn.disabled = true;
-  submitBtn.classList.remove('ready');
-});
-
-// ── New student modal ──
-function openNewStudentModal() {
-  firstNameInput.value = '';
-  lastNameInput.value = '';
-  newStudentContinue.disabled = true;
-  newStudentOverlay.classList.add('visible');
-  newStudentSheet.classList.remove('visible', 'closing');
-  void newStudentSheet.offsetWidth;
-  newStudentSheet.classList.add('visible');
-  setTimeout(function() { firstNameInput.focus(); }, 300);
-}
-
-function closeNewStudentModal() {
-  newStudentSheet.classList.add('closing');
-  newStudentOverlay.classList.remove('visible');
-  setTimeout(function() {
-    newStudentSheet.classList.remove('visible', 'closing');
-  }, 200);
-}
-
-function checkNewStudentFields() {
-  var hasName = firstNameInput.value.trim() && lastNameInput.value.trim();
-  newStudentContinue.disabled = !hasName;
-}
-firstNameInput.addEventListener('input', checkNewStudentFields);
-lastNameInput.addEventListener('input', checkNewStudentFields);
-
-// iOS: dismiss keyboard when tapping non-interactive areas
-newStudentSheet.addEventListener('touchstart', function(e) {
-  var tag = e.target.tagName.toLowerCase();
-  if (tag !== 'input' && tag !== 'button' && tag !== 'label') {
-    document.activeElement.blur();
-  }
-});
-newStudentOverlay.addEventListener('touchstart', function() {
-  document.activeElement.blur();
-});
-
-newStudentContinue.addEventListener('click', function() {
-  var fn = firstNameInput.value.trim();
-  var ln = lastNameInput.value.trim();
-  if (!fn || !ln) return;
-  selectedValue = fn + '|' + ln;
-  isNewStudent = true;
-  selectTrigger.textContent = fn + ' ' + ln;
-  selectTrigger.classList.remove('placeholder');
-  closeNewStudentModal();
-  submitBtn.disabled = false;
-  submitBtn.classList.add('ready');
-});
-
-document.getElementById('newStudentCancel').addEventListener('click', closeNewStudentModal);
-
-function showToast(msg, duration, extraClass) {
-  duration = duration || 3000;
-  var toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.className = 'toast';
-  if (extraClass) toast.classList.add(extraClass);
-  toast.classList.add('visible');
-  setTimeout(function() {
-    toast.classList.remove('visible');
-    setTimeout(function() { toast.className = 'toast'; }, 300);
-  }, duration);
-}
-
-// ═══════════════════════════════════════════════════
-// DUES TRACKING
-// ═══════════════════════════════════════════════════
-var DUES_CACHE_KEY = 'deleon_dues';
-
-function getDuesCache() {
-  try { return JSON.parse(localStorage.getItem(DUES_CACHE_KEY) || '{}'); }
-  catch (e) { return {}; }
-}
-
-function isDuesPaid(firstName, lastName, monthKey) {
-  var cache = getDuesCache();
-  return cache[monthKey] && cache[monthKey][firstName + '|' + lastName];
-}
-
-function setDuesPaid(firstName, lastName, monthKey) {
-  var cache = getDuesCache();
-  if (!cache[monthKey]) cache[monthKey] = {};
-  cache[monthKey][firstName + '|' + lastName] = true;
-  try { localStorage.setItem(DUES_CACHE_KEY, JSON.stringify(cache)); }
-  catch (e) {}
-}
-
-function isDuesEnabled() {
-  var v = localStorage.getItem('deleon_dues_enabled');
-  return v !== 'false'; // default true
-}
-
-function getCurrentMonthKey() {
-  var d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-}
-
-// ═══════════════════════════════════════════════════
-// OFFLINE QUEUE — max 200 entries, syncs when online
-// ═══════════════════════════════════════════════════
-var QUEUE_KEY = 'deleon_checkin_queue';
-var MAX_QUEUE_SIZE = 200;
-
-function getQueue() {
-  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); }
-  catch (e) { return []; }
-}
-
-function saveToQueue(entry) {
-  try {
-    var q = getQueue();
-    if (q.length >= MAX_QUEUE_SIZE) q.shift();
-    q.push(entry);
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
-  } catch (e) {
-    console.warn('Could not save to offline queue:', e);
-  }
-}
-
-async function flushQueue() {
-  var q = getQueue();
-  if (!q.length) return;
-  setStatus('yellow', 'Pushing\u2026', true);
-  var remaining = [];
-  for (var i = 0; i < q.length; i++) {
-    try {
-      var res = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(q[i])
-      });
-      if (!res.ok) remaining.push(q[i]);
-    } catch (e) {
-      remaining.push(q[i]);
-    }
-  }
-  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining)); }
-  catch (e) { /* storage issue */ }
-  if (remaining.length) {
-    setStatus('red', 'Some check-ins pending', false);
-  } else {
-    setStatus('green', 'Synced ' + formatTime(new Date()), false);
-  }
-}
-
-try {
-  window.addEventListener('online', function() {
-    document.getElementById('offlineBanner').classList.remove('visible');
-    setStatus('green', 'Back online', false);
-    flushQueue().catch(function() {});
-  });
-  window.addEventListener('offline', function() {
-    document.getElementById('offlineBanner').classList.add('visible');
-    setStatus('red', 'Offline', false);
-  });
-  if (!navigator.onLine) {
-    document.getElementById('offlineBanner').classList.add('visible');
-    setStatus('red', 'Offline', false);
-  }
-} catch (e) { /* event listener issue */ }
-
-// ═══════════════════════════════════════════════════
-// CONFETTI ENGINE
-// ═══════════════════════════════════════════════════
-var form = document.getElementById('checkinForm');
-var sheet = document.getElementById('sheet');
-var sheetOverlay = document.getElementById('sheetOverlay');
-
-var confettiCanvas = document.getElementById('confettiCanvas');
-var ctx = confettiCanvas.getContext('2d');
-var confettiPieces = [];
-var confettiRunning = false;
-var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-function resizeConfetti() {
-  confettiCanvas.width = window.innerWidth;
-  confettiCanvas.height = window.innerHeight;
-}
-resizeConfetti();
-window.addEventListener('resize', resizeConfetti);
-
-var CONFETTI_COLORS = ['#C41E3A', '#FFD700', '#1a1a1a', '#ffffff', '#ff6b6b', '#ffd93d'];
-
-function launchConfetti() {
-  if (prefersReducedMotion) return;
-  confettiPieces = [];
-  for (var i = 0; i < 120; i++) {
-    confettiPieces.push({
-      x: confettiCanvas.width * 0.5 + (Math.random() - 0.5) * 200,
-      y: confettiCanvas.height * 0.45,
-      vx: (Math.random() - 0.5) * 16,
-      vy: -(Math.random() * 14 + 6),
-      w: Math.random() * 8 + 4,
-      h: Math.random() * 6 + 3,
-      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-      rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 12,
-      gravity: 0.25 + Math.random() * 0.15,
-      opacity: 1,
-      decay: 0.008 + Math.random() * 0.008
-    });
-  }
-  if (!confettiRunning) {
-    confettiRunning = true;
-    animateConfetti();
-  }
-}
-
-function animateConfetti() {
-  ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-  var alive = false;
-  for (var i = 0; i < confettiPieces.length; i++) {
-    var p = confettiPieces[i];
-    if (p.opacity <= 0) continue;
-    alive = true;
-    p.x += p.vx;
-    p.vy += p.gravity;
-    p.y += p.vy;
-    p.vx *= 0.98;
-    p.rotation += p.rotationSpeed;
-    p.opacity -= p.decay;
-
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(p.rotation * Math.PI / 180);
-    ctx.globalAlpha = Math.max(0, p.opacity);
-    ctx.fillStyle = p.color;
-    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-    ctx.restore();
-  }
-  if (alive) {
-    requestAnimationFrame(animateConfetti);
-  } else {
-    confettiRunning = false;
-    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-  }
-}
-
-// ═══════════════════════════════════════════════════
-// MODAL LOGIC
-// ═══════════════════════════════════════════════════
-function showSheet(state, name) {
-  document.getElementById('sheetWaiting').classList.remove('active');
-  document.getElementById('sheetSuccess').classList.remove('active');
-  document.getElementById('sheetError').classList.remove('active');
-  sheet.classList.remove('shake');
-
-  if (state === 'waiting') {
-    document.getElementById('sheetWaiting').classList.add('active');
-    sheetOverlay.classList.add('visible');
-    sheet.classList.remove('visible', 'subtle');
-    void sheet.offsetWidth;
-    sheet.classList.add('visible', 'subtle');
-  } else if (state === 'success') {
-    document.getElementById('successName').textContent = name || '';
-    document.getElementById('sheetSuccess').classList.add('active');
-    sheet.classList.remove('visible', 'subtle');
-    void sheet.offsetWidth;
-    sheet.classList.add('visible');
-    setTimeout(function() { launchConfetti(); }, 150);
-  } else if (state === 'error') {
-    document.getElementById('sheetError').classList.add('active');
-    sheet.classList.remove('visible', 'subtle');
-    void sheet.offsetWidth;
-    sheet.classList.add('visible');
-    setTimeout(function() { sheet.classList.add('shake'); }, 400);
-  }
-}
-
-function hideSheet() {
-  sheet.classList.add('closing');
-  sheetOverlay.classList.remove('visible');
-  setTimeout(function() {
-    sheet.classList.remove('visible', 'closing', 'shake');
-    form.reset();
-    submitBtn.disabled = true;
-    submitBtn.classList.remove('ready');
-    resetSelection();
-    selectTrigger.focus();
-  }, 200);
-}
-
-// ── Dues prompt after successful sign-in ──
-var duesSheet = document.getElementById('duesSheet');
-var duesOverlay = document.getElementById('duesOverlay');
-var pendingDuesEntry = null; // stores {firstName, lastName} for dues recording
-
-function shouldShowDuesPrompt(firstName, lastName) {
-  if (!isDuesEnabled()) return false;
-  var day = new Date().getDate();
-  if (day >= 24) return 'headsup';
-  if (day <= 10) {
-    if (isDuesPaid(firstName, lastName, getCurrentMonthKey())) return false;
-    return 'paycheck';
-  }
-  return false;
-}
-
-function showDuesPrompt(variant) {
-  document.getElementById('duesHeadsUp').classList.remove('active');
-  document.getElementById('duesPayCheck').classList.remove('active');
-  if (variant === 'headsup') {
-    document.getElementById('duesHeadsUp').classList.add('active');
-  } else {
-    document.getElementById('duesPayCheck').classList.add('active');
-  }
-  duesOverlay.classList.add('visible');
-  duesSheet.classList.remove('visible', 'closing');
-  void duesSheet.offsetWidth;
-  duesSheet.classList.add('visible');
-}
-
-function closeDuesPrompt() {
-  duesSheet.classList.add('closing');
-  duesOverlay.classList.remove('visible');
-  setTimeout(function() {
-    duesSheet.classList.remove('visible', 'closing');
-    pendingDuesEntry = null;
-  }, 200);
-}
-
-function hideSheetWithDuesCheck() {
-  if (!lastEntry) { hideSheet(); return; }
-  var fn = lastEntry.firstName;
-  var ln = lastEntry.lastName;
-  var variant = shouldShowDuesPrompt(fn, ln);
-
-  hideSheet();
-
-  if (variant) {
-    pendingDuesEntry = { firstName: fn, lastName: ln };
-    setTimeout(function() { showDuesPrompt(variant); }, 300);
-  }
-}
-
-// ═══════════════════════════════════════════════════
-// KEYBOARD / ACCESSIBILITY
-// ═══════════════════════════════════════════════════
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    if (duesSheet.classList.contains('visible')) {
-      closeDuesPrompt();
-    } else if (newStudentSheet.classList.contains('visible')) {
-      closeNewStudentModal();
-    } else if (customSelect.classList.contains('open')) {
-      closeDropdown();
-    } else if (sheet.classList.contains('visible')) {
-      hideSheet();
-    }
-  }
-});
-
-// ═══════════════════════════════════════════════════
-// SUBMIT HANDLER
-// ═══════════════════════════════════════════════════
-var lastEntry = null;
-
-submitBtn.addEventListener('click', async function(e) {
-  e.preventDefault();
-  try {
-    if (!selectedValue) {
-      showToast('Please select your name.'); return;
-    }
-    var isNew = isNewStudent;
-    var parts = selectedValue.split('|');
-    var firstName = parts[0];
-    var lastName = parts[1];
-
-    var now = new Date();
-    lastEntry = {
-      action: isNew ? 'new_student' : 'checkin',
-      date: fmtDate(now),
-      time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-      class: getClassName(), firstName: firstName, lastName: lastName
-    };
-
-    submitBtn.classList.add('loading'); submitBtn.disabled = true;
-    showSheet('waiting');
-
-    if (navigator.onLine) {
-      var controller = new AbortController();
-      var timeout = setTimeout(function() { controller.abort(); }, 8000);
-      try {
-        var res = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(lastEntry),
-          signal: controller.signal
+      function populateDropdown(students) {
+        var list = document.getElementById("selectList");
+        list.innerHTML = "";
+        students.forEach(function (s) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "custom-select__item";
+          btn.setAttribute("role", "option");
+          btn.dataset.value = s.firstName + "|" + s.lastName;
+          btn.textContent = s.firstName + " " + s.lastName;
+          btn.addEventListener("click", function () {
+            selectStudent(
+              s.firstName + "|" + s.lastName,
+              s.firstName + " " + s.lastName,
+            );
+          });
+          list.appendChild(btn);
         });
-        clearTimeout(timeout);
-        if (!res.ok) throw new Error('Server error (' + res.status + ')');
-      } catch (err) {
-        clearTimeout(timeout);
-        if (err.name === 'AbortError') throw new Error('timeout');
-        throw err;
       }
-    } else {
-      saveToQueue(lastEntry);
-    }
 
-    // If new student, add to local roster cache so they appear in the dropdown next time
-    if (isNew) {
-      var cached = getCachedRoster();
-      var alreadyCached = cached.some(function(s) { return s.firstName === firstName && s.lastName === lastName; });
-      if (!alreadyCached) {
-        cached.push({ firstName: firstName, lastName: lastName });
-        cached.sort(function(a, b) { return (a.firstName + ' ' + a.lastName).localeCompare(b.firstName + ' ' + b.lastName); });
-        setCachedRoster(cached);
-        populateDropdown(cached);
+      async function loadRoster() {
+        // Show cached roster immediately
+        var cached = getCachedRoster();
+        if (cached.length) populateDropdown(cached);
+
+        setStatus("green", "Updating\u2026", true);
+
+        // Fetch fresh in background
+        try {
+          var controller = new AbortController();
+          var timeout = setTimeout(function () {
+            controller.abort();
+          }, 10000);
+          var res = await fetch(APPS_SCRIPT_URL + "?action=roster", {
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          if (!res.ok) throw new Error("Network error");
+          var data = await res.json();
+          if (data.students && data.students.length) {
+            setCachedRoster(data.students);
+            populateDropdown(data.students);
+          }
+          setStatus("green", "Refreshed " + formatTime(new Date()), false);
+        } catch (err) {
+          console.warn("Could not load roster from server:", err);
+          if (cached.length) {
+            setStatus("yellow", "Using cached roster", false);
+          } else {
+            setStatus("red", "Could not load roster", false);
+          }
+        }
       }
-    }
 
-    showSheet('success', firstName);
-  } catch (err) {
-    saveToQueue(lastEntry);
-    showSheet('error');
-  } finally {
-    submitBtn.classList.remove('loading');
-    submitBtn.disabled = false;
-    submitBtn.classList.remove('ready');
-  }
-});
+      loadRoster();
 
-// ═══════════════════════════════════════════════════
-// RETRY / CLOSE HANDLERS
-// ═══════════════════════════════════════════════════
-document.getElementById('resetBtn').addEventListener('click', hideSheetWithDuesCheck);
+      // Fetch dues setting from server
+      (async function () {
+        try {
+          var res = await fetch(APPS_SCRIPT_URL + "?action=settings");
+          if (res.ok) {
+            var data = await res.json();
+            if (data.settings && data.settings.duesEnabled !== undefined) {
+              localStorage.setItem(
+                "deleon_dues_enabled",
+                data.settings.duesEnabled,
+              );
+            }
+          }
+        } catch (e) {}
+      })();
 
-// Dues prompt handlers
-document.getElementById('duesHeadsUpDismiss').addEventListener('click', closeDuesPrompt);
-document.getElementById('duesPaidNo').addEventListener('click', function() {
-  closeDuesPrompt();
-  showToast('No worries! Reminder: monthly dues are due the first week of the month.', 4500, 'toast--dues');
-});
-document.getElementById('duesPaidYes').addEventListener('click', function() {
-  if (pendingDuesEntry) {
-    var fn = pendingDuesEntry.firstName;
-    var ln = pendingDuesEntry.lastName;
-    setDuesPaid(fn, ln, getCurrentMonthKey());
-    saveToQueue({
-      action: 'recordDues',
-      firstName: fn,
-      lastName: ln,
-      month: getCurrentMonthKey(),
-      date: fmtDate(new Date())
-    });
-    if (navigator.onLine) {
-      flushQueue().catch(function() {});
-    }
-  }
-  closeDuesPrompt();
-  showToast('Thanks! Payment recorded.', 3500, 'toast--dues');
-});
-document.getElementById('errorDoneBtn').addEventListener('click', hideSheet);
-document.getElementById('retryBtn').addEventListener('click', async function() {
-  if (!lastEntry) { hideSheet(); return; }
+      // ═══════════════════════════════════════════════════
+      // FORM HANDLERS
+      // ═══════════════════════════════════════════════════
+      var customSelect = document.getElementById("customSelect");
+      var selectTrigger = document.getElementById("selectTrigger");
+      var selectDropdown = document.getElementById("selectDropdown");
+      var otherBtn = document.getElementById("otherBtn");
+      var submitBtn = document.getElementById("submitBtn");
+      var selectedValue = "";
+      var isNewStudent = false;
 
-  sheet.classList.remove('visible', 'shake');
-  void sheet.offsetWidth;
-  showSheet('waiting');
+      // New student modal elements
+      var newStudentSheet = document.getElementById("newStudentSheet");
+      var newStudentOverlay = document.getElementById("newStudentOverlay");
+      var firstNameInput = document.getElementById("firstName");
+      var lastNameInput = document.getElementById("lastName");
+      var newStudentContinue = document.getElementById("newStudentContinue");
 
-  try {
-    if (navigator.onLine) {
-      var controller = new AbortController();
-      var timeout = setTimeout(function() { controller.abort(); }, 8000);
-      try {
-        var res = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(lastEntry),
-          signal: controller.signal
-        });
-        clearTimeout(timeout);
-        if (!res.ok) throw new Error('server');
-      } catch (err) {
-        clearTimeout(timeout);
-        if (err.name === 'AbortError') throw new Error('timeout');
-        throw err;
+      function openDropdown() {
+        customSelect.classList.add("open");
+        selectTrigger.setAttribute("aria-expanded", "true");
+        document.body.classList.add("picker-open");
       }
-    } else {
-      saveToQueue(lastEntry);
-    }
-    showSheet('success', lastEntry.firstName);
-  } catch (err) {
-    showSheet('error');
-  }
-});
-sheetOverlay.addEventListener('click', hideSheet);
-duesOverlay.addEventListener('click', closeDuesPrompt);
 
-// ═══════════════════════════════════════════════════
-// PULL TO REFRESH
-// ═══════════════════════════════════════════════════
-(function() {
-  var ptrEl = document.getElementById('ptr');
-  var startY = 0;
-  var pulling = false;
-  var threshold = 60;
+      function closeDropdown() {
+        customSelect.classList.remove("open");
+        selectTrigger.setAttribute("aria-expanded", "false");
+        document.body.classList.remove("picker-open");
+      }
 
-  document.addEventListener('touchstart', function(e) {
-    if (window.scrollY > 0) return;
-    if (customSelect.classList.contains('open')) return;
-    if (sheet.classList.contains('visible')) return;
-    if (duesSheet.classList.contains('visible')) return;
-    if (newStudentSheet.classList.contains('visible')) return;
-    startY = e.touches[0].clientY;
-    pulling = true;
-  }, { passive: true });
+      function selectStudent(value, displayName) {
+        selectedValue = value;
+        isNewStudent = false;
+        selectTrigger.textContent = displayName;
+        selectTrigger.classList.remove("placeholder");
+        closeDropdown();
+        submitBtn.disabled = false;
+        submitBtn.classList.add("ready");
+      }
 
-  document.addEventListener('touchmove', function(e) {
-    if (!pulling) return;
-    var dy = e.touches[0].clientY - startY;
-    if (dy > 0 && window.scrollY === 0) {
-      var progress = Math.min(dy / threshold, 1);
-      ptrEl.querySelector('.ptr__indicator').style.transform = 'translateY(' + (-50 + 66 * progress) + 'px)';
-    }
-  }, { passive: true });
+      function selectOther() {
+        closeDropdown();
+        openNewStudentModal();
+      }
 
-  document.addEventListener('touchend', function() {
-    if (!pulling) return;
-    pulling = false;
-    var indicator = ptrEl.querySelector('.ptr__indicator');
-    var currentY = parseFloat(indicator.style.transform.replace(/[^-\d.]/g, '')) || -50;
-    if (currentY > 10) {
-      ptrEl.classList.add('ptr--loading');
-      indicator.style.transform = '';
-      loadRoster().then(function() {
-        setTimeout(function() {
-          ptrEl.classList.remove('ptr--loading');
-        }, 500);
-      }).catch(function() {
-        ptrEl.classList.remove('ptr--loading');
+      function resetSelection() {
+        selectedValue = "";
+        isNewStudent = false;
+        selectTrigger.textContent = "Select your name\u2026";
+        selectTrigger.classList.add("placeholder");
+      }
+
+      // ── Name picker triggers ──
+      selectTrigger.addEventListener("click", function () {
+        if (customSelect.classList.contains("open")) {
+          closeDropdown();
+        } else {
+          openDropdown();
+        }
       });
-    } else {
-      indicator.style.transform = '';
-    }
-  });
-})();
 
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
-try {
-  if (navigator.onLine) flushQueue().catch(function() {});
-} catch (e) { /* init flush error */ }
+      otherBtn.addEventListener("click", selectOther);
+      document
+        .getElementById("selectBack")
+        .addEventListener("click", function () {
+          closeDropdown();
+          resetSelection();
+          submitBtn.disabled = true;
+          submitBtn.classList.remove("ready");
+        });
 
-// Auto-refresh roster every 5 minutes so kiosk stays current
-setInterval(function() {
-  if (document.visibilityState === 'visible' && navigator.onLine) {
-    loadRoster();
-  }
-}, 5 * 60 * 1000);
+      // ── New student modal ──
+      function openNewStudentModal() {
+        firstNameInput.value = "";
+        lastNameInput.value = "";
+        newStudentContinue.disabled = true;
+        newStudentOverlay.classList.add("visible");
+        newStudentSheet.classList.remove("visible", "closing");
+        void newStudentSheet.offsetWidth;
+        newStudentSheet.classList.add("visible");
+        setTimeout(function () {
+          firstNameInput.focus();
+        }, 300);
+      }
 
-document.querySelector('.status-bar__version').textContent = APP_VERSION;
+      function closeNewStudentModal() {
+        newStudentSheet.classList.add("closing");
+        newStudentOverlay.classList.remove("visible");
+        setTimeout(function () {
+          newStudentSheet.classList.remove("visible", "closing");
+        }, 200);
+      }
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(function(err) {
-    console.warn('Service worker registration failed:', err);
-  });
-}
-</script>
-</body>
+      function checkNewStudentFields() {
+        var hasName = firstNameInput.value.trim() && lastNameInput.value.trim();
+        newStudentContinue.disabled = !hasName;
+      }
+      firstNameInput.addEventListener("input", checkNewStudentFields);
+      lastNameInput.addEventListener("input", checkNewStudentFields);
+
+      // iOS: dismiss keyboard when tapping non-interactive areas
+      newStudentSheet.addEventListener("touchstart", function (e) {
+        var tag = e.target.tagName.toLowerCase();
+        if (tag !== "input" && tag !== "button" && tag !== "label") {
+          document.activeElement.blur();
+        }
+      });
+      newStudentOverlay.addEventListener("touchstart", function () {
+        document.activeElement.blur();
+      });
+
+      newStudentContinue.addEventListener("click", function () {
+        var fn = firstNameInput.value.trim();
+        var ln = lastNameInput.value.trim();
+        if (!fn || !ln) return;
+        selectedValue = fn + "|" + ln;
+        isNewStudent = true;
+        selectTrigger.textContent = fn + " " + ln;
+        selectTrigger.classList.remove("placeholder");
+        closeNewStudentModal();
+        submitBtn.disabled = false;
+        submitBtn.classList.add("ready");
+      });
+
+      document
+        .getElementById("newStudentCancel")
+        .addEventListener("click", closeNewStudentModal);
+
+      function showToast(msg, duration, extraClass) {
+        duration = duration || 3000;
+        var toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.className = "toast";
+        if (extraClass) toast.classList.add(extraClass);
+        toast.classList.add("visible");
+        setTimeout(function () {
+          toast.classList.remove("visible");
+          setTimeout(function () {
+            toast.className = "toast";
+          }, 300);
+        }, duration);
+      }
+
+      // ═══════════════════════════════════════════════════
+      // DUES TRACKING
+      // ═══════════════════════════════════════════════════
+      var DUES_CACHE_KEY = "deleon_dues";
+
+      function getDuesCache() {
+        try {
+          return JSON.parse(localStorage.getItem(DUES_CACHE_KEY) || "{}");
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function isDuesPaid(firstName, lastName, monthKey) {
+        var cache = getDuesCache();
+        return cache[monthKey] && cache[monthKey][firstName + "|" + lastName];
+      }
+
+      function setDuesPaid(firstName, lastName, monthKey) {
+        var cache = getDuesCache();
+        if (!cache[monthKey]) cache[monthKey] = {};
+        cache[monthKey][firstName + "|" + lastName] = true;
+        try {
+          localStorage.setItem(DUES_CACHE_KEY, JSON.stringify(cache));
+        } catch (e) {}
+      }
+
+      function isDuesEnabled() {
+        var v = localStorage.getItem("deleon_dues_enabled");
+        return v !== "false"; // default true
+      }
+
+      function getCurrentMonthKey() {
+        var d = new Date();
+        return (
+          d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")
+        );
+      }
+
+      // ═══════════════════════════════════════════════════
+      // OFFLINE QUEUE — max 200 entries, syncs when online
+      // ═══════════════════════════════════════════════════
+      var QUEUE_KEY = "deleon_checkin_queue";
+      var MAX_QUEUE_SIZE = 200;
+
+      function getQueue() {
+        try {
+          return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveToQueue(entry) {
+        try {
+          var q = getQueue();
+          if (q.length >= MAX_QUEUE_SIZE) q.shift();
+          q.push(entry);
+          localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+        } catch (e) {
+          console.warn("Could not save to offline queue:", e);
+        }
+      }
+
+      async function flushQueue() {
+        var q = getQueue();
+        if (!q.length) return;
+        setStatus("yellow", "Pushing\u2026", true);
+        var remaining = [];
+        for (var i = 0; i < q.length; i++) {
+          try {
+            var res = await fetch(APPS_SCRIPT_URL, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain" },
+              body: JSON.stringify(q[i]),
+            });
+            if (!res.ok) remaining.push(q[i]);
+          } catch (e) {
+            remaining.push(q[i]);
+          }
+        }
+        try {
+          localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
+        } catch (e) {
+          /* storage issue */
+        }
+        if (remaining.length) {
+          setStatus("red", "Some check-ins pending", false);
+        } else {
+          setStatus("green", "Synced " + formatTime(new Date()), false);
+        }
+      }
+
+      try {
+        window.addEventListener("online", function () {
+          document.getElementById("offlineBanner").classList.remove("visible");
+          setStatus("green", "Back online", false);
+          flushQueue().catch(function () {});
+        });
+        window.addEventListener("offline", function () {
+          document.getElementById("offlineBanner").classList.add("visible");
+          setStatus("red", "Offline", false);
+        });
+        if (!navigator.onLine) {
+          document.getElementById("offlineBanner").classList.add("visible");
+          setStatus("red", "Offline", false);
+        }
+      } catch (e) {
+        /* event listener issue */
+      }
+
+      // ═══════════════════════════════════════════════════
+      // CONFETTI ENGINE
+      // ═══════════════════════════════════════════════════
+      var form = document.getElementById("checkinForm");
+      var sheet = document.getElementById("sheet");
+      var sheetOverlay = document.getElementById("sheetOverlay");
+
+      var confettiCanvas = document.getElementById("confettiCanvas");
+      var ctx = confettiCanvas.getContext("2d");
+      var confettiPieces = [];
+      var confettiRunning = false;
+      var prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      function resizeConfetti() {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+      }
+      resizeConfetti();
+      window.addEventListener("resize", resizeConfetti);
+
+      var CONFETTI_COLORS = [
+        "#C41E3A",
+        "#FFD700",
+        "#1a1a1a",
+        "#ffffff",
+        "#ff6b6b",
+        "#ffd93d",
+      ];
+
+      function launchConfetti() {
+        if (prefersReducedMotion) return;
+        confettiPieces = [];
+        for (var i = 0; i < 120; i++) {
+          confettiPieces.push({
+            x: confettiCanvas.width * 0.5 + (Math.random() - 0.5) * 200,
+            y: confettiCanvas.height * 0.45,
+            vx: (Math.random() - 0.5) * 16,
+            vy: -(Math.random() * 14 + 6),
+            w: Math.random() * 8 + 4,
+            h: Math.random() * 6 + 3,
+            color:
+              CONFETTI_COLORS[
+                Math.floor(Math.random() * CONFETTI_COLORS.length)
+              ],
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 12,
+            gravity: 0.25 + Math.random() * 0.15,
+            opacity: 1,
+            decay: 0.008 + Math.random() * 0.008,
+          });
+        }
+        if (!confettiRunning) {
+          confettiRunning = true;
+          animateConfetti();
+        }
+      }
+
+      function animateConfetti() {
+        ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        var alive = false;
+        for (var i = 0; i < confettiPieces.length; i++) {
+          var p = confettiPieces[i];
+          if (p.opacity <= 0) continue;
+          alive = true;
+          p.x += p.vx;
+          p.vy += p.gravity;
+          p.y += p.vy;
+          p.vx *= 0.98;
+          p.rotation += p.rotationSpeed;
+          p.opacity -= p.decay;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.globalAlpha = Math.max(0, p.opacity);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+        if (alive) {
+          requestAnimationFrame(animateConfetti);
+        } else {
+          confettiRunning = false;
+          ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════
+      // MODAL LOGIC
+      // ═══════════════════════════════════════════════════
+      function showSheet(state, name) {
+        document.getElementById("sheetWaiting").classList.remove("active");
+        document.getElementById("sheetSuccess").classList.remove("active");
+        document.getElementById("sheetError").classList.remove("active");
+        sheet.classList.remove("shake");
+
+        if (state === "waiting") {
+          document.getElementById("sheetWaiting").classList.add("active");
+          sheetOverlay.classList.add("visible");
+          sheet.classList.remove("visible", "subtle");
+          void sheet.offsetWidth;
+          sheet.classList.add("visible", "subtle");
+        } else if (state === "success") {
+          document.getElementById("successName").textContent = name || "";
+          document.getElementById("sheetSuccess").classList.add("active");
+          sheet.classList.remove("visible", "subtle");
+          void sheet.offsetWidth;
+          sheet.classList.add("visible");
+          setTimeout(function () {
+            launchConfetti();
+          }, 150);
+        } else if (state === "error") {
+          document.getElementById("sheetError").classList.add("active");
+          sheet.classList.remove("visible", "subtle");
+          void sheet.offsetWidth;
+          sheet.classList.add("visible");
+          setTimeout(function () {
+            sheet.classList.add("shake");
+          }, 400);
+        }
+      }
+
+      function hideSheet() {
+        sheet.classList.add("closing");
+        sheetOverlay.classList.remove("visible");
+        setTimeout(function () {
+          sheet.classList.remove("visible", "closing", "shake");
+          form.reset();
+          submitBtn.disabled = true;
+          submitBtn.classList.remove("ready");
+          resetSelection();
+          selectTrigger.focus();
+        }, 200);
+      }
+
+      // ── Dues prompt after successful sign-in ──
+      var duesSheet = document.getElementById("duesSheet");
+      var duesOverlay = document.getElementById("duesOverlay");
+      var pendingDuesEntry = null; // stores {firstName, lastName} for dues recording
+
+      function shouldShowDuesPrompt(firstName, lastName) {
+        if (!isDuesEnabled()) return false;
+        var day = new Date().getDate();
+        if (day >= 24) return "headsup";
+        if (day <= 10) {
+          if (isDuesPaid(firstName, lastName, getCurrentMonthKey()))
+            return false;
+          return "paycheck";
+        }
+        return false;
+      }
+
+      function showDuesPrompt(variant) {
+        document.getElementById("duesHeadsUp").classList.remove("active");
+        document.getElementById("duesPayCheck").classList.remove("active");
+        if (variant === "headsup") {
+          document.getElementById("duesHeadsUp").classList.add("active");
+        } else {
+          document.getElementById("duesPayCheck").classList.add("active");
+        }
+        duesOverlay.classList.add("visible");
+        duesSheet.classList.remove("visible", "closing");
+        void duesSheet.offsetWidth;
+        duesSheet.classList.add("visible");
+      }
+
+      function closeDuesPrompt() {
+        duesSheet.classList.add("closing");
+        duesOverlay.classList.remove("visible");
+        setTimeout(function () {
+          duesSheet.classList.remove("visible", "closing");
+          pendingDuesEntry = null;
+        }, 200);
+      }
+
+      function hideSheetWithDuesCheck() {
+        if (!lastEntry) {
+          hideSheet();
+          return;
+        }
+        var fn = lastEntry.firstName;
+        var ln = lastEntry.lastName;
+        var variant = shouldShowDuesPrompt(fn, ln);
+
+        hideSheet();
+
+        if (variant) {
+          pendingDuesEntry = { firstName: fn, lastName: ln };
+          setTimeout(function () {
+            showDuesPrompt(variant);
+          }, 300);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════
+      // KEYBOARD / ACCESSIBILITY
+      // ═══════════════════════════════════════════════════
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          if (duesSheet.classList.contains("visible")) {
+            closeDuesPrompt();
+          } else if (newStudentSheet.classList.contains("visible")) {
+            closeNewStudentModal();
+          } else if (customSelect.classList.contains("open")) {
+            closeDropdown();
+          } else if (sheet.classList.contains("visible")) {
+            hideSheet();
+          }
+        }
+      });
+
+      // ═══════════════════════════════════════════════════
+      // SUBMIT HANDLER
+      // ═══════════════════════════════════════════════════
+      var lastEntry = null;
+
+      submitBtn.addEventListener("click", async function (e) {
+        e.preventDefault();
+        try {
+          if (!selectedValue) {
+            showToast("Please select your name.");
+            return;
+          }
+          var isNew = isNewStudent;
+          var parts = selectedValue.split("|");
+          var firstName = parts[0];
+          var lastName = parts[1];
+
+          var now = new Date();
+          lastEntry = {
+            action: isNew ? "new_student" : "checkin",
+            date: fmtDate(now),
+            time: now.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+            }),
+            class: getClassName(),
+            firstName: firstName,
+            lastName: lastName,
+          };
+
+          submitBtn.classList.add("loading");
+          submitBtn.disabled = true;
+          showSheet("waiting");
+
+          if (navigator.onLine) {
+            var controller = new AbortController();
+            var timeout = setTimeout(function () {
+              controller.abort();
+            }, 8000);
+            try {
+              var res = await fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(lastEntry),
+                signal: controller.signal,
+              });
+              clearTimeout(timeout);
+              if (!res.ok) throw new Error("Server error (" + res.status + ")");
+            } catch (err) {
+              clearTimeout(timeout);
+              if (err.name === "AbortError") throw new Error("timeout");
+              throw err;
+            }
+          } else {
+            saveToQueue(lastEntry);
+          }
+
+          // If new student, add to local roster cache so they appear in the dropdown next time
+          if (isNew) {
+            var cached = getCachedRoster();
+            var alreadyCached = cached.some(function (s) {
+              return s.firstName === firstName && s.lastName === lastName;
+            });
+            if (!alreadyCached) {
+              cached.push({ firstName: firstName, lastName: lastName });
+              cached.sort(function (a, b) {
+                return (a.firstName + " " + a.lastName).localeCompare(
+                  b.firstName + " " + b.lastName,
+                );
+              });
+              setCachedRoster(cached);
+              populateDropdown(cached);
+            }
+          }
+
+          showSheet("success", firstName);
+        } catch (err) {
+          saveToQueue(lastEntry);
+          showSheet("error");
+        } finally {
+          submitBtn.classList.remove("loading");
+          submitBtn.disabled = false;
+          submitBtn.classList.remove("ready");
+        }
+      });
+
+      // ═══════════════════════════════════════════════════
+      // RETRY / CLOSE HANDLERS
+      // ═══════════════════════════════════════════════════
+      document
+        .getElementById("resetBtn")
+        .addEventListener("click", hideSheetWithDuesCheck);
+
+      // Dues prompt handlers
+      document
+        .getElementById("duesHeadsUpDismiss")
+        .addEventListener("click", closeDuesPrompt);
+      document
+        .getElementById("duesPaidNo")
+        .addEventListener("click", function () {
+          closeDuesPrompt();
+          showToast(
+            "No worries! Reminder: monthly dues are due the first week of the month.",
+            4500,
+            "toast--dues",
+          );
+        });
+      document
+        .getElementById("duesPaidYes")
+        .addEventListener("click", function () {
+          if (pendingDuesEntry) {
+            var fn = pendingDuesEntry.firstName;
+            var ln = pendingDuesEntry.lastName;
+            setDuesPaid(fn, ln, getCurrentMonthKey());
+            saveToQueue({
+              action: "recordDues",
+              firstName: fn,
+              lastName: ln,
+              month: getCurrentMonthKey(),
+              date: fmtDate(new Date()),
+            });
+            if (navigator.onLine) {
+              flushQueue().catch(function () {});
+            }
+          }
+          closeDuesPrompt();
+          showToast("Thanks! Payment recorded.", 3500, "toast--dues");
+        });
+      document
+        .getElementById("errorDoneBtn")
+        .addEventListener("click", hideSheet);
+      document
+        .getElementById("retryBtn")
+        .addEventListener("click", async function () {
+          if (!lastEntry) {
+            hideSheet();
+            return;
+          }
+
+          sheet.classList.remove("visible", "shake");
+          void sheet.offsetWidth;
+          showSheet("waiting");
+
+          try {
+            if (navigator.onLine) {
+              var controller = new AbortController();
+              var timeout = setTimeout(function () {
+                controller.abort();
+              }, 8000);
+              try {
+                var res = await fetch(APPS_SCRIPT_URL, {
+                  method: "POST",
+                  headers: { "Content-Type": "text/plain" },
+                  body: JSON.stringify(lastEntry),
+                  signal: controller.signal,
+                });
+                clearTimeout(timeout);
+                if (!res.ok) throw new Error("server");
+              } catch (err) {
+                clearTimeout(timeout);
+                if (err.name === "AbortError") throw new Error("timeout");
+                throw err;
+              }
+            } else {
+              saveToQueue(lastEntry);
+            }
+            showSheet("success", lastEntry.firstName);
+          } catch (err) {
+            showSheet("error");
+          }
+        });
+      sheetOverlay.addEventListener("click", hideSheet);
+      duesOverlay.addEventListener("click", closeDuesPrompt);
+
+      // ═══════════════════════════════════════════════════
+      // PULL TO REFRESH
+      // ═══════════════════════════════════════════════════
+      (function () {
+        var ptrEl = document.getElementById("ptr");
+        var startY = 0;
+        var pulling = false;
+        var threshold = 60;
+
+        document.addEventListener(
+          "touchstart",
+          function (e) {
+            if (window.scrollY > 0) return;
+            if (customSelect.classList.contains("open")) return;
+            if (sheet.classList.contains("visible")) return;
+            if (duesSheet.classList.contains("visible")) return;
+            if (newStudentSheet.classList.contains("visible")) return;
+            startY = e.touches[0].clientY;
+            pulling = true;
+          },
+          { passive: true },
+        );
+
+        document.addEventListener(
+          "touchmove",
+          function (e) {
+            if (!pulling) return;
+            var dy = e.touches[0].clientY - startY;
+            if (dy > 0 && window.scrollY === 0) {
+              var progress = Math.min(dy / threshold, 1);
+              ptrEl.querySelector(".ptr__indicator").style.transform =
+                "translateY(" + (-50 + 66 * progress) + "px)";
+            }
+          },
+          { passive: true },
+        );
+
+        document.addEventListener("touchend", function () {
+          if (!pulling) return;
+          pulling = false;
+          var indicator = ptrEl.querySelector(".ptr__indicator");
+          var currentY =
+            parseFloat(indicator.style.transform.replace(/[^-\d.]/g, "")) ||
+            -50;
+          if (currentY > 10) {
+            ptrEl.classList.add("ptr--loading");
+            indicator.style.transform = "";
+            loadRoster()
+              .then(function () {
+                setTimeout(function () {
+                  ptrEl.classList.remove("ptr--loading");
+                }, 500);
+              })
+              .catch(function () {
+                ptrEl.classList.remove("ptr--loading");
+              });
+          } else {
+            indicator.style.transform = "";
+          }
+        });
+      })();
+
+      // ═══════════════════════════════════════════════════
+      // INIT
+      // ═══════════════════════════════════════════════════
+      try {
+        if (navigator.onLine) flushQueue().catch(function () {});
+      } catch (e) {
+        /* init flush error */
+      }
+
+      // Auto-refresh roster every 5 minutes so kiosk stays current
+      setInterval(
+        function () {
+          if (document.visibilityState === "visible" && navigator.onLine) {
+            loadRoster();
+          }
+        },
+        5 * 60 * 1000,
+      );
+
+      document.querySelector(".status-bar__version").textContent = APP_VERSION;
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("sw.js")
+          .then(function (reg) {
+            // Check for updates every 60s
+            setInterval(function () {
+              reg.update();
+            }, 60000);
+            reg.addEventListener("updatefound", function () {
+              var newSW = reg.installing;
+              newSW.addEventListener("statechange", function () {
+                if (newSW.state === "activated") {
+                  window.location.reload();
+                }
+              });
+            });
+          })
+          .catch(function (err) {
+            console.warn("Service worker registration failed:", err);
+          });
+        // Reload when new SW takes over
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener(
+          "controllerchange",
+          function () {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          },
+        );
+      }
+    </script>
+  </body>
 </html>
