@@ -742,6 +742,52 @@
       line-height: 1.4;
     }
 
+    /* ── Pull to Refresh ─────────────────────────────── */
+    .ptr {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    .ptr__indicator {
+      background: var(--white);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transform: translateY(-50px);
+      transition: transform 0.2s ease;
+    }
+
+    .ptr__indicator svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--red);
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+    }
+
+    .ptr--loading .ptr__indicator {
+      transform: translateY(16px);
+    }
+
+    .ptr--loading .ptr__indicator svg {
+      animation: ptr-spin 0.8s linear infinite;
+    }
+
+    @keyframes ptr-spin {
+      to { transform: rotate(360deg); }
+    }
+
     /* ── Offline Banner ──────────────────────────────── */
     .offline-banner {
       display: none;
@@ -899,6 +945,12 @@
   </style>
 </head>
 <body>
+
+<div class="ptr" id="ptr">
+  <div class="ptr__indicator">
+    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.22-8.56"/><polyline points="21 3 21 9 15 9"/></svg>
+  </div>
+</div>
 
 <div class="container">
   <header class="header" role="banner">
@@ -1682,6 +1734,55 @@ document.getElementById('retryBtn').addEventListener('click', async function() {
 });
 sheetOverlay.addEventListener('click', hideSheet);
 duesOverlay.addEventListener('click', closeDuesPrompt);
+
+// ═══════════════════════════════════════════════════
+// PULL TO REFRESH
+// ═══════════════════════════════════════════════════
+(function() {
+  var ptrEl = document.getElementById('ptr');
+  var startY = 0;
+  var pulling = false;
+  var threshold = 60;
+
+  document.addEventListener('touchstart', function(e) {
+    if (window.scrollY > 0) return;
+    if (customSelect.classList.contains('open')) return;
+    if (sheet.classList.contains('visible')) return;
+    if (duesSheet.classList.contains('visible')) return;
+    if (newStudentSheet.classList.contains('visible')) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!pulling) return;
+    var dy = e.touches[0].clientY - startY;
+    if (dy > 0 && window.scrollY === 0) {
+      var progress = Math.min(dy / threshold, 1);
+      ptrEl.querySelector('.ptr__indicator').style.transform = 'translateY(' + (-50 + 66 * progress) + 'px)';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function() {
+    if (!pulling) return;
+    pulling = false;
+    var indicator = ptrEl.querySelector('.ptr__indicator');
+    var currentY = parseFloat(indicator.style.transform.replace(/[^-\d.]/g, '')) || -50;
+    if (currentY > 10) {
+      ptrEl.classList.add('ptr--loading');
+      indicator.style.transform = '';
+      loadRoster().then(function() {
+        setTimeout(function() {
+          ptrEl.classList.remove('ptr--loading');
+        }, 500);
+      }).catch(function() {
+        ptrEl.classList.remove('ptr--loading');
+      });
+    } else {
+      indicator.style.transform = '';
+    }
+  });
+})();
 
 // ═══════════════════════════════════════════════════
 // INIT

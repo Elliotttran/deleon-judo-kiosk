@@ -827,9 +827,56 @@ body.past-mode .tab.active { color: #ccc; }
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
+
+/* ── Pull to Refresh ── */
+.ptr {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 50;
+  pointer-events: none;
+}
+.ptr__indicator {
+  background: var(--white);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transform: translateY(-50px);
+  transition: transform 0.2s ease;
+}
+.ptr__indicator svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--text);
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.ptr--loading .ptr__indicator {
+  transform: translateY(16px);
+}
+.ptr--loading .ptr__indicator svg {
+  animation: ptr-spin 0.8s linear infinite;
+}
+@keyframes ptr-spin {
+  to { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
+
+<div class="ptr" id="ptr">
+  <div class="ptr__indicator">
+    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.22-8.56"/><polyline points="21 3 21 9 15 9"/></svg>
+  </div>
+</div>
 
 <div class="pin-screen" id="pinScreen">
   <div class="pin-brand">Club Sign In</div>
@@ -2152,6 +2199,54 @@ flushSyncQueue().then(function(success) {
     setSyncState('saved', 'Synced ' + formatSavedTime(lastSavedTime));
   }
 }).catch(function() {});
+
+// ═══════════════════════════════════
+// PULL TO REFRESH
+// ═══════════════════════════════════
+(function() {
+  var ptrEl = document.getElementById('ptr');
+  var startY = 0;
+  var pulling = false;
+  var threshold = 60;
+
+  document.addEventListener('touchstart', function(e) {
+    if (window.scrollY > 0) return;
+    if (!document.getElementById('pinScreen').classList.contains('hidden')) return;
+    if (document.getElementById('roAddOverlay').classList.contains('show')) return;
+    if (document.getElementById('modalOverlay').classList.contains('show')) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!pulling) return;
+    var dy = e.touches[0].clientY - startY;
+    if (dy > 0 && window.scrollY === 0) {
+      var progress = Math.min(dy / threshold, 1);
+      ptrEl.querySelector('.ptr__indicator').style.transform = 'translateY(' + (-50 + 66 * progress) + 'px)';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function() {
+    if (!pulling) return;
+    pulling = false;
+    var indicator = ptrEl.querySelector('.ptr__indicator');
+    var currentY = parseFloat(indicator.style.transform.replace(/[^-\d.]/g, '')) || -50;
+    if (currentY > 10) {
+      ptrEl.classList.add('ptr--loading');
+      indicator.style.transform = '';
+      loadFromServer().then(function() {
+        setTimeout(function() {
+          ptrEl.classList.remove('ptr--loading');
+        }, 500);
+      }).catch(function() {
+        ptrEl.classList.remove('ptr--loading');
+      });
+    } else {
+      indicator.style.transform = '';
+    }
+  });
+})();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(function(err) {
