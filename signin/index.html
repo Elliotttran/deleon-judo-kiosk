@@ -54,7 +54,7 @@
         color: var(--text);
         min-height: 100%;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
         -webkit-font-smoothing: antialiased;
       }
@@ -62,11 +62,12 @@
       .container {
         width: 100%;
         max-width: 440px;
-        padding: 72px 24px 100px;
-        padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+        flex: 1;
+        padding: 72px 24px 60px;
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
       }
 
       /* ── App Bar ─────────────────────────────────────── */
@@ -1345,7 +1346,8 @@
       /* ── Status Bar ─────────────────────────────────── */
       .status-bar {
         width: 100%;
-        margin-top: 24px;
+        padding: 16px 24px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1489,14 +1491,14 @@
           <span class="spinner" aria-hidden="true"></span>
         </button>
       </form>
+    </div>
 
-      <div class="status-bar" id="statusBar">
-        <div class="status-bar__left">
-          <div class="status-bar__dot" id="statusDot"></div>
-          <div class="status-bar__text" id="statusText">Loading...</div>
-        </div>
-        <div class="status-bar__version">v1.0</div>
+    <div class="status-bar" id="statusBar">
+      <div class="status-bar__left">
+        <div class="status-bar__dot" id="statusDot"></div>
+        <div class="status-bar__text" id="statusText">Loading...</div>
       </div>
+      <div class="status-bar__version">v1.0</div>
     </div>
 
     <!-- Bottom Sheet -->
