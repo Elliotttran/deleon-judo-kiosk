@@ -1118,13 +1118,7 @@ async function loadRoster() {
   }
 }
 
-if (APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') {
-  loadRoster();
-} else {
-  console.warn('DeLeon Judo: APPS_SCRIPT_URL not configured. Set it to your deployed Apps Script URL.');
-  var cached = getCachedRoster();
-  if (cached.length) populateDropdown(cached);
-}
+loadRoster();
 
 // ═══════════════════════════════════════════════════
 // FORM HANDLERS
@@ -1317,7 +1311,6 @@ function saveToQueue(entry) {
 }
 
 async function flushQueue() {
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') return;
   var q = getQueue();
   if (!q.length) return;
   var remaining = [];
@@ -1566,7 +1559,7 @@ submitBtn.addEventListener('click', async function(e) {
     submitBtn.classList.add('loading'); submitBtn.disabled = true;
     showSheet('waiting');
 
-    if (navigator.onLine && APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') {
+    if (navigator.onLine) {
       var controller = new AbortController();
       var timeout = setTimeout(function() { controller.abort(); }, 8000);
       try {
@@ -1633,7 +1626,7 @@ document.getElementById('duesPaidYes').addEventListener('click', function() {
       month: getCurrentMonthKey(),
       date: fmtDate(new Date())
     });
-    if (navigator.onLine && APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') {
+    if (navigator.onLine) {
       flushQueue().catch(function() {});
     }
   }
@@ -1649,7 +1642,7 @@ document.getElementById('retryBtn').addEventListener('click', async function() {
   showSheet('waiting');
 
   try {
-    if (navigator.onLine && APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') {
+    if (navigator.onLine) {
       var controller = new AbortController();
       var timeout = setTimeout(function() { controller.abort(); }, 8000);
       try {
@@ -1681,7 +1674,7 @@ duesOverlay.addEventListener('click', closeDuesPrompt);
 // INIT
 // ═══════════════════════════════════════════════════
 try {
-  if (navigator.onLine && APPS_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') flushQueue().catch(function() {});
+  if (navigator.onLine) flushQueue().catch(function() {});
 } catch (e) { /* init flush error */ }
 
 if ('serviceWorker' in navigator) {

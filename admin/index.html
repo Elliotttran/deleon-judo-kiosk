@@ -1116,7 +1116,6 @@ function queueChange(change) {
 }
 
 async function flushSyncQueue() {
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') return true;
   if (!navigator.onLine) return false;
   var q = getSyncQueue();
   if (!q.length) return true;
@@ -1188,7 +1187,6 @@ function siRetrySync() {
 // SERVER DATA LOADING
 // ═══════════════════════════════════
 async function loadFromServer() {
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec') return;
   if (!navigator.onLine) return;
   try {
     var results = await Promise.all([
