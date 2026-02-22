@@ -1120,6 +1120,19 @@ async function loadRoster() {
 
 loadRoster();
 
+// Fetch dues setting from server
+(async function() {
+  try {
+    var res = await fetch(APPS_SCRIPT_URL + '?action=settings');
+    if (res.ok) {
+      var data = await res.json();
+      if (data.settings && data.settings.duesEnabled !== undefined) {
+        localStorage.setItem('deleon_dues_enabled', data.settings.duesEnabled);
+      }
+    }
+  } catch (e) {}
+})();
+
 // ═══════════════════════════════════════════════════
 // FORM HANDLERS
 // ═══════════════════════════════════════════════════

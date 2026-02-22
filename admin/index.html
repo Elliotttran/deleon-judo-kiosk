@@ -1005,13 +1005,11 @@ body.past-mode .tab.active { color: #ccc; }
 // SHARED STATE & HELPERS
 // ═══════════════════════════════════
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
-const WRITE_KEY = 'YOUR_WRITE_KEY_HERE';
+const WRITE_KEY = '1970';
 
 const CLASS_DAYS = [2, 4]; // Tue, Thu (graded days)
 // const CLASS_DAYS = [1, 2, 4]; // Mon, Tue, Thu — uncomment to include Monday open mat
-const DEFAULT_ROSTER = [
-  'Zhang, Bob'
-];
+const DEFAULT_ROSTER = [];
 
 function getRoster() {
   try {
@@ -1312,6 +1310,12 @@ function pinBack() {
   pinUpdateDots();
   document.getElementById('pinError').textContent = '';
 }
+
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('pinScreen').classList.contains('hidden')) return;
+  if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+  else if (e.key === 'Backspace') pinBack();
+});
 
 function pinUpdateDots() {
   for (var i = 0; i < 4; i++) {
