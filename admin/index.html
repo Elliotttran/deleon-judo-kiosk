@@ -1123,7 +1123,7 @@ async function flushSyncQueue() {
       var payload = Object.assign({}, q[i], { key: WRITE_KEY });
       var res = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
       });
       if (!res.ok) remaining.push(q[i]);
