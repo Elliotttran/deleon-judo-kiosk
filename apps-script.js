@@ -216,6 +216,7 @@ function doPost(e) {
     switch (action) {
       case 'addstudent':      return handleAddStudent(body);
       case 'removestudent':   return handleRemoveStudent(body);
+      case 'editstudent':     return handleEditStudent(body);
       case 'saveattendance':  return handleSaveAttendance(body);
       case 'cancelclass':     return handleCancelClass(body);
       case 'restoreclass':    return handleRestoreClass(body);
@@ -293,6 +294,59 @@ function handleAddStudent(body) {
   var name = body.last + ', ' + body.first;
   addToRoster(name);
   return json({ ok: true, name: name });
+}
+
+function handleEditStudent(body) {
+  var oldName = body.oldName;
+  var newName = body.newLast + ', ' + body.newFirst;
+  if (!oldName || !newName) return json({ error: 'oldName, newLast, newFirst required' });
+
+  // Rename in Roster
+  var roster = getSheet(TAB_ROSTER);
+  var rosterLast = roster.getLastRow();
+  if (rosterLast >= 2) {
+    var names = roster.getRange(2, 1, rosterLast - 1, 1).getValues();
+    for (var i = 0; i < names.length; i++) {
+      if (names[i][0] === oldName) {
+        roster.getRange(i + 2, 1).setValue(newName);
+        break;
+      }
+    }
+    if (roster.getLastRow() >= 3) {
+      roster.getRange(2, 1, roster.getLastRow() - 1, 1).sort(1);
+    }
+  }
+
+  // Update Attendance records
+  var att = getSheet(TAB_ATTENDANCE);
+  var attLast = att.getLastRow();
+  if (attLast >= 2) {
+    var data = att.getRange(2, 1, attLast - 1, 2).getValues();
+    for (var j = 0; j < data.length; j++) {
+      try {
+        var present = JSON.parse(data[j][1]);
+        var idx = present.indexOf(oldName);
+        if (idx !== -1) {
+          present[idx] = newName;
+          att.getRange(j + 2, 2).setValue(JSON.stringify(present));
+        }
+      } catch (ex) { /* skip malformed */ }
+    }
+  }
+
+  // Update Check-ins
+  var ci = getSheet(TAB_CHECKINS);
+  var ciLast = ci.getLastRow();
+  if (ciLast >= 2) {
+    var ciData = ci.getRange(2, 2, ciLast - 1, 1).getValues();
+    for (var k = 0; k < ciData.length; k++) {
+      if (ciData[k][0] === oldName) {
+        ci.getRange(k + 2, 2).setValue(newName);
+      }
+    }
+  }
+
+  return json({ ok: true, oldName: oldName, newName: newName });
 }
 
 function handleRemoveStudent(body) {

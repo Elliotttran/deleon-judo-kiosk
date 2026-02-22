@@ -325,6 +325,14 @@ body.past-mode .tab.active { color: #ccc; }
   font-size: 18px; font-weight: 700; flex: 1; color: var(--text);
 }
 
+.ro-edit {
+  background: none; border: none; cursor: pointer;
+  font-size: 17px; color: #ccc; padding: 4px 8px;
+  transition: color 0.15s; border-radius: 6px;
+}
+.ro-edit:hover { color: var(--text); }
+.ro-edit:active { background: rgba(0,0,0,0.06); }
+
 .ro-delete {
   background: none; border: none; cursor: pointer;
   font-size: 18px; color: #ccc; padding: 4px 8px;
@@ -961,13 +969,13 @@ body.past-mode .tab.active { color: #ccc; }
     </div>
     <div class="modal-actions" id="roAddActions">
       <button class="modal-btn modal-cancel" onclick="roCloseAdd()">Cancel</button>
-      <button class="modal-btn btn-green" onclick="roAddConfirm()">Add</button>
+      <button class="modal-btn btn-green" id="roAddBtn" onclick="editingStudent ? roEditConfirm() : roAddConfirm()">Add</button>
     </div>
     <!-- Success state -->
     <div id="roAddSuccess" style="display:none; text-align:center; padding: 10px 0;">
       <div style="font-size:40px; margin-bottom:12px;">&#10003;</div>
       <div style="font-size:18px; font-weight:700; margin-bottom:4px;" id="roAddSuccessName"></div>
-      <div style="font-size:14px; color:var(--text-light); font-weight:600;">Added to roster</div>
+      <div style="font-size:14px; color:var(--text-light); font-weight:600;" id="roAddSuccessMsg">Added to roster</div>
     </div>
   </div>
 </div>
@@ -1620,25 +1628,102 @@ function roRender() {
   var roster = getRoster();
   document.getElementById('roSubtitle').textContent = roster.length + ' students';
   document.getElementById('roList').innerHTML = roster.map(function(name, i) {
+    var escaped = name.replace(/'/g, "\\'");
     return '<div class="ro-row">' +
       '<span class="ro-num">' + (i + 1) + '</span>' +
       '<span class="ro-name">' + name + '</span>' +
-      '<button class="ro-delete" onclick="roDelete(\'' + name.replace(/'/g, "\\'") + '\')">&#10005;</button>' +
+      '<button class="ro-edit" onclick="roEdit(\'' + escaped + '\')">&#9998;</button>' +
+      '<button class="ro-delete" onclick="roDelete(\'' + escaped + '\')">&#10005;</button>' +
     '</div>';
   }).join('');
 }
 
+var editingStudent = null;
+
 function roShowAdd() {
+  editingStudent = null;
   document.getElementById('roLastName').value = '';
   document.getElementById('roFirstName').value = '';
   document.getElementById('roLastName').classList.remove('error');
   document.getElementById('roFirstName').classList.remove('error');
   document.getElementById('roAddTitle').textContent = 'Add Student';
+  document.getElementById('roAddBtn').textContent = 'Add';
   document.getElementById('roAddBody').style.display = '';
   document.getElementById('roAddActions').style.display = '';
   document.getElementById('roAddSuccess').style.display = 'none';
   document.getElementById('roAddOverlay').classList.add('show');
   setTimeout(function() { document.getElementById('roLastName').focus(); }, 200);
+}
+
+function roEdit(name) {
+  editingStudent = name;
+  var parts = name.split(', ');
+  document.getElementById('roLastName').value = parts[0] || '';
+  document.getElementById('roFirstName').value = parts[1] || '';
+  document.getElementById('roLastName').classList.remove('error');
+  document.getElementById('roFirstName').classList.remove('error');
+  document.getElementById('roAddTitle').textContent = 'Edit Student';
+  document.getElementById('roAddBtn').textContent = 'Save';
+  document.getElementById('roAddBody').style.display = '';
+  document.getElementById('roAddActions').style.display = '';
+  document.getElementById('roAddSuccess').style.display = 'none';
+  document.getElementById('roAddOverlay').classList.add('show');
+  setTimeout(function() { document.getElementById('roLastName').focus(); }, 200);
+}
+
+function roEditConfirm() {
+  var last = document.getElementById('roLastName').value.trim();
+  var first = document.getElementById('roFirstName').value.trim();
+
+  var valid = true;
+  document.getElementById('roLastName').classList.remove('error');
+  document.getElementById('roFirstName').classList.remove('error');
+  if (!last) { document.getElementById('roLastName').classList.add('error'); valid = false; }
+  if (!first) { document.getElementById('roFirstName').classList.add('error'); valid = false; }
+  if (!valid) return;
+
+  var newName = last + ', ' + first;
+  var oldName = editingStudent;
+
+  // No change
+  if (newName === oldName) { roCloseAdd(); return; }
+
+  var roster = getRoster();
+  if (roster.includes(newName)) {
+    showToast('Already on roster', 'error');
+    return;
+  }
+
+  // Update roster
+  roster = roster.filter(function(n) { return n !== oldName; });
+  roster.push(newName);
+  roster.sort(function(a, b) { return a.localeCompare(b); });
+  setRoster(roster);
+
+  // Update all attendance records
+  var att = getAtt();
+  Object.keys(att).forEach(function(date) {
+    att[date] = att[date].map(function(n) { return n === oldName ? newName : n; });
+  });
+  setAtt(att);
+
+  queueChange({ action: 'editStudent', oldName: oldName, newLast: last, newFirst: first });
+
+  // Show success state
+  document.getElementById('roAddBody').style.display = 'none';
+  document.getElementById('roAddActions').style.display = 'none';
+  document.getElementById('roAddSuccess').style.display = '';
+  document.getElementById('roAddTitle').textContent = '';
+  document.getElementById('roAddSuccessName').textContent = newName;
+  document.getElementById('roAddSuccessMsg').textContent = 'Updated';
+
+  setTimeout(function() {
+    roCloseAdd();
+    roRender();
+    document.getElementById('roAddSuccessMsg').textContent = 'Added to roster';
+  }, 1200);
+
+  triggerSync();
 }
 
 function roCloseAdd() {
@@ -2235,7 +2320,9 @@ flushSyncQueue().then(function(success) {
     if (currentY > 10) {
       ptrEl.classList.add('ptr--loading');
       indicator.style.transform = '';
-      loadFromServer().then(function() {
+      flushSyncQueue().then(function() {
+        return loadFromServer();
+      }).then(function() {
         setTimeout(function() {
           ptrEl.classList.remove('ptr--loading');
         }, 500);
@@ -2247,6 +2334,13 @@ flushSyncQueue().then(function(success) {
     }
   });
 })();
+
+// Auto-refresh every 5 minutes so kiosk stays current
+setInterval(function() {
+  if (document.visibilityState === 'visible' && navigator.onLine) {
+    loadFromServer();
+  }
+}, 5 * 60 * 1000);
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(function(err) {

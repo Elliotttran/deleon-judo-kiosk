@@ -942,6 +942,49 @@
       .sheet__title { font-size: 28px; }
       .sheet__message { font-size: 21px; }
     }
+
+    /* ── Status Bar ─────────────────────────────────── */
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: rgba(248,248,248,0.95);
+      border-top: 1px solid var(--border);
+      z-index: 40;
+    }
+    .status-bar__left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-bar__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ccc;
+      flex-shrink: 0;
+    }
+    .status-bar__dot.green { background: #16a34a; }
+    .status-bar__dot.yellow { background: #eab308; }
+    .status-bar__dot.red { background: #c41919; }
+    .status-bar__dot.pulsing { animation: status-pulse 0.8s ease infinite; }
+    @keyframes status-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+    .status-bar__version {
+      color: #bbb;
+      font-size: 11px;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -1073,12 +1116,21 @@
   </div>
 </div>
 
+<div class="status-bar" id="statusBar">
+  <div class="status-bar__left">
+    <div class="status-bar__dot" id="statusDot"></div>
+    <div class="status-bar__text" id="statusText">Loading...</div>
+  </div>
+  <div class="status-bar__version">v1.0</div>
+</div>
+
 <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
 <script>
 // ═══════════════════════════════════════════════════
 // CONFIG — paste your deployed Apps Script URL here
 // ═══════════════════════════════════════════════════
+const APP_VERSION = 'v1.0';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 
 // ═══════════════════════════════════════════════════
@@ -1114,6 +1166,20 @@ function getClassName() {
   if (day === 2) return 'Tuesday';
   if (day === 4) return 'Thursday';
   return DAYS_EN[day];
+}
+
+// ═══════════════════════════════════════════════════
+// STATUS BAR
+// ═══════════════════════════════════════════════════
+function setStatus(color, text, pulsing) {
+  var dot = document.getElementById('statusDot');
+  var txt = document.getElementById('statusText');
+  dot.className = 'status-bar__dot ' + color + (pulsing ? ' pulsing' : '');
+  txt.textContent = text;
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1153,6 +1219,8 @@ async function loadRoster() {
   var cached = getCachedRoster();
   if (cached.length) populateDropdown(cached);
 
+  setStatus('green', 'Updating\u2026', true);
+
   // Fetch fresh in background
   try {
     var controller = new AbortController();
@@ -1165,8 +1233,14 @@ async function loadRoster() {
       setCachedRoster(data.students);
       populateDropdown(data.students);
     }
+    setStatus('green', 'Refreshed ' + formatTime(new Date()), false);
   } catch (err) {
     console.warn('Could not load roster from server:', err);
+    if (cached.length) {
+      setStatus('yellow', 'Using cached roster', false);
+    } else {
+      setStatus('red', 'Could not load roster', false);
+    }
   }
 }
 
@@ -1378,6 +1452,7 @@ function saveToQueue(entry) {
 async function flushQueue() {
   var q = getQueue();
   if (!q.length) return;
+  setStatus('yellow', 'Pushing\u2026', true);
   var remaining = [];
   for (var i = 0; i < q.length; i++) {
     try {
@@ -1393,17 +1468,27 @@ async function flushQueue() {
   }
   try { localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining)); }
   catch (e) { /* storage issue */ }
+  if (remaining.length) {
+    setStatus('red', 'Some check-ins pending', false);
+  } else {
+    setStatus('green', 'Synced ' + formatTime(new Date()), false);
+  }
 }
 
 try {
   window.addEventListener('online', function() {
     document.getElementById('offlineBanner').classList.remove('visible');
+    setStatus('green', 'Back online', false);
     flushQueue().catch(function() {});
   });
   window.addEventListener('offline', function() {
     document.getElementById('offlineBanner').classList.add('visible');
+    setStatus('red', 'Offline', false);
   });
-  if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('visible');
+  if (!navigator.onLine) {
+    document.getElementById('offlineBanner').classList.add('visible');
+    setStatus('red', 'Offline', false);
+  }
 } catch (e) { /* event listener issue */ }
 
 // ═══════════════════════════════════════════════════
@@ -1790,6 +1875,15 @@ duesOverlay.addEventListener('click', closeDuesPrompt);
 try {
   if (navigator.onLine) flushQueue().catch(function() {});
 } catch (e) { /* init flush error */ }
+
+// Auto-refresh roster every 5 minutes so kiosk stays current
+setInterval(function() {
+  if (document.visibilityState === 'visible' && navigator.onLine) {
+    loadRoster();
+  }
+}, 5 * 60 * 1000);
+
+document.querySelector('.status-bar__version').textContent = APP_VERSION;
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(function(err) {
