@@ -391,6 +391,64 @@
         background: #f0f0f0;
       }
 
+      .custom-select__item-check {
+        margin-left: auto;
+        color: #22c55e;
+        font-size: 16px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      /* No-class-today message */
+      .no-class-msg {
+        width: 100%;
+        padding: 28px 0 8px;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+
+      /* Debug date-shift controls */
+      .debug-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 10px;
+        padding: 6px 4px;
+        background: rgba(196,30,58,0.06);
+        border: 1px solid rgba(196,30,58,0.2);
+        border-radius: 10px;
+        gap: 8px;
+      }
+
+      .debug-nav__btn {
+        background: none;
+        border: none;
+        color: var(--red);
+        font-size: 20px;
+        padding: 4px 12px;
+        cursor: pointer;
+        border-radius: 6px;
+        line-height: 1;
+      }
+
+      .debug-nav__btn:active {
+        background: rgba(196,30,58,0.1);
+      }
+
+      .debug-nav__label {
+        flex: 1;
+        text-align: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--red);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
       .custom-select__footer {
         flex-shrink: 0;
         padding: 16px 24px;
@@ -1434,6 +1492,14 @@
         </div>
       </div>
 
+      <div class="debug-nav" id="debugNav" style="display:none">
+        <button class="debug-nav__btn" id="debugPrev" aria-label="Previous day">&#8592;</button>
+        <div class="debug-nav__label" id="debugLabel">Debug Mode</div>
+        <button class="debug-nav__btn" id="debugNext" aria-label="Next day">&#8594;</button>
+      </div>
+
+      <div class="no-class-msg" id="noClassMsg" style="display:none">No class today.</div>
+
       <form id="checkinForm" class="form-area" novalidate>
         <div class="form-group">
           <div class="custom-select" id="customSelect">
@@ -1655,7 +1721,7 @@
       // ═══════════════════════════════════════════════════
       // CONFIG — paste your deployed Apps Script URL here
       // ═══════════════════════════════════════════════════
-      const APP_VERSION = "v1.2";
+      const APP_VERSION = "v1.3";
       const APPS_SCRIPT_URL =
         "https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec";
 
@@ -1708,31 +1774,82 @@
         return y + "-" + m + "-" + day;
       }
 
+      // ═══════════════════════════════════════════════════
+      // ACTIVE DATE — real today, or shifted in debug mode
+      // ═══════════════════════════════════════════════════
+      var CLASS_DAYS = [2, 4]; // Tue, Thu
+      var activeDate = new Date();
+      var DEBUG_MODE = new URLSearchParams(window.location.search).has("debug");
+
+      function isClassDay() {
+        return CLASS_DAYS.includes(activeDate.getDay());
+      }
+
+      function applyClassDayState() {
+        var classDay = isClassDay();
+        document.getElementById("checkinForm").style.display = classDay ? "" : "none";
+        document.getElementById("noClassMsg").style.display = classDay ? "none" : "";
+      }
+
+      // ═══════════════════════════════════════════════════
+      // SIGNED TODAY — track who has signed in this session
+      // ═══════════════════════════════════════════════════
+      function getSignedToday() {
+        try { return JSON.parse(localStorage.getItem("deleon_signed_" + fmtDate(activeDate)) || "[]"); }
+        catch (e) { return []; }
+      }
+
+      function addSignedToday(value) {
+        try {
+          var arr = getSignedToday();
+          if (!arr.includes(value)) arr.push(value);
+          localStorage.setItem("deleon_signed_" + fmtDate(activeDate), JSON.stringify(arr));
+        } catch (e) {}
+      }
+
       function updateDateTime() {
-        var now = new Date();
+        var now = activeDate;
         var dayIdx = now.getDay();
         var monthIdx = now.getMonth();
         var date = now.getDate();
         document.getElementById("yearDisplay").textContent = now.getFullYear();
-        document.getElementById("monthDisplay").textContent =
-          MONTHS_EN[monthIdx];
+        document.getElementById("monthDisplay").textContent = MONTHS_EN[monthIdx];
         document.getElementById("dateDisplay").textContent = date;
         document.getElementById("weekdayDisplay").textContent = DAYS_EN[dayIdx];
-        document.getElementById("jpLeftDisplay").textContent =
-          DAYS_JP[dayIdx] + "曜日";
-        document.getElementById("jpRightDisplay").textContent =
-          monthIdx + 1 + "月" + date + "日";
+        document.getElementById("jpLeftDisplay").textContent = DAYS_JP[dayIdx] + "曜日";
+        document.getElementById("jpRightDisplay").textContent = monthIdx + 1 + "月" + date + "日";
+        if (DEBUG_MODE) {
+          document.getElementById("debugLabel").textContent =
+            "Debug · " + DAYS_EN[dayIdx] + " " + (monthIdx + 1) + "/" + date;
+        }
       }
       updateDateTime();
-      setInterval(updateDateTime, 60000);
+      setInterval(function() {
+        if (!DEBUG_MODE) { activeDate = new Date(); updateDateTime(); }
+      }, 60000);
 
       function getClassName() {
-        var day = new Date().getDay();
+        var day = activeDate.getDay();
         if (day === 1) return "Monday (Optional)";
         if (day === 2) return "Tuesday";
         if (day === 4) return "Thursday";
         return DAYS_EN[day];
       }
+
+      // Debug nav
+      if (DEBUG_MODE) {
+        document.getElementById("debugNav").style.display = "";
+        document.getElementById("debugPrev").addEventListener("click", function () {
+          activeDate = new Date(activeDate); activeDate.setDate(activeDate.getDate() - 1);
+          updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster());
+        });
+        document.getElementById("debugNext").addEventListener("click", function () {
+          activeDate = new Date(activeDate); activeDate.setDate(activeDate.getDate() + 1);
+          updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster());
+        });
+      }
+
+      applyClassDayState();
 
       // ═══════════════════════════════════════════════════
       // STATUS BAR
@@ -1775,18 +1892,25 @@
       function populateDropdown(students) {
         var list = document.getElementById("selectList");
         list.innerHTML = "";
+        var signed = getSignedToday();
         students.forEach(function (s) {
+          var val = s.firstName + "|" + s.lastName;
           var btn = document.createElement("button");
           btn.type = "button";
           btn.className = "custom-select__item";
           btn.setAttribute("role", "option");
-          btn.dataset.value = s.firstName + "|" + s.lastName;
-          btn.textContent = s.firstName + " " + s.lastName;
+          btn.dataset.value = val;
+          var nameSpan = document.createElement("span");
+          nameSpan.textContent = s.firstName + " " + s.lastName;
+          btn.appendChild(nameSpan);
+          if (signed.includes(val)) {
+            var check = document.createElement("span");
+            check.className = "custom-select__item-check";
+            check.textContent = "✓";
+            btn.appendChild(check);
+          }
           btn.addEventListener("click", function () {
-            selectStudent(
-              s.firstName + "|" + s.lastName,
-              s.firstName + " " + s.lastName,
-            );
+            selectStudent(val, s.firstName + " " + s.lastName);
           });
           list.appendChild(btn);
         });
@@ -2340,7 +2464,7 @@
           var now = new Date();
           lastEntry = {
             action: isNew ? "new_student" : "checkin",
-            date: fmtDate(now),
+            date: fmtDate(activeDate),
             time: now.toLocaleTimeString("en-US", {
               hour: "numeric",
               minute: "2-digit",
@@ -2397,6 +2521,8 @@
             }
           }
 
+          addSignedToday(lastEntry.firstName + "|" + lastEntry.lastName);
+          populateDropdown(getCachedRoster());
           showSheet("success", firstName);
         } catch (err) {
           saveToQueue(lastEntry);
@@ -2441,7 +2567,7 @@
               firstName: fn,
               lastName: ln,
               month: getCurrentMonthKey(),
-              date: fmtDate(new Date()),
+              date: fmtDate(activeDate),
             });
             if (navigator.onLine) {
               flushQueue().catch(function () {});
@@ -2490,6 +2616,8 @@
             } else {
               saveToQueue(lastEntry);
             }
+            addSignedToday(lastEntry.firstName + "|" + lastEntry.lastName);
+            populateDropdown(getCachedRoster());
             showSheet("success", lastEntry.firstName);
           } catch (err) {
             showSheet("error");
