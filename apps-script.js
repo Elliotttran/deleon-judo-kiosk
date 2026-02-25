@@ -131,19 +131,29 @@ function handleGetAllAttendance() {
   var sheet = getSheet(TAB_ATTENDANCE);
   var lastRow = sheet.getLastRow();
   var att = {};
+  var removedMap = {};
 
   if (lastRow >= 2) {
     var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
     for (var i = 0; i < data.length; i++) {
       if (data[i][0]) {
         var dk = toDateStr(data[i][0]);
-        try { att[dk] = JSON.parse(data[i][1]); }
-        catch (ex) { att[dk] = []; }
+        try {
+          var parsed = JSON.parse(data[i][1]);
+          if (Array.isArray(parsed)) {
+            att[dk] = parsed; // old format — array only
+          } else {
+            att[dk] = parsed.present || [];
+            if (parsed.removed && parsed.removed.length) {
+              removedMap[dk] = parsed.removed;
+            }
+          }
+        } catch (ex) { att[dk] = []; }
       }
     }
   }
 
-  // Always merge check-ins into attendance (additive — admin records don't silence check-ins)
+  // Always merge check-ins additively
   var ciSheet = getSheet(TAB_CHECKINS);
   var ciLastRow = ciSheet.getLastRow();
   if (ciLastRow >= 2) {
@@ -158,7 +168,16 @@ function handleGetAllAttendance() {
     }
   }
 
-  return json({ attendance: att });
+  // Apply admin removals — filter out explicitly removed names after merge
+  Object.keys(removedMap).forEach(function(date) {
+    if (att[date]) {
+      att[date] = att[date].filter(function(name) {
+        return removedMap[date].indexOf(name) === -1;
+      });
+    }
+  });
+
+  return json({ attendance: att, removed: removedMap });
 }
 
 function getCheckinsForDate(date) {
@@ -384,20 +403,22 @@ function handleSaveAttendance(body) {
   var lastRow = sheet.getLastRow();
   var date = body.date;
   var names = body.names || [];
+  var removed = body.removed || [];
+  var record = JSON.stringify({ present: names, removed: removed });
 
   // Update existing row if present
   if (lastRow >= 2) {
     var dates = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < dates.length; i++) {
       if (toDateStr(dates[i][0]) === date) {
-        sheet.getRange(i + 2, 2).setValue(JSON.stringify(names));
+        sheet.getRange(i + 2, 2).setValue(record);
         return json({ ok: true });
       }
     }
   }
 
   // New date
-  sheet.appendRow([date, JSON.stringify(names)]);
+  sheet.appendRow([date, record]);
   return json({ ok: true });
 }
 

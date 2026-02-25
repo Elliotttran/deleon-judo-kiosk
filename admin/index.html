@@ -84,7 +84,7 @@ body {
 
 /* ── Page containers ── */
 .page { display: none; }
-.page.active { display: flex; flex-direction: column; min-height: calc(100dvh - 90px); }
+.page.active { display: flex; flex-direction: column; min-height: calc(100dvh - 90px - 45px); }
 .si-past.page.active { background: var(--past-bg); }
 
 /* ═══════════════════════════════════════════
@@ -822,11 +822,11 @@ body.past-mode .tab.active { color: #ccc; }
 .si-sync.error .si-sync-retry { display: block; }
 
 /* past mode sync bar */
-.si-past .si-sync {
+body.past-mode .si-sync {
   background: var(--past-bg); color: var(--past-text-light);
   border-bottom-color: var(--past-divider);
 }
-.si-past .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.2); }
+body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.2); }
 
 .toast {
   position: fixed; bottom: 100px; left: 50%;
@@ -943,20 +943,22 @@ body.past-mode .tab.active { color: #ccc; }
   <div class="pin-error-msg" id="pinError"></div>
 </div>
 
+<!-- ════ GLOBAL SYNC BAR ════ -->
+<div class="si-sync" id="siSync">
+  <div class="si-sync-dot green" id="siSyncDot"></div>
+  <div class="si-sync-text" id="siSyncText">All saved</div>
+  <button class="si-sync-retry" id="siSyncRetry" onclick="siRetrySync()">Retry</button>
+  <div class="si-sync-version" id="siSyncVersion"></div>
+  <button class="si-sync-refresh" id="siSyncRefresh" aria-label="Refresh data">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"></polyline>
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+    </svg>
+  </button>
+</div>
+
 <!-- ════ SIGN IN PAGE ════ -->
 <div class="page active" id="page-signin">
-  <div class="si-sync" id="siSync">
-    <div class="si-sync-dot green" id="siSyncDot"></div>
-    <div class="si-sync-text" id="siSyncText">All saved</div>
-    <button class="si-sync-retry" id="siSyncRetry" onclick="siRetrySync()">Retry</button>
-    <div class="si-sync-version" id="siSyncVersion"></div>
-    <button class="si-sync-refresh" id="siSyncRefresh" aria-label="Refresh data">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="23 4 23 10 17 10"></polyline>
-        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-      </svg>
-    </button>
-  </div>
   <div class="si-header">
     <div class="si-brand">Club Sign In</div>
     <div class="si-date-nav">
@@ -1130,6 +1132,14 @@ function getAtt() {
 }
 function setAtt(a) {
   try { localStorage.setItem('dojo_attendance', JSON.stringify(a)); }
+  catch (e) {}
+}
+function getRemoved() {
+  try { return JSON.parse(localStorage.getItem('dojo_removed') || '{}'); }
+  catch (e) { return {}; }
+}
+function setRemoved(r) {
+  try { localStorage.setItem('dojo_removed', JSON.stringify(r)); }
   catch (e) {}
 }
 function getCancelled() {
@@ -1315,14 +1325,18 @@ async function loadFromServer() {
       var aData = await results[1].json();
       if (aData.attendance) {
         var localAtt = getAtt();
+        var localRemoved = getRemoved();
         var queue = getSyncQueue();
         var dirtyDates = {};
         queue.forEach(function(c) { if (c.action === 'saveAttendance') dirtyDates[c.date] = true; });
         var merged = Object.assign({}, aData.attendance);
+        var mergedRemoved = Object.assign({}, aData.removed || {});
         Object.keys(dirtyDates).forEach(function(date) {
           if (localAtt[date] !== undefined) merged[date] = localAtt[date];
+          if (localRemoved[date] !== undefined) mergedRemoved[date] = localRemoved[date];
         });
         setAtt(merged);
+        setRemoved(mergedRemoved);
       }
     }
 
@@ -1629,11 +1643,24 @@ function siToggleCancel() {
 function siToggle(name) {
   var key = fmtDate(siDays[siIdx]);
   var att = getAtt();
+  var removedAll = getRemoved();
   var p = att[key] || [];
+  var r = removedAll[key] || [];
   var idx = p.indexOf(name);
-  if (idx >= 0) p.splice(idx, 1); else p.push(name);
-  att[key] = p; setAtt(att); siRender();
-  queueChange({ action: 'saveAttendance', date: key, names: p });
+  if (idx >= 0) {
+    // Toggling off: remove from present, add to removed
+    p.splice(idx, 1);
+    if (r.indexOf(name) === -1) r.push(name);
+  } else {
+    // Toggling on: add to present, remove from removed
+    p.push(name);
+    var rIdx = r.indexOf(name);
+    if (rIdx >= 0) r.splice(rIdx, 1);
+  }
+  att[key] = p; setAtt(att);
+  removedAll[key] = r; setRemoved(removedAll);
+  siRender();
+  queueChange({ action: 'saveAttendance', date: key, names: p, removed: r });
   triggerSync();
 }
 
@@ -1642,7 +1669,9 @@ function siToggleAll() {
   var ts = todayStr();
   var isPast = key < ts;
   var att = getAtt();
+  var removedAll = getRemoved();
   var p = att[key] || [];
+  var r = removedAll[key] || [];
   var roster = getRoster();
 
   if (p.length > 0) {
@@ -1655,19 +1684,28 @@ function siToggleAll() {
       document.getElementById('modalConfirm').textContent = 'Clear all';
       document.getElementById('modalConfirm').className = 'modal-btn modal-danger';
       document.getElementById('modalConfirm').onclick = function() {
-        att[key] = []; setAtt(att); modalClose(); siRender();
-        queueChange({ action: 'saveAttendance', date: key, names: att[key] });
+        p.forEach(function(name) { if (r.indexOf(name) === -1) r.push(name); });
+        att[key] = []; setAtt(att);
+        removedAll[key] = r; setRemoved(removedAll);
+        modalClose(); siRender();
+        queueChange({ action: 'saveAttendance', date: key, names: [], removed: r });
         triggerSync();
       };
       document.getElementById('modalOverlay').classList.add('show');
     } else {
-      att[key] = []; setAtt(att); siRender();
-      queueChange({ action: 'saveAttendance', date: key, names: att[key] });
+      p.forEach(function(name) { if (r.indexOf(name) === -1) r.push(name); });
+      att[key] = []; setAtt(att);
+      removedAll[key] = r; setRemoved(removedAll);
+      siRender();
+      queueChange({ action: 'saveAttendance', date: key, names: [], removed: r });
       triggerSync();
     }
   } else {
-    att[key] = roster.slice(); setAtt(att); siRender();
-    queueChange({ action: 'saveAttendance', date: key, names: att[key] });
+    // Select all: clear removed list entirely for this date
+    att[key] = roster.slice(); setAtt(att);
+    removedAll[key] = []; setRemoved(removedAll);
+    siRender();
+    queueChange({ action: 'saveAttendance', date: key, names: roster.slice(), removed: [] });
     triggerSync();
   }
 }
