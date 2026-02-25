@@ -57,6 +57,16 @@ function verifyKey(key) {
   return key === writeKey;
 }
 
+// Google Sheets .getValues() returns Date objects for date-formatted cells.
+// This converts any date cell value to a "YYYY-MM-DD" string consistently.
+function toDateStr(val) {
+  if (!val) return '';
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  return String(val).trim();
+}
+
 // ── GET ──────────────────────────────────────────────────
 
 function doGet(e) {
@@ -106,7 +116,7 @@ function handleGetAttendance(date) {
   if (lastRow >= 2) {
     var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
     for (var i = 0; i < data.length; i++) {
-      if (data[i][0] === date) {
+      if (toDateStr(data[i][0]) === date) {
         try { return json({ date: date, present: JSON.parse(data[i][1]) }); }
         catch (ex) { return json({ date: date, present: [] }); }
       }
@@ -127,9 +137,10 @@ function handleGetAllAttendance() {
     var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
     for (var i = 0; i < data.length; i++) {
       if (data[i][0]) {
-        try { att[data[i][0]] = JSON.parse(data[i][1]); }
-        catch (ex) { att[data[i][0]] = []; }
-        attendanceDates[data[i][0]] = true;
+        var dk = toDateStr(data[i][0]);
+        try { att[dk] = JSON.parse(data[i][1]); }
+        catch (ex) { att[dk] = []; }
+        attendanceDates[dk] = true;
       }
     }
   }
@@ -140,7 +151,7 @@ function handleGetAllAttendance() {
   if (ciLastRow >= 2) {
     var ciData = ciSheet.getRange(2, 1, ciLastRow - 1, 2).getValues();
     for (var j = 0; j < ciData.length; j++) {
-      var date = ciData[j][0];
+      var date = toDateStr(ciData[j][0]);
       var name = ciData[j][1];
       if (date && name && !attendanceDates[date]) {
         if (!att[date]) att[date] = [];
@@ -160,7 +171,7 @@ function getCheckinsForDate(date) {
   var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
   var names = [];
   for (var i = 0; i < data.length; i++) {
-    if (data[i][0] === date && data[i][1] && names.indexOf(data[i][1]) === -1) {
+    if (toDateStr(data[i][0]) === date && data[i][1] && names.indexOf(data[i][1]) === -1) {
       names.push(data[i][1]);
     }
   }
@@ -173,7 +184,7 @@ function handleGetCancelled() {
   if (lastRow < 2) return json({ cancelled: [] });
 
   var dates = sheet.getRange(2, 1, lastRow - 1, 1).getValues()
-    .map(function(r) { return r[0]; })
+    .map(function(r) { return toDateStr(r[0]); })
     .filter(function(d) { return d; });
 
   return json({ cancelled: dates });
@@ -376,7 +387,7 @@ function handleSaveAttendance(body) {
   if (lastRow >= 2) {
     var dates = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < dates.length; i++) {
-      if (dates[i][0] === date) {
+      if (toDateStr(dates[i][0]) === date) {
         sheet.getRange(i + 2, 2).setValue(JSON.stringify(names));
         return json({ ok: true });
       }
@@ -398,7 +409,7 @@ function handleCancelClass(body) {
   if (lastRow >= 2) {
     var dates = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     for (var i = 0; i < dates.length; i++) {
-      if (dates[i][0] === body.date) return json({ ok: true });
+      if (toDateStr(dates[i][0]) === body.date) return json({ ok: true });
     }
   }
 
@@ -413,7 +424,7 @@ function handleRestoreClass(body) {
 
   var dates = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
   for (var i = dates.length - 1; i >= 0; i--) {
-    if (dates[i][0] === body.date) {
+    if (toDateStr(dates[i][0]) === body.date) {
       sheet.deleteRow(i + 2);
       break;
     }
