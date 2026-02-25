@@ -73,6 +73,38 @@
         justify-content: center;
       }
 
+      /* ── Kiosk Hero ──────────────────────────────────── */
+      .kiosk-hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 48px;
+      }
+      .kiosk-logo {
+        width: 300px;
+        border-radius: 50%;
+        margin-bottom: 32px;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .kiosk-title {
+        font-family: var(--font);
+        font-size: 21px;
+        font-weight: 800;
+        color: var(--red-hover);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .kiosk-date {
+        font-size: 47px;
+        font-weight: 900;
+        color: var(--black);
+        letter-spacing: -0.5px;
+        text-transform: uppercase;
+      }
+
       /* ── App Bar ─────────────────────────────────────── */
       .app-bar {
         position: fixed;
@@ -607,7 +639,7 @@
         width: 100%;
         height: 64px;
         border: none;
-        border-radius: var(--radius-full);
+        border-radius: 9999px;
         background: linear-gradient(
           90deg,
           var(--red),
@@ -1511,6 +1543,19 @@
         font-size: 11px;
         font-weight: 500;
       }
+      .status-bar__right {
+        display: flex; align-items: center; gap: 6px;
+      }
+      .status-bar__refresh {
+        background: none; border: none; cursor: pointer;
+        color: #bbb; padding: 4px; border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        transition: color 0.15s; flex-shrink: 0;
+      }
+      .status-bar__refresh:active { color: var(--text-secondary); }
+      .status-bar__refresh svg { width: 14px; height: 14px; }
+      .status-bar__refresh.spinning svg { animation: status-spin 0.7s linear infinite; }
+      @keyframes status-spin { to { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
@@ -1524,7 +1569,7 @@
     </div>
 
     <header class="app-bar" role="banner">
-      <img class="app-bar__logo" src="logo.svg" alt="" aria-hidden="true" id="appLogo" />
+      <img class="app-bar__logo" src="logo.svg" id="appLogo" alt="" aria-hidden="true" />
       <div class="app-bar__title">DeLeon Judo Club</div>
     </header>
 
@@ -1540,20 +1585,10 @@
         You're offline — check-in will sync when reconnected.
       </div>
 
-      <div class="date-box" aria-label="Current class date">
-        <div class="date-box__top-edge"></div>
-        <div class="date-box__body">
-          <div class="date-box__jp-left" id="jpLeftDisplay"></div>
-          <div class="date-box__center">
-            <div class="date-box__month" id="monthDisplay"></div>
-            <div class="date-box__date" id="dateDisplay"></div>
-          </div>
-          <div class="date-box__jp-right" id="jpRightDisplay"></div>
-          <div class="date-box__footer">
-            <div class="date-box__footer-cell" id="weekdayDisplay"></div>
-            <div class="date-box__footer-cell" id="yearDisplay"></div>
-          </div>
-        </div>
+      <div class="kiosk-hero">
+        <img class="kiosk-logo" src="logo.svg" alt="DeLeon Judo Club" />
+        <h2 class="kiosk-title">Class Sign In</h2>
+        <div class="kiosk-date" id="dateDisplay"></div>
       </div>
 
       <div class="debug-nav" id="debugNav" style="display:none">
@@ -1631,7 +1666,15 @@
         <div class="status-bar__dot" id="statusDot"></div>
         <div class="status-bar__text" id="statusText">Loading...</div>
       </div>
-      <div class="status-bar__version">v1.0</div>
+      <div class="status-bar__right">
+        <div class="status-bar__version">v1.0</div>
+        <button class="status-bar__refresh" id="statusRefresh" aria-label="Refresh roster">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Bottom Sheet -->
@@ -1887,15 +1930,12 @@
         var dayIdx = now.getDay();
         var monthIdx = now.getMonth();
         var date = now.getDate();
-        document.getElementById("yearDisplay").textContent = now.getFullYear();
-        document.getElementById("monthDisplay").textContent = MONTHS_EN[monthIdx];
-        document.getElementById("dateDisplay").textContent = date;
-        document.getElementById("weekdayDisplay").textContent = DAYS_EN[dayIdx];
-        document.getElementById("jpLeftDisplay").textContent = DAYS_JP[dayIdx] + "曜日";
-        document.getElementById("jpRightDisplay").textContent = monthIdx + 1 + "月" + date + "日";
+        var month3 = MONTHS_EN[monthIdx].slice(0, 3);
+        var day = DAYS_EN[dayIdx].toUpperCase();
+        document.getElementById("dateDisplay").textContent = month3 + " " + date + ", " + day;
         if (DEBUG_MODE) {
           document.getElementById("debugLabel").textContent =
-            "Debug · " + DAYS_EN[dayIdx] + " " + (monthIdx + 1) + "/" + date;
+            "Debug \u00b7 " + DAYS_EN[dayIdx] + " " + (monthIdx + 1) + "/" + date;
         }
       }
       updateDateTime();
@@ -2059,6 +2099,12 @@
       }
 
       loadRoster();
+
+      document.getElementById("statusRefresh").addEventListener("click", function () {
+        var btn = this;
+        btn.classList.add("spinning");
+        loadRoster().finally(function () { btn.classList.remove("spinning"); });
+      });
 
       // Fetch dues setting from server
       (async function () {
