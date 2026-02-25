@@ -1655,7 +1655,7 @@
       // ═══════════════════════════════════════════════════
       // CONFIG — paste your deployed Apps Script URL here
       // ═══════════════════════════════════════════════════
-      const APP_VERSION = "v1.1";
+      const APP_VERSION = "v1.2";
       const APPS_SCRIPT_URL =
         "https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec";
 
@@ -1831,7 +1831,10 @@
       // Fetch dues setting from server
       (async function () {
         try {
-          var res = await fetch(APPS_SCRIPT_URL + "?action=settings");
+          var settingsCtrl = new AbortController();
+          var settingsTimer = setTimeout(function() { settingsCtrl.abort(); }, 8000);
+          var res = await fetch(APPS_SCRIPT_URL + "?action=settings", { signal: settingsCtrl.signal });
+          clearTimeout(settingsTimer);
           if (res.ok) {
             var data = await res.json();
             if (data.settings && data.settings.duesEnabled !== undefined) {
@@ -2058,12 +2061,18 @@
         var remaining = [];
         for (var i = 0; i < q.length; i++) {
           try {
+            var ctrl = new AbortController();
+            var timer = setTimeout(function() { ctrl.abort(); }, 12000);
             var res = await fetch(APPS_SCRIPT_URL, {
               method: "POST",
               headers: { "Content-Type": "text/plain" },
               body: JSON.stringify(q[i]),
+              signal: ctrl.signal,
             });
-            if (!res.ok) remaining.push(q[i]);
+            clearTimeout(timer);
+            if (!res.ok) { remaining.push(q[i]); continue; }
+            var data = await res.json().catch(function() { return {}; });
+            if (data.error) remaining.push(q[i]);
           } catch (e) {
             remaining.push(q[i]);
           }
@@ -2359,6 +2368,8 @@
               });
               clearTimeout(timeout);
               if (!res.ok) throw new Error("Server error (" + res.status + ")");
+              var resData = await res.json().catch(function() { return {}; });
+              if (resData.error) throw new Error(resData.error);
             } catch (err) {
               clearTimeout(timeout);
               if (err.name === "AbortError") throw new Error("timeout");
@@ -2469,6 +2480,8 @@
                 });
                 clearTimeout(timeout);
                 if (!res.ok) throw new Error("server");
+                var retryData = await res.json().catch(function() { return {}; });
+                if (retryData.error) throw new Error(retryData.error);
               } catch (err) {
                 clearTimeout(timeout);
                 if (err.name === "AbortError") throw new Error("timeout");

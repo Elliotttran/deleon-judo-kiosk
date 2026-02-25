@@ -1066,7 +1066,7 @@ body.past-mode .tab.active { color: #ccc; }
 // ═══════════════════════════════════
 // SHARED STATE & HELPERS
 // ═══════════════════════════════════
-const APP_VERSION = 'v1.1';
+const APP_VERSION = 'v1.2';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 const WRITE_KEY = '1970';
 
@@ -1184,12 +1184,18 @@ async function flushSyncQueue() {
   for (var i = 0; i < q.length; i++) {
     try {
       var payload = Object.assign({}, q[i], { key: WRITE_KEY });
+      var ctrl = new AbortController();
+      var timer = setTimeout(function() { ctrl.abort(); }, 12000);
       var res = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: ctrl.signal
       });
-      if (!res.ok) remaining.push(q[i]);
+      clearTimeout(timer);
+      if (!res.ok) { remaining.push(q[i]); continue; }
+      var data = await res.json().catch(function() { return {}; });
+      if (data.error) remaining.push(q[i]);
     } catch (e) {
       remaining.push(q[i]);
     }
@@ -1247,15 +1253,21 @@ function siRetrySync() {
 // ═══════════════════════════════════
 // SERVER DATA LOADING
 // ═══════════════════════════════════
+function timedFetch(url, ms) {
+  var ctrl = new AbortController();
+  var t = setTimeout(function() { ctrl.abort(); }, ms);
+  return fetch(url, { signal: ctrl.signal }).finally(function() { clearTimeout(t); });
+}
+
 async function loadFromServer() {
   if (!navigator.onLine) return;
   try {
     var results = await Promise.all([
-      fetch(APPS_SCRIPT_URL + '?action=roster').catch(function() { return null; }),
-      fetch(APPS_SCRIPT_URL + '?action=allAttendance').catch(function() { return null; }),
-      fetch(APPS_SCRIPT_URL + '?action=cancelled').catch(function() { return null; }),
-      fetch(APPS_SCRIPT_URL + '?action=dues').catch(function() { return null; }),
-      fetch(APPS_SCRIPT_URL + '?action=settings').catch(function() { return null; })
+      timedFetch(APPS_SCRIPT_URL + '?action=roster', 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=allAttendance', 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=cancelled', 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=dues', 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=settings', 15000).catch(function() { return null; })
     ]);
 
     if (results[0] && results[0].ok) {
