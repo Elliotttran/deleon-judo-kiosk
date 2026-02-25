@@ -1,5 +1,5 @@
 // DeLeon Judo Club — Admin Service Worker
-const CACHE_NAME = 'deleon-admin-v7';
+const CACHE_NAME = 'deleon-admin-v8';
 const STATIC_ASSETS = ['./', './index.html', './logo.svg'];
 
 self.addEventListener('install', function (event) {

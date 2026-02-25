@@ -780,6 +780,18 @@ body.past-mode .tab.active { color: #ccc; }
 .si-sync-text { flex: 1; }
 .si-sync-version { font-size: 13px; font-weight: 500; color: #bbb; }
 
+.si-sync-refresh {
+  background: none; border: none; cursor: pointer;
+  color: #bbb; padding: 4px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: color 0.15s;
+}
+.si-sync-refresh:hover { color: var(--text-light); }
+.si-sync-refresh:active { color: var(--text); }
+.si-sync-refresh svg { width: 16px; height: 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.si-sync-refresh.spinning svg { animation: spin 0.7s linear infinite; }
+
 .si-sync-retry {
   font-family: var(--font); font-size: 15px; font-weight: 700;
   color: var(--red); background: rgba(196,25,25,0.06);
@@ -926,6 +938,12 @@ body.past-mode .tab.active { color: #ccc; }
     <div class="si-sync-text" id="siSyncText">All saved</div>
     <button class="si-sync-retry" id="siSyncRetry" onclick="siRetrySync()">Retry</button>
     <div class="si-sync-version" id="siSyncVersion"></div>
+    <button class="si-sync-refresh" id="siSyncRefresh" aria-label="Refresh data">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+    </button>
   </div>
   <div class="si-header">
     <div class="si-brand">Club Sign In</div>
@@ -1066,7 +1084,7 @@ body.past-mode .tab.active { color: #ccc; }
 // ═══════════════════════════════════
 // SHARED STATE & HELPERS
 // ═══════════════════════════════════
-const APP_VERSION = 'v1.2';
+const APP_VERSION = 'v1.3';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 const WRITE_KEY = '1970';
 
@@ -2291,6 +2309,17 @@ window.addEventListener('online', function() {
 // ═══════════════════════════════════
 siInit();
 document.getElementById('siSyncVersion').textContent = APP_VERSION;
+
+document.getElementById('siSyncRefresh').addEventListener('click', function() {
+  var btn = this;
+  btn.classList.add('spinning');
+  loadFromServer().then(function() {
+    stRender();
+    btn.classList.remove('spinning');
+  }).catch(function() {
+    btn.classList.remove('spinning');
+  });
+});
 if (isUnlocked()) {
   document.getElementById('pinScreen').classList.add('hidden');
   siRender();
