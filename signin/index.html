@@ -1785,9 +1785,10 @@
       // ═══════════════════════════════════════════════════
       // CONFIG — paste your deployed Apps Script URL here
       // ═══════════════════════════════════════════════════
-      const APP_VERSION = "v1.3";
+      const APP_VERSION = "v1.4";
       const APPS_SCRIPT_URL =
         "https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec";
+      const CHECKIN_TOKEN = "1970";
 
       // ═══════════════════════════════════════════════════
       // DATE & TIME
@@ -2261,60 +2262,112 @@
       }
 
       // ═══════════════════════════════════════════════════
-      // OFFLINE QUEUE — max 200 entries, syncs when online
+      // OFFLINE QUEUE — IndexedDB, syncs on reconnect + Background Sync
       // ═══════════════════════════════════════════════════
-      var QUEUE_KEY = "deleon_checkin_queue";
-      var MAX_QUEUE_SIZE = 200;
+      var IDB_NAME = "deleon-queue";
+      var IDB_STORE = "queue";
+      var IDB_VERSION = 1;
 
-      function getQueue() {
-        try {
-          return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");
-        } catch (e) {
-          return [];
-        }
+      function openQueueDB() {
+        return new Promise(function (resolve, reject) {
+          var req = indexedDB.open(IDB_NAME, IDB_VERSION);
+          req.onupgradeneeded = function (e) {
+            e.target.result.createObjectStore(IDB_STORE, { keyPath: "id", autoIncrement: true });
+          };
+          req.onsuccess = function (e) { resolve(e.target.result); };
+          req.onerror = function (e) { reject(e.target.error); };
+        });
       }
 
-      function saveToQueue(entry) {
+      function idbAdd(entry) {
+        return openQueueDB().then(function (db) {
+          return new Promise(function (resolve, reject) {
+            var tx = db.transaction(IDB_STORE, "readwrite");
+            tx.objectStore(IDB_STORE).add({ payload: entry, ts: Date.now() });
+            tx.oncomplete = function () { resolve(); };
+            tx.onerror = function (e) { reject(e.target.error); };
+          });
+        });
+      }
+
+      function idbGetAll() {
+        return openQueueDB().then(function (db) {
+          return new Promise(function (resolve, reject) {
+            var tx = db.transaction(IDB_STORE, "readonly");
+            var req = tx.objectStore(IDB_STORE).getAll();
+            req.onsuccess = function (e) { resolve(e.target.result); };
+            req.onerror = function (e) { reject(e.target.error); };
+          });
+        });
+      }
+
+      function idbDelete(id) {
+        return openQueueDB().then(function (db) {
+          return new Promise(function (resolve, reject) {
+            var tx = db.transaction(IDB_STORE, "readwrite");
+            tx.objectStore(IDB_STORE).delete(id);
+            tx.oncomplete = function () { resolve(); };
+            tx.onerror = function (e) { reject(e.target.error); };
+          });
+        });
+      }
+
+      // Migrate any existing localStorage queue into IDB (one-time on first load)
+      async function migrateLocalStorageQueue() {
         try {
-          var q = getQueue();
-          if (q.length >= MAX_QUEUE_SIZE) q.shift();
-          q.push(entry);
-          localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+          var old = JSON.parse(localStorage.getItem("deleon_checkin_queue") || "[]");
+          if (old.length > 0) {
+            for (var i = 0; i < old.length; i++) {
+              await idbAdd(old[i]);
+            }
+            localStorage.removeItem("deleon_checkin_queue");
+          }
+        } catch (e) { /* migration failed silently */ }
+      }
+
+      async function saveToQueue(entry) {
+        try {
+          await idbAdd(entry);
+          // Register Background Sync so the SW can flush even with screen off
+          if ("serviceWorker" in navigator && "SyncManager" in window) {
+            navigator.serviceWorker.ready.then(function (sw) {
+              sw.sync.register("flush-checkins").catch(function () {});
+            });
+          }
         } catch (e) {
           console.warn("Could not save to offline queue:", e);
         }
       }
 
       async function flushQueue() {
-        var q = getQueue();
-        if (!q.length) return;
+        var items;
+        try { items = await idbGetAll(); } catch (e) { return; }
+        if (!items.length) return;
         setStatus("yellow", "Pushing\u2026", true);
-        var remaining = [];
-        for (var i = 0; i < q.length; i++) {
+        for (var i = 0; i < items.length; i++) {
+          var item = items[i];
           try {
+            var payload = Object.assign({}, item.payload, { token: CHECKIN_TOKEN });
             var ctrl = new AbortController();
-            var timer = setTimeout(function() { ctrl.abort(); }, 12000);
+            var timer = setTimeout(function () { ctrl.abort(); }, 12000);
             var res = await fetch(APPS_SCRIPT_URL, {
               method: "POST",
               headers: { "Content-Type": "text/plain" },
-              body: JSON.stringify(q[i]),
+              body: JSON.stringify(payload),
               signal: ctrl.signal,
             });
             clearTimeout(timer);
-            if (!res.ok) { remaining.push(q[i]); continue; }
-            var data = await res.json().catch(function() { return {}; });
-            if (data.error) remaining.push(q[i]);
+            if (!res.ok) continue;
+            var data = await res.json().catch(function () { return {}; });
+            if (!data.error) await idbDelete(item.id);
           } catch (e) {
-            remaining.push(q[i]);
+            // Leave in queue, will retry on next flush
           }
         }
-        try {
-          localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
-        } catch (e) {
-          /* storage issue */
-        }
+        var remaining;
+        try { remaining = await idbGetAll(); } catch (e) { remaining = []; }
         if (remaining.length) {
-          setStatus("red", "Some check-ins pending", false);
+          setStatus("red", "Check-ins queued \u2014 syncs on WiFi", false);
         } else {
           setStatus("green", "Synced " + formatTime(new Date()), false);
         }
@@ -2328,11 +2381,11 @@
         });
         window.addEventListener("offline", function () {
           document.getElementById("offlineBanner").classList.add("visible");
-          setStatus("red", "Offline", false);
+          setStatus("red", "Offline \u2014 syncs when on WiFi", false);
         });
         if (!navigator.onLine) {
           document.getElementById("offlineBanner").classList.add("visible");
-          setStatus("red", "Offline", false);
+          setStatus("red", "Offline \u2014 syncs when on WiFi", false);
         }
       } catch (e) {
         /* event listener issue */
@@ -2591,10 +2644,11 @@
               controller.abort();
             }, 8000);
             try {
+              var submitPayload = Object.assign({}, lastEntry, { token: CHECKIN_TOKEN });
               var res = await fetch(APPS_SCRIPT_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify(lastEntry),
+                body: JSON.stringify(submitPayload),
                 signal: controller.signal,
               });
               clearTimeout(timeout);
@@ -2607,7 +2661,7 @@
               throw err;
             }
           } else {
-            saveToQueue(lastEntry);
+            await saveToQueue(lastEntry);
           }
 
           // If new student, add to local roster cache so they appear in the dropdown next time
@@ -2632,7 +2686,7 @@
           populateDropdown(getCachedRoster());
           showSheet("success", firstName);
         } catch (err) {
-          saveToQueue(lastEntry);
+          await saveToQueue(lastEntry);
           showSheet("error");
         } finally {
           submitBtn.classList.remove("loading");
@@ -2705,10 +2759,11 @@
                 controller.abort();
               }, 8000);
               try {
+                var retryPayload = Object.assign({}, lastEntry, { token: CHECKIN_TOKEN });
                 var res = await fetch(APPS_SCRIPT_URL, {
                   method: "POST",
                   headers: { "Content-Type": "text/plain" },
-                  body: JSON.stringify(lastEntry),
+                  body: JSON.stringify(retryPayload),
                   signal: controller.signal,
                 });
                 clearTimeout(timeout);
@@ -2721,7 +2776,7 @@
                 throw err;
               }
             } else {
-              saveToQueue(lastEntry);
+              await saveToQueue(lastEntry);
             }
             addSignedToday(lastEntry.firstName + "|" + lastEntry.lastName);
             populateDropdown(getCachedRoster());
@@ -2815,6 +2870,11 @@
       );
 
       document.querySelector(".status-bar__version").textContent = APP_VERSION;
+
+      // Migrate any queued check-ins from old localStorage format to IndexedDB
+      migrateLocalStorageQueue().then(function() {
+        if (navigator.onLine) flushQueue().catch(function() {});
+      });
 
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker

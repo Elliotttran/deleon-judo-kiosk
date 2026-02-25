@@ -214,7 +214,11 @@ function doPost(e) {
     var body = JSON.parse(e.postData.contents);
     var action = (body.action || '').toLowerCase();
 
-    // Public endpoints (from student kiosk — no key required)
+    // Kiosk endpoints — require CHECKIN_TOKEN (same secret as WRITE_KEY)
+    if (action === 'checkin' || action === 'new_student' || action === 'recorddues') {
+      if (!verifyKey(body.token)) return json({ error: 'Invalid token' });
+    }
+
     if (action === 'checkin')      return handleCheckin(body);
     if (action === 'new_student')  return handleNewStudent(body);
     if (action === 'recorddues')   return handleRecordDues(body);

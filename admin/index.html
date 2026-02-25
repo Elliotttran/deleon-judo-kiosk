@@ -354,9 +354,21 @@ body.past-mode .tab.active { color: #ccc; }
   padding: 28px 24px 20px;
 }
 
-.st-title {
-  font-size: 28px; font-weight: 900; margin-bottom: 16px;
+.st-title-row {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
 }
+
+.st-title {
+  font-size: 28px; font-weight: 900;
+}
+
+.st-export-btn {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 12px; font-family: var(--font); font-size: 13px; font-weight: 600;
+  color: var(--text-light); cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s;
+}
+.st-export-btn:hover { color: var(--text); border-color: #bbb; }
 
 .st-view-toggle {
   display: flex; gap: 2px; background: var(--bg);
@@ -1008,7 +1020,13 @@ body.past-mode .tab.active { color: #ccc; }
 <!-- ════ STATS PAGE ════ -->
 <div class="page" id="page-stats">
   <div class="st-header">
-    <div class="st-title">Stats</div>
+    <div class="st-title-row">
+      <div class="st-title">Stats</div>
+      <button class="st-export-btn" onclick="exportAttendanceCSV()" aria-label="Export attendance CSV">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+    </div>
     <div class="st-view-toggle">
       <button class="st-view-btn active" id="stMonthBtn" onclick="stSetView('month')">Month</button>
       <button class="st-view-btn" id="stCycleBtn" onclick="stSetView('cycle')">Cycle</button>
@@ -2385,12 +2403,36 @@ flushSyncQueue().then(function(success) {
   });
 })();
 
-// Auto-refresh every 5 minutes so kiosk stays current
+// ── CSV Export ───────────────────────────────────────────
+function exportAttendanceCSV() {
+  var att = getAtt();
+  var dates = Object.keys(att).sort();
+  if (!dates.length) { alert('No attendance data to export yet.'); return; }
+  var rows = [['Date', 'Students Present', 'Count']];
+  dates.forEach(function(d) {
+    var names = Array.isArray(att[d]) ? att[d] : [];
+    rows.push([d, names.join('; '), names.length]);
+  });
+  var csv = rows.map(function(r) {
+    return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'deleon-attendance-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Auto-refresh every 60 seconds so admin stays current
 setInterval(function() {
   if (document.visibilityState === 'visible' && navigator.onLine) {
     loadFromServer();
   }
-}, 5 * 60 * 1000);
+}, 60 * 1000);
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(function(err) {
