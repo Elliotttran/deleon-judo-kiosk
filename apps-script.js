@@ -131,7 +131,6 @@ function handleGetAllAttendance() {
   var sheet = getSheet(TAB_ATTENDANCE);
   var lastRow = sheet.getLastRow();
   var att = {};
-  var attendanceDates = {};
 
   if (lastRow >= 2) {
     var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
@@ -140,12 +139,11 @@ function handleGetAllAttendance() {
         var dk = toDateStr(data[i][0]);
         try { att[dk] = JSON.parse(data[i][1]); }
         catch (ex) { att[dk] = []; }
-        attendanceDates[dk] = true;
       }
     }
   }
 
-  // For dates WITHOUT an admin attendance record, populate from check-ins
+  // Always merge check-ins into attendance (additive — admin records don't silence check-ins)
   var ciSheet = getSheet(TAB_CHECKINS);
   var ciLastRow = ciSheet.getLastRow();
   if (ciLastRow >= 2) {
@@ -153,7 +151,7 @@ function handleGetAllAttendance() {
     for (var j = 0; j < ciData.length; j++) {
       var date = toDateStr(ciData[j][0]);
       var name = ciData[j][1];
-      if (date && name && !attendanceDates[date]) {
+      if (date && name) {
         if (!att[date]) att[date] = [];
         if (att[date].indexOf(name) === -1) att[date].push(name);
       }
