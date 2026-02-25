@@ -410,6 +410,65 @@
         letter-spacing: 0.01em;
       }
 
+      /* Logo long-press dropdown */
+      .logo-menu {
+        position: fixed;
+        top: 56px;
+        left: 16px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        padding: 8px 0;
+        min-width: 200px;
+        z-index: 200;
+        display: none;
+      }
+
+      .logo-menu.visible { display: block; }
+
+      .logo-menu__item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        gap: 12px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .logo-menu__item:active { background: #f5f5f5; }
+
+      .logo-menu__toggle {
+        width: 36px;
+        height: 20px;
+        background: #ddd;
+        border-radius: 10px;
+        position: relative;
+        flex-shrink: 0;
+        transition: background 0.2s;
+      }
+
+      .logo-menu__toggle.on { background: var(--red); }
+
+      .logo-menu__toggle::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+
+      .logo-menu__toggle.on::after { transform: translateX(16px); }
+
       /* Debug date-shift controls */
       .debug-nav {
         display: flex;
@@ -435,9 +494,7 @@
         line-height: 1;
       }
 
-      .debug-nav__btn:active {
-        background: rgba(196,30,58,0.1);
-      }
+      .debug-nav__btn:active { background: rgba(196,30,58,0.1); }
 
       .debug-nav__label {
         flex: 1;
@@ -1467,9 +1524,16 @@
     </div>
 
     <header class="app-bar" role="banner">
-      <img class="app-bar__logo" src="logo.svg" alt="" aria-hidden="true" />
+      <img class="app-bar__logo" src="logo.svg" alt="" aria-hidden="true" id="appLogo" />
       <div class="app-bar__title">DeLeon Judo Club</div>
     </header>
+
+    <div class="logo-menu" id="logoMenu">
+      <div class="logo-menu__item" id="debugToggleItem">
+        <span>Debug Mode</span>
+        <div class="logo-menu__toggle" id="debugToggle"></div>
+      </div>
+    </div>
 
     <div class="container">
       <div class="offline-banner" id="offlineBanner" role="alert">
@@ -1779,7 +1843,17 @@
       // ═══════════════════════════════════════════════════
       var CLASS_DAYS = [2, 4]; // Tue, Thu
       var activeDate = new Date();
-      var DEBUG_MODE = new URLSearchParams(window.location.search).has("debug");
+      var DEBUG_MODE = localStorage.getItem("deleon_debug") === "1";
+
+      function setDebugMode(on) {
+        DEBUG_MODE = on;
+        localStorage.setItem("deleon_debug", on ? "1" : "0");
+        document.getElementById("debugToggle").classList.toggle("on", on);
+        document.getElementById("debugNav").style.display = on ? "" : "none";
+        if (!on) { activeDate = new Date(); updateDateTime(); }
+        applyClassDayState();
+        populateDropdown(getCachedRoster());
+      }
 
       function isClassDay() {
         return CLASS_DAYS.includes(activeDate.getDay());
@@ -1836,19 +1910,52 @@
         return DAYS_EN[day];
       }
 
-      // Debug nav
-      if (DEBUG_MODE) {
-        document.getElementById("debugNav").style.display = "";
-        document.getElementById("debugPrev").addEventListener("click", function () {
-          activeDate = new Date(activeDate); activeDate.setDate(activeDate.getDate() - 1);
-          updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster());
-        });
-        document.getElementById("debugNext").addEventListener("click", function () {
-          activeDate = new Date(activeDate); activeDate.setDate(activeDate.getDate() + 1);
-          updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster());
-        });
-      }
+      // Debug nav arrows
+      document.getElementById("debugPrev").addEventListener("click", function () {
+        activeDate = new Date(activeDate); activeDate.setDate(activeDate.getDate() - 1);
+        updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster());
+      });
+      document.getElementById("debugNext").addEventListener("click", function () {
+        activeDate = new Date(activeDate); activeDate.setDate(activeDate.getDate() + 1);
+        updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster());
+      });
 
+      // Logo long-press → opens menu
+      (function () {
+        var logo = document.getElementById("appLogo");
+        var menu = document.getElementById("logoMenu");
+        var pressTimer = null;
+
+        function openMenu() {
+          document.getElementById("debugToggle").classList.toggle("on", DEBUG_MODE);
+          menu.classList.add("visible");
+        }
+        function closeMenu() { menu.classList.remove("visible"); }
+
+        logo.addEventListener("mousedown", function () {
+          pressTimer = setTimeout(openMenu, 600);
+        });
+        logo.addEventListener("touchstart", function (e) {
+          e.preventDefault();
+          pressTimer = setTimeout(openMenu, 600);
+        }, { passive: false });
+        ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(function (ev) {
+          logo.addEventListener(ev, function () { clearTimeout(pressTimer); });
+        });
+
+        document.getElementById("debugToggleItem").addEventListener("click", function () {
+          setDebugMode(!DEBUG_MODE);
+          closeMenu();
+        });
+
+        document.addEventListener("click", function (e) {
+          if (!menu.contains(e.target) && e.target !== logo) closeMenu();
+        });
+      })();
+
+      // Apply initial state
+      document.getElementById("debugNav").style.display = DEBUG_MODE ? "" : "none";
+      document.getElementById("debugToggle").classList.toggle("on", DEBUG_MODE);
       applyClassDayState();
 
       // ═══════════════════════════════════════════════════
