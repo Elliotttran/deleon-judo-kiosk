@@ -351,7 +351,9 @@
       .custom-select__header {
         display: flex;
         align-items: center;
-        padding: 16px;
+        justify-content: center;
+        position: relative;
+        padding: 12px 16px;
         border-bottom: 1px solid var(--border);
         flex-shrink: 0;
       }
@@ -365,9 +367,10 @@
         background: none;
         border: none;
         cursor: pointer;
-        margin-right: 8px;
         border-radius: 50%;
         transition: background 0.15s;
+        position: absolute;
+        left: 8px;
       }
 
       .custom-select__back:active {
@@ -386,8 +389,9 @@
 
       .custom-select__dropdown-title {
         font-family: var(--font);
-        font-size: 18px;
+        font-size: 28px;
         font-weight: 800;
+        letter-spacing: -0.3px;
         color: var(--text);
       }
 
@@ -401,10 +405,10 @@
         display: flex;
         align-items: center;
         width: 100%;
-        height: 56px;
+        height: 72px;
         padding: 0 24px;
         font-family: var(--font);
-        font-size: 18px;
+        font-size: 22px;
         font-weight: 600;
         color: var(--text);
         background: none;
@@ -437,9 +441,9 @@
         padding: 28px 0 8px;
         text-align: center;
         color: var(--text-secondary);
-        font-size: 17px;
-        font-weight: 600;
-        letter-spacing: 0.01em;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
       }
 
       /* Logo long-press dropdown */
@@ -538,23 +542,23 @@
         text-transform: uppercase;
       }
 
-      .custom-select__footer {
-        flex-shrink: 0;
-        padding: 16px 24px;
-        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-        border-top: 1px solid var(--border);
-        text-align: center;
-      }
-
       .custom-select__other {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 56px;
         background: none;
         border: none;
+        border-top: 1px solid var(--border);
         font-family: var(--font);
         font-size: 17px;
         font-weight: 600;
         color: var(--text-secondary);
         cursor: pointer;
-        padding: 10px 0;
+        padding: 0 24px;
+        margin-top: 8px;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
       }
 
       .custom-select__other span {
@@ -1225,8 +1229,8 @@
           font-size: 16px;
         }
         .custom-select__item {
-          height: 48px;
-          font-size: 16px;
+          height: 64px;
+          font-size: 20px;
           padding: 0 16px;
         }
         input[type="text"] {
@@ -1364,29 +1368,24 @@
           padding: 0 48px 0 20px;
         }
         .custom-select__header {
-          padding: 20px 24px;
-        }
-        .custom-select__dropdown-title {
-          font-size: 22px;
+          padding: 12px 24px;
         }
         .custom-select__back {
           width: 48px;
           height: 48px;
+          left: 12px;
         }
         .custom-select__back svg {
           width: 28px;
           height: 28px;
         }
         .custom-select__item {
-          height: 64px;
-          font-size: 20px;
+          height: 76px;
+          font-size: 24px;
           padding: 0 28px;
         }
-        .custom-select__footer {
-          padding: 20px 28px;
-        }
         .custom-select__other {
-          font-size: 18px;
+          font-size: 20px;
         }
         input[type="text"] {
           height: 64px;
@@ -1450,29 +1449,24 @@
           font-size: 20px;
         }
         .custom-select__header {
-          padding: 20px 24px;
-        }
-        .custom-select__dropdown-title {
-          font-size: 21px;
+          padding: 12px 24px;
         }
         .custom-select__back {
           width: 48px;
           height: 48px;
+          left: 12px;
         }
         .custom-select__back svg {
           width: 28px;
           height: 28px;
         }
         .custom-select__item {
-          height: 60px;
-          font-size: 20px;
+          height: 76px;
+          font-size: 24px;
           padding: 0 28px;
         }
-        .custom-select__footer {
-          padding: 20px 28px;
-        }
         .custom-select__other {
-          font-size: 18px;
+          font-size: 20px;
         }
         input[type="text"] {
           height: 62px;
@@ -1634,15 +1628,6 @@
                 >
               </div>
               <div class="custom-select__list" id="selectList"></div>
-              <div class="custom-select__footer">
-                <button
-                  type="button"
-                  class="custom-select__other"
-                  id="otherBtn"
-                >
-                  Not on the list? <span>Tap here</span>
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -2062,6 +2047,13 @@
           });
           list.appendChild(btn);
         });
+        // "Not on the list?" lives at the bottom of the scroll list
+        var other = document.createElement("button");
+        other.type = "button";
+        other.className = "custom-select__other";
+        other.innerHTML = 'Not on the list? <span>Tap here</span>';
+        other.addEventListener("click", selectOther);
+        list.appendChild(other);
       }
 
       async function loadRoster() {
@@ -2131,7 +2123,6 @@
       var customSelect = document.getElementById("customSelect");
       var selectTrigger = document.getElementById("selectTrigger");
       var selectDropdown = document.getElementById("selectDropdown");
-      var otherBtn = document.getElementById("otherBtn");
       var submitBtn = document.getElementById("submitBtn");
       var selectedValue = "";
       var isNewStudent = false;
@@ -2186,7 +2177,6 @@
         }
       });
 
-      otherBtn.addEventListener("click", selectOther);
       document
         .getElementById("selectBack")
         .addEventListener("click", function () {
