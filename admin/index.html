@@ -372,7 +372,10 @@ body.past-mode .tab.active { color: #ccc; }
 
 .st-view-toggle {
   display: flex; gap: 2px; background: var(--bg);
-  border-radius: 12px; padding: 4px; margin-bottom: 20px;
+  border-radius: 12px; padding: 4px; margin-bottom: 12px;
+}
+.st-day-filter {
+  display: flex; align-items: center; padding: 0 4px; margin-bottom: 16px;
 }
 
 .st-view-btn {
@@ -1012,6 +1015,13 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
     <div class="st-view-toggle">
       <button class="st-view-btn active" id="stDayBtn" onclick="stSetView('day')">Day</button>
       <button class="st-view-btn" id="stMonthBtn" onclick="stSetView('month')">Month</button>
+    </div>
+    <div class="st-day-filter" id="stDayFilter">
+      <label class="du-toggle">
+        <input type="checkbox" id="stClassDaysOnly">
+        <span class="du-toggle-slider"></span>
+        <span class="du-toggle-label">Class days only</span>
+      </label>
     </div>
     <div class="st-nav">
       <button class="st-arrow" id="stPrev" onclick="stNav(-1)">&#8249;</button>
@@ -1919,6 +1929,7 @@ function stCompute(year, month) {
 function stRender() {
   document.getElementById('stDayBtn').classList.toggle('active', stView==='day');
   document.getElementById('stMonthBtn').classList.toggle('active', stView==='month');
+  document.getElementById('stDayFilter').style.display = stView === 'day' ? 'flex' : 'none';
 
   if (stView === 'day') {
     var label = stDayDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase();
@@ -1941,10 +1952,20 @@ function stRender() {
   }
 }
 
+function stIsClassDay(d) {
+  var cancelled = getCancelled();
+  return CLASS_DAYS.includes(d.getDay()) && !cancelled.includes(fmtDate(d));
+}
+
 function stNav(dir) {
   if (stView === 'day') {
     var d = new Date(stDayDate);
-    d.setDate(d.getDate() + dir);
+    var filterOn = document.getElementById('stClassDaysOnly').checked;
+    var limit = 0;
+    do {
+      d.setDate(d.getDate() + dir);
+      limit++;
+    } while (filterOn && !stIsClassDay(d) && limit < 60);
     stDayDate = d;
   } else {
     stMonth += dir;
@@ -2067,14 +2088,25 @@ function stRenderDay() {
     return;
   }
 
+  // Month context — how many classes has each student attended this month so far
+  var monthStats = stCompute(stDayDate.getFullYear(), stDayDate.getMonth());
+  var monthCountMap = {};
+  monthStats.per.forEach(function(p) { monthCountMap[p.name] = p.count; });
+
   var sorted = names.slice().sort(function(a, b) { return a.localeCompare(b); });
   var rows = sorted.map(function(name) {
-    return '<div class="st-student-row"><div class="st-student-name">' + name + '</div></div>';
+    var mc = monthCountMap[name] || 1;
+    var monthLabel = mc + ' this month';
+    return '<div class="st-student-row">' +
+      '<div class="st-student-name">' + name + '</div>' +
+      '<div class="st-student-lastseen">' + monthLabel + '</div>' +
+    '</div>';
   }).join('');
 
   document.getElementById('stContent').innerHTML =
     '<div class="st-cards">' +
       '<div class="st-card"><div class="st-card-label">Attended</div><div class="st-card-value">' + names.length + '</div></div>' +
+      '<div class="st-card"><div class="st-card-label">Classes This Month</div><div class="st-card-value">' + monthStats.cc + '</div></div>' +
     '</div>' +
     '<div class="st-table">' +
       '<div class="st-table-header">' +
