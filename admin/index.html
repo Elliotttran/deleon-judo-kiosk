@@ -718,21 +718,21 @@ body.past-mode .tab.active { color: #ccc; }
 .du-list { padding: 0 20px 20px; }
 
 .du-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 16px 0; border-bottom: 1px solid var(--divider);
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 0; border-bottom: 1px solid var(--divider);
   cursor: pointer;
 }
 .du-row:last-child { border-bottom: none; }
 .du-row:active { background: var(--bg); }
 
 .du-name {
-  flex: 1; font-size: 17px; font-weight: 700;
+  flex: 1; font-size: 20px; font-weight: 700;
   min-width: 0; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
 }
 
 .du-badge {
-  font-size: 13px; font-weight: 800; padding: 4px 12px;
+  font-size: 14px; font-weight: 800; padding: 5px 14px;
   border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em;
 }
 .du-badge--paid { background: var(--green-row); color: var(--green); }
@@ -741,11 +741,6 @@ body.past-mode .tab.active { color: #ccc; }
 .du-date {
   font-size: 14px; font-weight: 600; color: var(--text-light);
   min-width: 60px; text-align: right;
-}
-
-.du-overdue {
-  font-size: 12px; font-weight: 800; color: var(--red);
-  white-space: nowrap;
 }
 
 /* ── Modal ── */
@@ -2834,7 +2829,6 @@ function duesRender() {
 
     return '<div class="du-row" onclick="duToggle(\'' + name.replace(/'/g, "\\'") + '\')">' +
       '<div class="du-name">' + name + '</div>' +
-      (overdue > 1 ? '<div class="du-overdue">' + overdue + 'mo overdue</div>' : '') +
       '<div class="du-badge ' + (paid ? 'du-badge--paid' : 'du-badge--unpaid') + '">' + (paid ? 'Paid' : 'Unpaid') + '</div>' +
       (dateStr ? '<div class="du-date">' + dateStr + '</div>' : '') +
     '</div>';
