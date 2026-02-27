@@ -412,6 +412,7 @@ body.past-mode .tab.active { color: #ccc; }
 .rk-row-right { text-align: right; flex-shrink: 0; }
 .rk-row-grade { font-size: 13px; font-weight: 700; color: var(--text); }
 .rk-row-date { font-size: 12px; color: var(--text-light); font-weight: 600; margin-top: 2px; }
+.rk-row-swatch { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(0,0,0,0.12); }
 
 /* Rank profile sheet */
 .rk-profile-overlay {
@@ -1433,6 +1434,31 @@ var BELT_NAMES = {
   'black':'Black','redwhite':'Red/White','red':'Red'
 };
 
+// 50/50 diagonal split for stripe belts — cleaner at larger swatch sizes
+var BELT_SWATCH_BG = {
+  'white':       '#f5f5f5',
+  'whiteyellow': 'linear-gradient(135deg,#f5f5f5 50%,#fef08a 50%)',
+  'yellow':      '#fef08a',
+  'yelloworange':'linear-gradient(135deg,#fef08a 50%,#fed7aa 50%)',
+  'orange':      '#fed7aa',
+  'orangegreen': 'linear-gradient(135deg,#fed7aa 50%,#bbf7d0 50%)',
+  'green':       '#bbf7d0',
+  'greenblue':   'linear-gradient(135deg,#bbf7d0 50%,#bfdbfe 50%)',
+  'blue':        '#bfdbfe',
+  'bluepurple':  'linear-gradient(135deg,#bfdbfe 50%,#e9d5ff 50%)',
+  'purple':      '#e9d5ff',
+  'brown':       '#d6b8a0',
+  'black':       '#111111',
+  'redwhite':    'linear-gradient(135deg,#ef4444 50%,#f5f5f5 50%)',
+  'red':         '#ef4444'
+};
+
+function beltSwatch(belt) {
+  var bg = BELT_SWATCH_BG[belt] || '#f5f5f5';
+  var border = (BELT_STYLES[belt] || {}).border || '#ccc';
+  return '<div class="rk-row-swatch" style="background:' + bg + ';border-color:' + border + '"></div>';
+}
+
 // Belt sort rank (higher = more senior)
 var BELT_SORT_RANK = {
   'red':15,'redwhite':14,'black':13,'purple':12,'brown':11,
@@ -2369,6 +2395,7 @@ function rkRender() {
         '<div class="rk-row-grade">' + gradeLabel + '</div>' +
         (dateStr ? '<div class="rk-row-date">' + dateStr + '</div>' : '') +
       '</div>' +
+      beltSwatch(belt) +
     '</div>';
   }).join('') || '<div style="padding:40px;text-align:center;color:var(--text-light);font-weight:600">No members yet</div>';
 }
