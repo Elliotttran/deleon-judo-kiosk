@@ -414,21 +414,21 @@ body.past-mode .tab.active { color: #ccc; }
 .rk-row-date { font-size: 12px; color: var(--text-light); font-weight: 600; margin-top: 2px; }
 .rk-row-swatch { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(0,0,0,0.12); }
 
-/* Rank profile sheet */
+/* Rank profile modal */
 .rk-profile-overlay {
   position: fixed; inset: 0; z-index: 400;
   background: rgba(0,0,0,0.45);
-  display: flex; align-items: flex-end;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
   opacity: 0; pointer-events: none; transition: opacity 0.2s;
 }
 .rk-profile-overlay.show { opacity: 1; pointer-events: auto; }
 .rk-profile-sheet {
-  background: var(--white); border-radius: 20px 20px 0 0;
-  width: 100%; max-height: 88dvh;
+  background: var(--white); border-radius: 16px;
+  width: 100%; max-width: 480px; max-height: 88dvh;
   display: flex; flex-direction: column; overflow: hidden;
-  transform: translateY(100%); transition: transform 0.25s cubic-bezier(.32,1,.23,1);
+  transform: scale(0.95); transition: transform 0.2s cubic-bezier(.32,1,.23,1);
 }
-.rk-profile-overlay.show .rk-profile-sheet { transform: translateY(0); }
+.rk-profile-overlay.show .rk-profile-sheet { transform: scale(1); }
 
 .rk-profile-header {
   display: flex; align-items: center; gap: 12px;
@@ -1390,42 +1390,42 @@ var BELT_STYLES = {
 
 // Junior belt system (16 & under) — 13 grades
 var JUNIOR_GRADES = [
-  { key:'juichikyu', label:'11th Kyu · Juichi-kyu', short:'11th Kyu', belt:'white' },
-  { key:'jukyu',     label:'10th Kyu · Ju-kyu',     short:'10th Kyu', belt:'whiteyellow' },
-  { key:'kyukyu',    label:'9th Kyu · Kyu-kyu',      short:'9th Kyu',  belt:'yellow' },
-  { key:'hachikyu',  label:'8th Kyu · Hachi-kyu',    short:'8th Kyu',  belt:'yelloworange' },
-  { key:'nanakyu',   label:'7th Kyu · Nana-kyu',     short:'7th Kyu',  belt:'orange' },
-  { key:'rokkyu',    label:'6th Kyu · Rok-kyu',      short:'6th Kyu',  belt:'orangegreen' },
-  { key:'gokyu',     label:'5th Kyu · Go-kyu',       short:'5th Kyu',  belt:'green' },
-  { key:'yonkyu',    label:'4th Kyu · Yon-kyu',      short:'4th Kyu',  belt:'greenblue' },
-  { key:'sankyu',    label:'3rd Kyu · San-kyu',       short:'3rd Kyu',  belt:'blue' },
-  { key:'nikyu',     label:'2nd Kyu · Ni-kyu',        short:'2nd Kyu',  belt:'bluepurple' },
-  { key:'ikkyu',     label:'1st Kyu · Ik-kyu',        short:'1st Kyu',  belt:'purple' },
-  { key:'shodan',    label:'1st Dan · Shodan',         short:'Shodan',   belt:'black' },
-  { key:'nidan',     label:'2nd Dan · Nidan',          short:'Nidan',    belt:'black' }
+  { key:'juichikyu', label:'11th Kyu · Juichikyu', short:'11th Kyu', belt:'white' },
+  { key:'jukyu',     label:'10th Kyu · Jukyu',     short:'10th Kyu', belt:'whiteyellow' },
+  { key:'kyukyu',    label:'9th Kyu · Kyukyu',      short:'9th Kyu',  belt:'yellow' },
+  { key:'hachikyu',  label:'8th Kyu · Hachikyu',    short:'8th Kyu',  belt:'yelloworange' },
+  { key:'nanakyu',   label:'7th Kyu · Nanakyu',     short:'7th Kyu',  belt:'orange' },
+  { key:'rokkyu',    label:'6th Kyu · Rokkyu',      short:'6th Kyu',  belt:'orangegreen' },
+  { key:'gokyu',     label:'5th Kyu · Gokyu',       short:'5th Kyu',  belt:'green' },
+  { key:'yonkyu',    label:'4th Kyu · Yonkyu',      short:'4th Kyu',  belt:'greenblue' },
+  { key:'sankyu',    label:'3rd Kyu · Sankyu',       short:'3rd Kyu',  belt:'blue' },
+  { key:'nikyu',     label:'2nd Kyu · Nikyu',        short:'2nd Kyu',  belt:'bluepurple' },
+  { key:'ikkyu',     label:'1st Kyu · Ikkyu',        short:'1st Kyu',  belt:'purple' },
+  { key:'shodan',    label:'1st Dan · Shodan',        short:'Shodan',   belt:'black' },
+  { key:'nidan',     label:'2nd Dan · Nidan',         short:'Nidan',    belt:'black' }
 ];
 
 // Senior belt system (17+) — 18 grades
 // rokkyuint + rokkyuadv are dojo-internal intermediates between 6th and 5th Kyu;
 // at federation level they are still white belt (Rokkyu) with distinction.
 var SENIOR_GRADES = [
-  { key:'rokkyu',    label:'6th Kyu · Rok-kyu',              short:'6th Kyu',      belt:'white' },
+  { key:'rokkyu',    label:'6th Kyu · Rokkyu',               short:'6th Kyu',      belt:'white' },
   { key:'rokkyuint', label:'6th Kyu Intermediate · Yellow',  short:'6th Kyu Int.', belt:'yellow' },
   { key:'rokkyuadv', label:'6th Kyu Advanced · Orange',      short:'6th Kyu Adv.', belt:'orange' },
-  { key:'gokyu',     label:'5th Kyu · Go-kyu',               short:'5th Kyu',      belt:'green' },
-  { key:'yonkyu',    label:'4th Kyu · Yon-kyu',        short:'4th Kyu',    belt:'blue' },
-  { key:'sankyu',    label:'3rd Kyu · San-kyu',         short:'3rd Kyu',    belt:'brown' },
-  { key:'nikyu',     label:'2nd Kyu · Ni-kyu',          short:'2nd Kyu',    belt:'brown' },
-  { key:'ikkyu',     label:'1st Kyu · Ik-kyu',          short:'1st Kyu',    belt:'brown' },
-  { key:'shodan',    label:'1st Dan · Shodan',           short:'Shodan',     belt:'black' },
-  { key:'nidan',     label:'2nd Dan · Nidan',            short:'Nidan',      belt:'black' },
-  { key:'sandan',    label:'3rd Dan · Sandan',           short:'Sandan',     belt:'black' },
-  { key:'yondan',    label:'4th Dan · Yondan',           short:'Yondan',     belt:'black' },
-  { key:'godan',     label:'5th Dan · Godan',            short:'Godan',      belt:'black' },
-  { key:'rokudan',   label:'6th Dan · Rokudan',          short:'Rokudan',    belt:'redwhite' },
-  { key:'shichidan', label:'7th Dan · Shichidan',        short:'Shichidan',  belt:'redwhite' },
-  { key:'hachidan',  label:'8th Dan · Hachidan',         short:'Hachidan',   belt:'redwhite' },
-  { key:'kudan',     label:'9th Dan · Kudan',            short:'Kudan',      belt:'red' },
+  { key:'gokyu',     label:'5th Kyu · Gokyu',                short:'5th Kyu',      belt:'green' },
+  { key:'yonkyu',    label:'4th Kyu · Yonkyu',        short:'4th Kyu',    belt:'blue' },
+  { key:'sankyu',    label:'3rd Kyu · Sankyu',         short:'3rd Kyu',    belt:'brown' },
+  { key:'nikyu',     label:'2nd Kyu · Nikyu',          short:'2nd Kyu',    belt:'brown' },
+  { key:'ikkyu',     label:'1st Kyu · Ikkyu',          short:'1st Kyu',    belt:'brown' },
+  { key:'shodan',    label:'1st Dan · Shodan',          short:'Shodan',     belt:'black' },
+  { key:'nidan',     label:'2nd Dan · Nidan',           short:'Nidan',      belt:'black' },
+  { key:'sandan',    label:'3rd Dan · Sandan',          short:'Sandan',     belt:'black' },
+  { key:'yondan',    label:'4th Dan · Yondan',          short:'Yondan',     belt:'black' },
+  { key:'godan',     label:'5th Dan · Godan',           short:'Godan',      belt:'black' },
+  { key:'rokudan',   label:'6th Dan · Rokudan',         short:'Rokudan',    belt:'redwhite' },
+  { key:'shichidan', label:'7th Dan · Shichidan',       short:'Shichidan',  belt:'redwhite' },
+  { key:'hachidan',  label:'8th Dan · Hachidan',        short:'Hachidan',   belt:'redwhite' },
+  { key:'kudan',     label:'9th Dan · Kudan',           short:'Kudan',      belt:'red' },
   { key:'judan',     label:'10th Dan · Judan',           short:'Judan',      belt:'red' }
 ];
 
@@ -1436,6 +1436,25 @@ var BELT_NAMES = {
   'green':'Green','greenblue':'Green/Blue','blue':'Blue',
   'bluepurple':'Blue/Purple','purple':'Purple','brown':'Brown',
   'black':'Black','redwhite':'Red/White','red':'Red'
+};
+
+// Two squares per belt — solid belts repeat the same square, stripe belts use two different ones
+var BELT_EMOJI = {
+  'white':       '⬜⬜',
+  'whiteyellow': '⬜🟨',
+  'yellow':      '🟨🟨',
+  'yelloworange':'🟨🟧',
+  'orange':      '🟧🟧',
+  'orangegreen': '🟧🟩',
+  'green':       '🟩🟩',
+  'greenblue':   '🟩🟦',
+  'blue':        '🟦🟦',
+  'bluepurple':  '🟦🟪',
+  'purple':      '🟪🟪',
+  'brown':       '🟫🟫',
+  'black':       '⬛⬛',
+  'redwhite':    '🟥⬜',
+  'red':         '🟥🟥'
 };
 
 // 50/50 diagonal split for stripe belts — cleaner at larger swatch sizes
@@ -2429,7 +2448,10 @@ function rkDivisionChange() {
   var grades = division === 'junior' ? JUNIOR_GRADES : (division === 'senior' ? SENIOR_GRADES : []);
   var gradeSelect = document.getElementById('rkGrade');
   gradeSelect.innerHTML = '<option value="">' + (division ? '— not set —' : '— select division first —') + '</option>' +
-    grades.map(function(g) { return '<option value="' + g.key + '">' + g.label + '</option>'; }).join('');
+    grades.map(function(g) {
+      var emoji = BELT_EMOJI[g.belt] || '⬜⬜';
+      return '<option value="' + g.key + '">' + emoji + '  ' + g.label + '</option>';
+    }).join('');
   rkGradeChange();
 }
 
