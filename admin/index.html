@@ -1094,7 +1094,7 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
 // ═══════════════════════════════════
 // SHARED STATE & HELPERS
 // ═══════════════════════════════════
-const APP_VERSION = 'v1.3';
+const APP_VERSION = 'v1.2.1';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 const WRITE_KEY = '1970';
 
@@ -1380,6 +1380,8 @@ async function loadFromServer() {
     if (activeTab === 'roster') roRender();
     if (activeTab === 'stats') stRender();
     if (activeTab === 'dues') duesRender();
+    lastSavedTime = new Date();
+    setSyncState('saved', 'Synced ' + formatSavedTime(lastSavedTime));
   } catch (err) {
     console.warn('Could not load data from server:', err);
   }
