@@ -401,12 +401,6 @@ body.past-mode .tab.active { color: #ccc; }
 }
 .rk-title { font-size: 28px; font-weight: 900; }
 .rk-subtitle { font-size: 14px; color: var(--text-light); font-weight: 600; margin-bottom: 16px; }
-.rk-add-btn {
-  background: var(--green); color: #fff; border: none; border-radius: 12px;
-  padding: 10px 18px; font-family: var(--font); font-size: 15px; font-weight: 700;
-  cursor: pointer;
-}
-.rk-add-btn:active { opacity: 0.85; }
 
 .rk-row {
   display: flex; align-items: center; gap: 12px;
@@ -457,11 +451,6 @@ body.past-mode .tab.active { color: #ccc; }
 .rk-profile-actions {
   display: flex; gap: 12px; padding: 16px 20px;
   border-top: 1px solid var(--divider); flex-shrink: 0;
-}
-.rk-profile-remove {
-  background: none; border: none; font-family: var(--font);
-  font-size: 13px; font-weight: 600; color: var(--red);
-  cursor: pointer; padding: 4px 0; text-align: center; width: 100%; margin-top: 4px;
 }
 
 /* ═══════════════════════════════════════════
@@ -1125,7 +1114,6 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
   <div class="rk-header">
     <div class="rk-title-row">
       <div class="rk-title">Rank</div>
-      <button class="rk-add-btn" onclick="rkShowAdd()">+ Add Member</button>
     </div>
     <div class="rk-subtitle" id="rkSubtitle"></div>
   </div>
@@ -1197,28 +1185,6 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
     <div class="rk-profile-actions">
       <button class="modal-btn modal-cancel" onclick="rkProfileClose()">Cancel</button>
       <button class="modal-btn btn-green" onclick="rkProfileSave()">Save</button>
-    </div>
-    <button class="rk-profile-remove" id="rkProfileRemoveBtn" onclick="rkRemoveMember()" style="display:none">Remove from Rank</button>
-  </div>
-</div>
-
-<!-- Add rank member modal (reuses existing modal pattern) -->
-<div class="modal-overlay" id="rkAddOverlay" onclick="rkCloseAdd()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-title">Add Member</div>
-    <div class="modal-body">
-      <div class="ro-field">
-        <label class="ro-label">First name</label>
-        <input class="ro-modal-input" id="rkFirstName" type="text" placeholder="e.g. Will" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" data-lpignore="true">
-      </div>
-      <div class="ro-field">
-        <label class="ro-label">Last name</label>
-        <input class="ro-modal-input" id="rkLastName" type="text" placeholder="e.g. Sakaguchi" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" data-lpignore="true">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-btn modal-cancel" onclick="rkCloseAdd()">Cancel</button>
-      <button class="modal-btn btn-green" onclick="rkAddConfirm()">Add</button>
     </div>
   </div>
 </div>
@@ -1414,14 +1380,6 @@ function setRankProfile(name, data) {
   var obj = getRankProfiles();
   obj[name] = Object.assign({}, obj[name] || {}, data);
   setRankProfiles(obj);
-}
-function getRankMembers() {
-  try { return JSON.parse(localStorage.getItem('dojo_rank_members') || '[]'); }
-  catch (e) { return []; }
-}
-function setRankMembers(arr) {
-  try { localStorage.setItem('dojo_rank_members', JSON.stringify(arr)); }
-  catch (e) {}
 }
 
 // Belt rank system
@@ -2298,10 +2256,8 @@ function roStatusSave() {
 // RANK PAGE
 // ═══════════════════════════════════
 var rkProfileCurrentName = null;
-var rkProfileIsRosterMember = false;
-
 function rkAllNames() {
-  // Roster students (active + hidden)
+  // All roster students (active + inactive + teacher)
   var roster = getRoster();
   var profiles = getStudentProfiles();
   var names = roster.slice();
@@ -2309,8 +2265,6 @@ function rkAllNames() {
     var s = profiles[n].status;
     if ((s === 'inactive' || s === 'teacher') && !names.includes(n)) names.push(n);
   });
-  // Non-roster rank members
-  getRankMembers().forEach(function(n) { if (!names.includes(n)) names.push(n); });
   return names;
 }
 
@@ -2325,13 +2279,6 @@ function rkSortNames(names) {
 
 function rkRender() {
   var names = rkSortNames(rkAllNames());
-  var rosterSet = new Set(getRoster());
-  var spObj = getStudentProfiles();
-  Object.keys(spObj).forEach(function(n) {
-    var s = spObj[n].status;
-    if (s === 'inactive' || s === 'teacher') rosterSet.add(n);
-  });
-
   document.getElementById('rkSubtitle').textContent = names.length + ' members';
   document.getElementById('rkList').innerHTML = names.map(function(name) {
     var escaped = name.replace(/'/g, "\\'");
@@ -2354,11 +2301,6 @@ function rkRender() {
 
 function rkOpenProfile(name) {
   rkProfileCurrentName = name;
-  var rosterSet = new Set(getRoster());
-  var spObj = getStudentProfiles();
-  var inRoster = rosterSet.has(name) || (spObj[name] && (spObj[name].status === 'inactive' || spObj[name].status === 'teacher'));
-  rkProfileIsRosterMember = !!inRoster;
-
   var rp = getRankProfile(name);
   document.getElementById('rkProfileName').textContent = name;
   document.getElementById('rkProfileBadge').innerHTML = beltBadge(rp.belt, rp.danKyu, true);
@@ -2371,7 +2313,6 @@ function rkOpenProfile(name) {
   document.getElementById('rkUsja').value = rp.usjaNum || '';
   document.getElementById('rkUsaj').value = rp.usajNum || '';
   rkBeltChange();
-  document.getElementById('rkProfileRemoveBtn').style.display = rkProfileIsRosterMember ? 'none' : '';
   document.getElementById('rkProfileOverlay').classList.add('show');
 }
 
@@ -2417,52 +2358,6 @@ function rkProfileSave() {
   showToast('Rank profile saved');
 }
 
-function rkRemoveMember() {
-  if (!rkProfileCurrentName || rkProfileIsRosterMember) return;
-  var name = rkProfileCurrentName;
-  var members = getRankMembers().filter(function(n) { return n !== name; });
-  setRankMembers(members);
-  queueChange({ action: 'removeRankMember', name: name });
-  rkProfileClose();
-  rkRender();
-  triggerSync();
-  showToast('Removed ' + name);
-}
-
-function rkShowAdd() {
-  document.getElementById('rkFirstName').value = '';
-  document.getElementById('rkLastName').value = '';
-  document.getElementById('rkAddOverlay').classList.add('show');
-  setTimeout(function() { document.getElementById('rkFirstName').focus(); }, 200);
-}
-
-function rkCloseAdd() {
-  document.getElementById('rkAddOverlay').classList.remove('show');
-}
-
-function rkAddConfirm() {
-  var last = document.getElementById('rkLastName').value.trim();
-  var first = document.getElementById('rkFirstName').value.trim();
-  if (!last || !first) {
-    showToast('Enter first and last name', 'error');
-    return;
-  }
-  var fullName = last + ', ' + first;
-  var existing = rkAllNames();
-  if (existing.includes(fullName)) {
-    showToast('Already in rank list', 'error');
-    return;
-  }
-  var members = getRankMembers();
-  members.push(fullName);
-  setRankMembers(members);
-  queueChange({ action: 'saveRankMember', name: fullName });
-  rkCloseAdd();
-  rkRender();
-  // Immediately open profile sheet to fill in rank data
-  rkOpenProfile(fullName);
-  triggerSync();
-}
 
 // ═══════════════════════════════════
 // STATS PAGE
@@ -2903,7 +2798,6 @@ flushSyncQueue().then(function(success) {
     if (!document.getElementById('pinScreen').classList.contains('hidden')) return;
     if (document.getElementById('roAddOverlay').classList.contains('show')) return;
     if (document.getElementById('roStatusOverlay').classList.contains('show')) return;
-    if (document.getElementById('rkAddOverlay').classList.contains('show')) return;
     if (document.getElementById('rkProfileOverlay').classList.contains('show')) return;
     if (document.getElementById('modalOverlay').classList.contains('show')) return;
     startY = e.touches[0].clientY;
