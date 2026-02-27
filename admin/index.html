@@ -408,11 +408,13 @@ body.past-mode .tab.active { color: #ccc; }
   cursor: pointer; transition: background 0.1s;
 }
 .rk-row:active { background: var(--bg); }
-.rk-row-name { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; }
+.rk-row-main { flex: 1; min-width: 0; }
+.rk-row-name { font-size: 16px; font-weight: 700; }
+.rk-row-sub { font-size: 13px; color: var(--text-light); font-weight: 600; margin-top: 2px; }
 .rk-row-right { text-align: right; flex-shrink: 0; }
 .rk-row-grade { font-size: 13px; font-weight: 700; color: var(--text); }
 .rk-row-date { font-size: 12px; color: var(--text-light); font-weight: 600; margin-top: 2px; }
-.rk-row-swatch { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(0,0,0,0.12); }
+.rk-row-swatch { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; border: 2px solid rgba(0,0,0,0.12); }
 
 /* Rank profile modal */
 .rk-profile-overlay {
@@ -1457,22 +1459,22 @@ var BELT_EMOJI = {
   'red':         '🟥🟥'
 };
 
-// 50/50 diagonal split for stripe belts — cleaner at larger swatch sizes
+// Top/bottom 50-50 horizontal split for stripe belts
 var BELT_SWATCH_BG = {
-  'white':       '#f5f5f5',
-  'whiteyellow': 'linear-gradient(135deg,#f5f5f5 50%,#fef08a 50%)',
+  'white':       '#f0f0f0',
+  'whiteyellow': 'linear-gradient(180deg,#f0f0f0 50%,#fef08a 50%)',
   'yellow':      '#fef08a',
-  'yelloworange':'linear-gradient(135deg,#fef08a 50%,#fed7aa 50%)',
+  'yelloworange':'linear-gradient(180deg,#fef08a 50%,#fed7aa 50%)',
   'orange':      '#fed7aa',
-  'orangegreen': 'linear-gradient(135deg,#fed7aa 50%,#bbf7d0 50%)',
+  'orangegreen': 'linear-gradient(180deg,#fed7aa 50%,#bbf7d0 50%)',
   'green':       '#bbf7d0',
-  'greenblue':   'linear-gradient(135deg,#bbf7d0 50%,#bfdbfe 50%)',
+  'greenblue':   'linear-gradient(180deg,#bbf7d0 50%,#bfdbfe 50%)',
   'blue':        '#bfdbfe',
-  'bluepurple':  'linear-gradient(135deg,#bfdbfe 50%,#e9d5ff 50%)',
+  'bluepurple':  'linear-gradient(180deg,#bfdbfe 50%,#e9d5ff 50%)',
   'purple':      '#e9d5ff',
   'brown':       '#d6b8a0',
   'black':       '#111111',
-  'redwhite':    'linear-gradient(135deg,#ef4444 50%,#f5f5f5 50%)',
+  'redwhite':    'linear-gradient(180deg,#ef4444 50%,#f0f0f0 50%)',
   'red':         '#ef4444'
 };
 
@@ -2407,13 +2409,19 @@ function rkRender() {
   document.getElementById('rkList').innerHTML = names.map(function(name) {
     var escaped = name.replace(/'/g, "\\'");
     var rp = getRankProfile(name);
-    var badge = gradeBadge(rp.grade, rp.division);
     var belt = getBeltForGrade(rp.grade, rp.division);
     var gradeLabel = rp.grade ? (getGradeShort(rp.grade, rp.division) + ' · ' + (BELT_NAMES[belt] || '')) : '—';
     var dateStr = rp.promotionDate ? fmtDateShort(rp.promotionDate) : '';
+    var divLabel = rp.division ? (rp.division.charAt(0).toUpperCase() + rp.division.slice(1)) : '';
+    var subParts = [];
+    if (divLabel) subParts.push(divLabel);
+    if (rp.usjfNum) subParts.push('USJF #' + rp.usjfNum);
+    var subStr = subParts.join(' · ');
     return '<div class="rk-row" onclick="rkOpenProfile(\'' + escaped + '\')">' +
-      badge +
-      '<div class="rk-row-name">' + name + '</div>' +
+      '<div class="rk-row-main">' +
+        '<div class="rk-row-name">' + name + '</div>' +
+        (subStr ? '<div class="rk-row-sub">' + subStr + '</div>' : '') +
+      '</div>' +
       '<div class="rk-row-right">' +
         '<div class="rk-row-grade">' + gradeLabel + '</div>' +
         (dateStr ? '<div class="rk-row-date">' + dateStr + '</div>' : '') +
