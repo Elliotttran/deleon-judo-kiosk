@@ -346,6 +346,124 @@ body.past-mode .tab.active { color: #ccc; }
 .ro-delete:hover { color: var(--red); }
 .ro-delete:active { background: rgba(196,25,25,0.08); }
 
+/* Status badges */
+.ro-status {
+  font-size: 11px; font-weight: 700; padding: 3px 9px;
+  border-radius: 20px; border: 1.5px solid transparent;
+  white-space: nowrap; flex-shrink: 0; cursor: pointer;
+}
+.ro-status-active   { background:#d6f5e0; color:#16a34a; border-color:#86efac; }
+.ro-status-inactive { background:#f0f0f0; color:#777;    border-color:#ccc; }
+.ro-status-teacher  { background:#e0e7ff; color:#4338ca; border-color:#a5b4fc; }
+
+/* Belt badges (Roster + Rank) */
+.rk-belt-badge {
+  display: inline-block;
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 20px;
+  border: 1.5px solid transparent;
+  flex-shrink: 0; white-space: nowrap;
+}
+
+/* Status sheet overlay */
+.ro-status-modal {
+  max-width: 320px;
+}
+.ro-status-name {
+  font-size: 18px; font-weight: 800; margin-bottom: 20px; text-align: center;
+}
+.ro-status-options { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.ro-status-option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 12px; cursor: pointer;
+  font-size: 16px; font-weight: 600; border: none; background: none;
+  font-family: var(--font); width: 100%; text-align: left;
+  transition: background 0.12s;
+}
+.ro-status-option:hover { background: var(--bg); }
+.ro-status-option.selected { background: var(--bg); }
+.ro-status-option .ro-status-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid #ccc; flex-shrink: 0;
+}
+.ro-status-option.selected .ro-status-dot {
+  background: var(--green); border-color: var(--green);
+}
+
+/* Rank page */
+.rk-header {
+  background: var(--white);
+  padding: 28px 24px 20px;
+}
+.rk-title-row {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+}
+.rk-title { font-size: 28px; font-weight: 900; }
+.rk-subtitle { font-size: 14px; color: var(--text-light); font-weight: 600; margin-bottom: 16px; }
+.rk-add-btn {
+  background: var(--green); color: #fff; border: none; border-radius: 12px;
+  padding: 10px 18px; font-family: var(--font); font-size: 15px; font-weight: 700;
+  cursor: pointer;
+}
+.rk-add-btn:active { opacity: 0.85; }
+
+.rk-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; border-bottom: 1px solid var(--divider);
+  cursor: pointer; transition: background 0.1s;
+}
+.rk-row:active { background: var(--bg); }
+.rk-row-info { flex: 1; min-width: 0; }
+.rk-row-name { font-size: 16px; font-weight: 700; }
+.rk-row-meta { font-size: 13px; color: var(--text-light); font-weight: 600; margin-top: 1px; }
+
+/* Rank profile sheet */
+.rk-profile-overlay {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.rk-profile-overlay.show { opacity: 1; pointer-events: auto; }
+.rk-profile-sheet {
+  background: var(--white); border-radius: 20px 20px 0 0;
+  width: 100%; max-height: 88dvh;
+  display: flex; flex-direction: column; overflow: hidden;
+  transform: translateY(100%); transition: transform 0.25s cubic-bezier(.32,1,.23,1);
+}
+.rk-profile-overlay.show .rk-profile-sheet { transform: translateY(0); }
+
+.rk-profile-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--divider); flex-shrink: 0;
+}
+.rk-profile-header-name { flex: 1; font-size: 19px; font-weight: 800; }
+.rk-profile-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; color: var(--text-light); padding: 4px 8px; border-radius: 6px;
+}
+.rk-profile-close:active { background: var(--bg); }
+
+.rk-profile-fields {
+  overflow-y: auto; padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 16px;
+}
+.rk-profile-section-title {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-light);
+  margin-bottom: -4px;
+}
+.rk-profile-actions {
+  display: flex; gap: 12px; padding: 16px 20px;
+  border-top: 1px solid var(--divider); flex-shrink: 0;
+}
+.rk-profile-remove {
+  background: none; border: none; font-family: var(--font);
+  font-size: 13px; font-weight: 600; color: var(--red);
+  cursor: pointer; padding: 4px 0; text-align: center; width: 100%; margin-top: 4px;
+}
+
 /* ═══════════════════════════════════════════
    STATS PAGE
    ═══════════════════════════════════════════ */
@@ -1002,6 +1120,131 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
   </div>
 </div>
 
+<!-- ════ RANK PAGE ════ -->
+<div class="page" id="page-rank">
+  <div class="rk-header">
+    <div class="rk-title-row">
+      <div class="rk-title">Rank</div>
+      <button class="rk-add-btn" onclick="rkShowAdd()">+ Add Member</button>
+    </div>
+    <div class="rk-subtitle" id="rkSubtitle"></div>
+  </div>
+  <div id="rkList"></div>
+</div>
+
+<!-- Rank profile sheet -->
+<div class="rk-profile-overlay" id="rkProfileOverlay" onclick="rkProfileClose()">
+  <div class="rk-profile-sheet" onclick="event.stopPropagation()">
+    <div class="rk-profile-header">
+      <div id="rkProfileBadge"></div>
+      <div class="rk-profile-header-name" id="rkProfileName"></div>
+      <button class="rk-profile-close" onclick="rkProfileClose()">&#10005;</button>
+    </div>
+    <div class="rk-profile-fields" id="rkProfileFields">
+      <div class="rk-profile-section-title">Rank</div>
+      <div class="ro-field">
+        <label class="ro-label">Belt Rank</label>
+        <select class="ro-modal-input" id="rkBelt" onchange="rkBeltChange()">
+          <option value="">— not set —</option>
+          <option value="white">White</option>
+          <option value="yellow">Yellow</option>
+          <option value="orange">Orange</option>
+          <option value="green">Green</option>
+          <option value="blue">Blue</option>
+          <option value="brown">Brown</option>
+          <option value="black">Black</option>
+        </select>
+      </div>
+      <div class="ro-field" id="rkDanKyuField" style="display:none">
+        <label class="ro-label">Dan Grade</label>
+        <select class="ro-modal-input" id="rkDanKyu">
+          <option value="">— not set —</option>
+          <option value="1dan">1st Dan (Shodan)</option>
+          <option value="2dan">2nd Dan (Nidan)</option>
+          <option value="3dan">3rd Dan (Sandan)</option>
+        </select>
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">Division</label>
+        <select class="ro-modal-input" id="rkDivision">
+          <option value="">— not set —</option>
+          <option value="junior">Junior (Kids)</option>
+          <option value="senior">Senior (Adult)</option>
+        </select>
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">Date of Last Promotion</label>
+        <input class="ro-modal-input" id="rkPromotionDate" type="month">
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">Join Date</label>
+        <input class="ro-modal-input" id="rkJoinDate" type="month">
+      </div>
+      <div class="rk-profile-section-title" style="margin-top:4px">Memberships</div>
+      <div class="ro-field">
+        <label class="ro-label">USJF Membership #</label>
+        <input class="ro-modal-input" id="rkUsjf" type="text" placeholder="Required" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">USJA Membership # <span style="font-weight:500;color:var(--text-light)">(optional)</span></label>
+        <input class="ro-modal-input" id="rkUsja" type="text" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">USA Judo # <span style="font-weight:500;color:var(--text-light)">(optional — national/intl)</span></label>
+        <input class="ro-modal-input" id="rkUsaj" type="text" inputmode="numeric" autocomplete="off">
+      </div>
+    </div>
+    <div class="rk-profile-actions">
+      <button class="modal-btn modal-cancel" onclick="rkProfileClose()">Cancel</button>
+      <button class="modal-btn btn-green" onclick="rkProfileSave()">Save</button>
+    </div>
+    <button class="rk-profile-remove" id="rkProfileRemoveBtn" onclick="rkRemoveMember()" style="display:none">Remove from Rank</button>
+  </div>
+</div>
+
+<!-- Add rank member modal (reuses existing modal pattern) -->
+<div class="modal-overlay" id="rkAddOverlay" onclick="rkCloseAdd()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Add Member</div>
+    <div class="modal-body">
+      <div class="ro-field">
+        <label class="ro-label">First name</label>
+        <input class="ro-modal-input" id="rkFirstName" type="text" placeholder="e.g. Will" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" data-lpignore="true">
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">Last name</label>
+        <input class="ro-modal-input" id="rkLastName" type="text" placeholder="e.g. Sakaguchi" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" data-lpignore="true">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-cancel" onclick="rkCloseAdd()">Cancel</button>
+      <button class="modal-btn btn-green" onclick="rkAddConfirm()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Status sheet -->
+<div class="modal-overlay" id="roStatusOverlay" onclick="roStatusClose()">
+  <div class="modal ro-status-modal" onclick="event.stopPropagation()">
+    <div class="modal-title ro-status-name" id="roStatusName"></div>
+    <div class="ro-status-options">
+      <button class="ro-status-option" id="roStatusOptActive" onclick="roStatusSelect('active')">
+        <span class="ro-status-dot"></span> Active
+      </button>
+      <button class="ro-status-option" id="roStatusOptInactive" onclick="roStatusSelect('inactive')">
+        <span class="ro-status-dot"></span> Inactive
+      </button>
+      <button class="ro-status-option" id="roStatusOptTeacher" onclick="roStatusSelect('teacher')">
+        <span class="ro-status-dot"></span> Teacher
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-cancel" onclick="roStatusClose()">Cancel</button>
+      <button class="modal-btn btn-green" onclick="roStatusSave()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ STATS PAGE ════ -->
 <div class="page" id="page-stats">
   <div class="st-header">
@@ -1067,6 +1310,10 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     Roster
   </button>
+  <button class="tab" onclick="switchTab('rank')" id="tab-rank">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+    Rank
+  </button>
   <button class="tab" onclick="switchTab('stats')" id="tab-stats">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="3" width="4" height="18"/></svg>
     Stats
@@ -1094,7 +1341,7 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
 // ═══════════════════════════════════
 // SHARED STATE & HELPERS
 // ═══════════════════════════════════
-const APP_VERSION = 'v1.2.1';
+const APP_VERSION = 'v1.4';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 const WRITE_KEY = '1970';
 
@@ -1139,6 +1386,70 @@ function getCancelled() {
 function setCancelled(c) {
   try { localStorage.setItem('dojo_cancelled', JSON.stringify(c)); }
   catch (e) {}
+}
+function getStudentProfiles() {
+  try { return JSON.parse(localStorage.getItem('dojo_student_profiles') || '{}'); }
+  catch (e) { return {}; }
+}
+function setStudentProfiles(obj) {
+  try { localStorage.setItem('dojo_student_profiles', JSON.stringify(obj)); }
+  catch (e) {}
+}
+function getStudentProfile(name) { return getStudentProfiles()[name] || {}; }
+function setStudentProfile(name, data) {
+  var obj = getStudentProfiles();
+  obj[name] = Object.assign({}, obj[name] || {}, data);
+  setStudentProfiles(obj);
+}
+function getRankProfiles() {
+  try { return JSON.parse(localStorage.getItem('dojo_rank_profiles') || '{}'); }
+  catch (e) { return {}; }
+}
+function setRankProfiles(obj) {
+  try { localStorage.setItem('dojo_rank_profiles', JSON.stringify(obj)); }
+  catch (e) {}
+}
+function getRankProfile(name) { return getRankProfiles()[name] || {}; }
+function setRankProfile(name, data) {
+  var obj = getRankProfiles();
+  obj[name] = Object.assign({}, obj[name] || {}, data);
+  setRankProfiles(obj);
+}
+function getRankMembers() {
+  try { return JSON.parse(localStorage.getItem('dojo_rank_members') || '[]'); }
+  catch (e) { return []; }
+}
+function setRankMembers(arr) {
+  try { localStorage.setItem('dojo_rank_members', JSON.stringify(arr)); }
+  catch (e) {}
+}
+
+// Belt rank system
+var BELT_ORDER = ['white','yellow','orange','green','blue','brown','black'];
+var BELT_COLORS = {
+  white:  { bg:'#f0f0f0', text:'#555',    border:'#ccc' },
+  yellow: { bg:'#fef08a', text:'#713f12', border:'#ca8a04' },
+  orange: { bg:'#fed7aa', text:'#7c2d12', border:'#ea580c' },
+  green:  { bg:'#bbf7d0', text:'#14532d', border:'#16a34a' },
+  blue:   { bg:'#bfdbfe', text:'#1e3a5f', border:'#2563eb' },
+  brown:  { bg:'#d6b8a0', text:'#3b1a0a', border:'#92400e' },
+  black:  { bg:'#111',    text:'#fff',    border:'#000' }
+};
+function beltBadge(belt, danKyu, large) {
+  var b = belt || '';
+  if (!b) return '<span class="rk-belt-badge" style="background:#f5f5f5;color:#aaa;border-color:#e0e0e0">—</span>';
+  var c = BELT_COLORS[b] || BELT_COLORS.white;
+  var label = b.charAt(0).toUpperCase() + b.slice(1);
+  if (b === 'black' && danKyu) label += ' ' + danKyu.replace('dan', 'D').replace('1D','1D').replace('2D','2D').replace('3D','3D');
+  var size = large ? 'font-size:14px;padding:6px 14px;' : '';
+  return '<span class="rk-belt-badge" style="background:' + c.bg + ';color:' + c.text + ';border-color:' + c.border + ';' + size + '">' + label + '</span>';
+}
+function beltSortKey(name) {
+  var p = getRankProfile(name);
+  var bIdx = BELT_ORDER.indexOf(p.belt || '');
+  if (bIdx < 0) bIdx = -1;
+  var dan = p.danKyu ? parseInt(p.danKyu) || 0 : 0;
+  return [bIdx, dan, p.promotionDate || '9999-99'];
 }
 
 function fmtDate(d) {
@@ -1378,6 +1689,7 @@ async function loadFromServer() {
 
     if (activeTab === 'signin') siRender();
     if (activeTab === 'roster') roRender();
+    if (activeTab === 'rank') rkRender();
     if (activeTab === 'stats') stRender();
     if (activeTab === 'dues') duesRender();
     lastSavedTime = new Date();
@@ -1486,6 +1798,7 @@ function switchTab(name) {
 
   if (name === 'signin') siRender();
   if (name === 'roster') roRender();
+  if (name === 'rank') rkRender();
   if (name === 'stats') stRender();
   if (name === 'dues') duesRender();
   window.scrollTo(0, 0);
@@ -1710,14 +2023,37 @@ function siNav(dir) {
 // ═══════════════════════════════════
 // ROSTER PAGE
 // ═══════════════════════════════════
+function roStatusBadge(name) {
+  var status = (getStudentProfile(name).status) || 'active';
+  var labels = { active: 'Active', inactive: 'Inactive', teacher: 'Teacher' };
+  return '<button class="ro-status ro-status-' + status + '" onclick="event.stopPropagation();roOpenStatus(\'' + name.replace(/'/g, "\\'") + '\')">' + (labels[status] || 'Active') + '</button>';
+}
+
 function roRender() {
-  var roster = getRoster();
-  document.getElementById('roSubtitle').textContent = roster.length + ' students';
-  document.getElementById('roList').innerHTML = roster.map(function(name, i) {
+  var activeRoster = getRoster();
+  var profiles = getStudentProfiles();
+  // Build full list: active roster + hidden students (inactive/teacher)
+  var allNames = activeRoster.slice();
+  Object.keys(profiles).forEach(function(name) {
+    var status = profiles[name].status;
+    if ((status === 'inactive' || status === 'teacher') && !allNames.includes(name)) {
+      allNames.push(name);
+    }
+  });
+  allNames.sort(function(a, b) { return a.localeCompare(b); });
+
+  var activeCount = activeRoster.length;
+  var totalCount = allNames.length;
+  document.getElementById('roSubtitle').textContent = activeCount + ' active' + (totalCount > activeCount ? ', ' + (totalCount - activeCount) + ' hidden' : '');
+
+  document.getElementById('roList').innerHTML = allNames.map(function(name, i) {
     var escaped = name.replace(/'/g, "\\'");
-    return '<div class="ro-row">' +
+    var status = (profiles[name] && profiles[name].status) || 'active';
+    var dimStyle = status !== 'active' ? ' style="opacity:0.55"' : '';
+    return '<div class="ro-row"' + dimStyle + '>' +
       '<span class="ro-num">' + (i + 1) + '</span>' +
       '<span class="ro-name">' + name + '</span>' +
+      roStatusBadge(name) +
       '<button class="ro-edit" onclick="roEdit(\'' + escaped + '\')">&#9998;</button>' +
       '<button class="ro-delete" onclick="roDelete(\'' + escaped + '\')">&#10005;</button>' +
     '</div>';
@@ -1792,6 +2128,12 @@ function roEditConfirm() {
     att[date] = att[date].map(function(n) { return n === oldName ? newName : n; });
   });
   setAtt(att);
+
+  // Migrate profile keys to new name
+  var sp = getStudentProfiles();
+  if (sp[oldName]) { sp[newName] = sp[oldName]; delete sp[oldName]; setStudentProfiles(sp); }
+  var rp = getRankProfiles();
+  if (rp[oldName]) { rp[newName] = rp[oldName]; delete rp[oldName]; setRankProfiles(rp); }
 
   queueChange({ action: 'editStudent', oldName: oldName, newLast: last, newFirst: first });
 
@@ -1884,9 +2226,242 @@ function roConfirmDelete() {
   });
   setAtt(att);
   queueChange({ action: 'removeStudent', name: name });
+  // Clean up profile data for deleted student
+  var sp = getStudentProfiles(); delete sp[name]; setStudentProfiles(sp);
   modalClose();
   roRender();
   showToast('Removed ' + name);
+}
+
+// ═══════════════════════════════════
+// ROSTER STATUS SHEET
+// ═══════════════════════════════════
+var statusEditingName = null;
+var statusSelectedValue = 'active';
+
+function roOpenStatus(name) {
+  statusEditingName = name;
+  statusSelectedValue = (getStudentProfile(name).status) || 'active';
+  document.getElementById('roStatusName').textContent = name;
+  roStatusUpdateUI();
+  document.getElementById('roStatusOverlay').classList.add('show');
+}
+
+function roStatusUpdateUI() {
+  ['active','inactive','teacher'].forEach(function(s) {
+    var el = document.getElementById('roStatusOpt' + s.charAt(0).toUpperCase() + s.slice(1));
+    el.classList.toggle('selected', s === statusSelectedValue);
+  });
+}
+
+function roStatusSelect(val) {
+  statusSelectedValue = val;
+  roStatusUpdateUI();
+}
+
+function roStatusClose() {
+  document.getElementById('roStatusOverlay').classList.remove('show');
+  statusEditingName = null;
+}
+
+function roStatusSave() {
+  if (!statusEditingName) return;
+  var name = statusEditingName;
+  var oldProfile = getStudentProfile(name);
+  var oldStatus = oldProfile.status || 'active';
+  var newStatus = statusSelectedValue;
+
+  setStudentProfile(name, { status: newStatus });
+
+  var roster = getRoster();
+  var onRoster = roster.includes(name);
+
+  if (newStatus === 'active' && !onRoster) {
+    // Re-add to sign-in roster
+    roster.push(name);
+    roster.sort(function(a, b) { return a.localeCompare(b); });
+    setRoster(roster);
+    var parts = name.split(', ');
+    queueChange({ action: 'addStudent', last: parts[0] || name, first: parts[1] || '' });
+  } else if (newStatus !== 'active' && onRoster) {
+    // Remove from sign-in roster
+    setRoster(roster.filter(function(n) { return n !== name; }));
+    queueChange({ action: 'removeStudent', name: name });
+  }
+
+  roStatusClose();
+  roRender();
+  triggerSync();
+}
+
+// ═══════════════════════════════════
+// RANK PAGE
+// ═══════════════════════════════════
+var rkProfileCurrentName = null;
+var rkProfileIsRosterMember = false;
+
+function rkAllNames() {
+  // Roster students (active + hidden)
+  var roster = getRoster();
+  var profiles = getStudentProfiles();
+  var names = roster.slice();
+  Object.keys(profiles).forEach(function(n) {
+    var s = profiles[n].status;
+    if ((s === 'inactive' || s === 'teacher') && !names.includes(n)) names.push(n);
+  });
+  // Non-roster rank members
+  getRankMembers().forEach(function(n) { if (!names.includes(n)) names.push(n); });
+  return names;
+}
+
+function rkSortNames(names) {
+  return names.slice().sort(function(a, b) {
+    var ka = beltSortKey(a), kb = beltSortKey(b);
+    if (kb[0] !== ka[0]) return kb[0] - ka[0];
+    if (kb[1] !== ka[1]) return kb[1] - ka[1];
+    return ka[2].localeCompare(kb[2]);
+  });
+}
+
+function rkRender() {
+  var names = rkSortNames(rkAllNames());
+  var rosterSet = new Set(getRoster());
+  var spObj = getStudentProfiles();
+  Object.keys(spObj).forEach(function(n) {
+    var s = spObj[n].status;
+    if (s === 'inactive' || s === 'teacher') rosterSet.add(n);
+  });
+
+  document.getElementById('rkSubtitle').textContent = names.length + ' members';
+  document.getElementById('rkList').innerHTML = names.map(function(name) {
+    var escaped = name.replace(/'/g, "\\'");
+    var rp = getRankProfile(name);
+    var badge = beltBadge(rp.belt, rp.danKyu);
+    var meta = [];
+    if (rp.usjfNum) meta.push('USJF #' + rp.usjfNum);
+    if (rp.division) meta.push(rp.division.charAt(0).toUpperCase() + rp.division.slice(1));
+    if (rp.promotionDate) meta.push('Since ' + rp.promotionDate);
+    var metaStr = meta.length ? meta.join(' · ') : '—';
+    return '<div class="rk-row" onclick="rkOpenProfile(\'' + escaped + '\')">' +
+      badge +
+      '<div class="rk-row-info">' +
+        '<div class="rk-row-name">' + name + '</div>' +
+        '<div class="rk-row-meta">' + metaStr + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('') || '<div style="padding:40px;text-align:center;color:var(--text-light);font-weight:600">No members yet</div>';
+}
+
+function rkOpenProfile(name) {
+  rkProfileCurrentName = name;
+  var rosterSet = new Set(getRoster());
+  var spObj = getStudentProfiles();
+  var inRoster = rosterSet.has(name) || (spObj[name] && (spObj[name].status === 'inactive' || spObj[name].status === 'teacher'));
+  rkProfileIsRosterMember = !!inRoster;
+
+  var rp = getRankProfile(name);
+  document.getElementById('rkProfileName').textContent = name;
+  document.getElementById('rkProfileBadge').innerHTML = beltBadge(rp.belt, rp.danKyu, true);
+  document.getElementById('rkBelt').value = rp.belt || '';
+  document.getElementById('rkDanKyu').value = rp.danKyu || '';
+  document.getElementById('rkDivision').value = rp.division || '';
+  document.getElementById('rkPromotionDate').value = rp.promotionDate || '';
+  document.getElementById('rkJoinDate').value = rp.joinDate || '';
+  document.getElementById('rkUsjf').value = rp.usjfNum || '';
+  document.getElementById('rkUsja').value = rp.usjaNum || '';
+  document.getElementById('rkUsaj').value = rp.usajNum || '';
+  rkBeltChange();
+  document.getElementById('rkProfileRemoveBtn').style.display = rkProfileIsRosterMember ? 'none' : '';
+  document.getElementById('rkProfileOverlay').classList.add('show');
+}
+
+function rkBeltChange() {
+  var belt = document.getElementById('rkBelt').value;
+  document.getElementById('rkDanKyuField').style.display = belt === 'black' ? '' : 'none';
+  if (belt !== 'black') document.getElementById('rkDanKyu').value = '';
+  // Update header badge live
+  document.getElementById('rkProfileBadge').innerHTML = beltBadge(belt || '', belt === 'black' ? document.getElementById('rkDanKyu').value : null, true);
+}
+
+function rkProfileClose() {
+  document.getElementById('rkProfileOverlay').classList.remove('show');
+  rkProfileCurrentName = null;
+}
+
+function rkProfileSave() {
+  if (!rkProfileCurrentName) return;
+  var name = rkProfileCurrentName;
+  var belt = document.getElementById('rkBelt').value;
+  var data = {
+    belt:          belt || null,
+    danKyu:        belt === 'black' ? (document.getElementById('rkDanKyu').value || null) : null,
+    division:      document.getElementById('rkDivision').value || null,
+    promotionDate: document.getElementById('rkPromotionDate').value || null,
+    joinDate:      document.getElementById('rkJoinDate').value || null,
+    usjfNum:       document.getElementById('rkUsjf').value.trim(),
+    usjaNum:       document.getElementById('rkUsja').value.trim(),
+    usajNum:       document.getElementById('rkUsaj').value.trim()
+  };
+  setRankProfile(name, data);
+
+  // Queue server sync (upsert-dedup)
+  var q = getSyncQueue();
+  var idx = q.findIndex(function(c) { return c.action === 'saveRankProfile' && c.name === name; });
+  var change = { action: 'saveRankProfile', name: name, profile: data };
+  if (idx >= 0) q[idx] = change; else q.push(change);
+  setSyncQueue(q);
+
+  rkProfileClose();
+  rkRender();
+  triggerSync();
+  showToast('Rank profile saved');
+}
+
+function rkRemoveMember() {
+  if (!rkProfileCurrentName || rkProfileIsRosterMember) return;
+  var name = rkProfileCurrentName;
+  var members = getRankMembers().filter(function(n) { return n !== name; });
+  setRankMembers(members);
+  queueChange({ action: 'removeRankMember', name: name });
+  rkProfileClose();
+  rkRender();
+  triggerSync();
+  showToast('Removed ' + name);
+}
+
+function rkShowAdd() {
+  document.getElementById('rkFirstName').value = '';
+  document.getElementById('rkLastName').value = '';
+  document.getElementById('rkAddOverlay').classList.add('show');
+  setTimeout(function() { document.getElementById('rkFirstName').focus(); }, 200);
+}
+
+function rkCloseAdd() {
+  document.getElementById('rkAddOverlay').classList.remove('show');
+}
+
+function rkAddConfirm() {
+  var last = document.getElementById('rkLastName').value.trim();
+  var first = document.getElementById('rkFirstName').value.trim();
+  if (!last || !first) {
+    showToast('Enter first and last name', 'error');
+    return;
+  }
+  var fullName = last + ', ' + first;
+  var existing = rkAllNames();
+  if (existing.includes(fullName)) {
+    showToast('Already in rank list', 'error');
+    return;
+  }
+  var members = getRankMembers();
+  members.push(fullName);
+  setRankMembers(members);
+  queueChange({ action: 'saveRankMember', name: fullName });
+  rkCloseAdd();
+  rkRender();
+  // Immediately open profile sheet to fill in rank data
+  rkOpenProfile(fullName);
+  triggerSync();
 }
 
 // ═══════════════════════════════════
@@ -2327,6 +2902,9 @@ flushSyncQueue().then(function(success) {
     if (window.scrollY > 0) return;
     if (!document.getElementById('pinScreen').classList.contains('hidden')) return;
     if (document.getElementById('roAddOverlay').classList.contains('show')) return;
+    if (document.getElementById('roStatusOverlay').classList.contains('show')) return;
+    if (document.getElementById('rkAddOverlay').classList.contains('show')) return;
+    if (document.getElementById('rkProfileOverlay').classList.contains('show')) return;
     if (document.getElementById('modalOverlay').classList.contains('show')) return;
     startY = e.touches[0].clientY;
     pulling = true;
