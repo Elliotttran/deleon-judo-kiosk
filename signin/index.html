@@ -1595,7 +1595,7 @@
     <div class="container">
 
       <div class="kiosk-hero">
-        <img class="kiosk-logo" src="logo.svg" alt="DeLeon Judo Club" />
+        <img class="kiosk-logo" id="kioskLogo" src="logo.svg" alt="DeLeon Judo Club" />
         <h2 class="kiosk-title">Class Sign In</h2>
         <div class="kiosk-date" id="dateDisplay"></div>
       </div>
@@ -2043,16 +2043,16 @@
         });
       })();
 
-      // Double-tap logo → wiggle + confetti
+      // Double-tap big logo → wiggle + confetti
       (function () {
         var lastTap = 0;
         function onLogoTap() {
           var now = Date.now();
           if (now - lastTap < 320) {
-            launchConfetti();
-            var logoEl = document.getElementById("appLogo");
+            var logoEl = document.getElementById("kioskLogo");
+            launchConfetti(logoEl);
             logoEl.classList.remove("wiggle");
-            void logoEl.offsetWidth; // force reflow so animation restarts
+            void logoEl.offsetWidth;
             logoEl.classList.add("wiggle");
             logoEl.addEventListener("animationend", function () {
               logoEl.classList.remove("wiggle");
@@ -2060,26 +2060,29 @@
           }
           lastTap = now;
         }
-        document.getElementById("appLogo").addEventListener("touchend", function (e) {
+        document.getElementById("kioskLogo").addEventListener("touchend", function (e) {
           e.preventDefault();
           onLogoTap();
         }, { passive: false });
-        document.getElementById("appLogo").addEventListener("click", onLogoTap);
+        document.getElementById("kioskLogo").addEventListener("click", onLogoTap);
       })();
 
-      function launchConfetti() {
+      function launchConfetti(originEl) {
         var canvas = document.createElement("canvas");
         canvas.id = "confetti-canvas";
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         document.body.appendChild(canvas);
         var ctx = canvas.getContext("2d");
+        var rect = originEl ? originEl.getBoundingClientRect() : null;
+        var ox = rect ? rect.left + rect.width / 2 : canvas.width / 2;
+        var oy = rect ? rect.top + rect.height / 2 : canvas.height * 0.35;
         var colors = ["#e63946","#ffffff","#f4d35e","#2ec4b6","#ff6b6b","#a8dadc","#457b9d"];
         var particles = [];
         for (var i = 0; i < 120; i++) {
           particles.push({
-            x: canvas.width / 2,
-            y: canvas.height * 0.35,
+            x: ox,
+            y: oy,
             vx: (Math.random() - 0.5) * 18,
             vy: Math.random() * -18 - 4,
             size: Math.random() * 10 + 5,
