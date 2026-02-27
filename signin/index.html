@@ -429,9 +429,23 @@
 
       .custom-select__item-check {
         margin-left: auto;
-        color: #22c55e;
-        font-size: 16px;
-        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #22c55e;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 5px 12px 5px 8px;
+        border-radius: 999px;
+        flex-shrink: 0;
+      }
+
+      .custom-select__item-check svg {
+        width: 16px;
+        height: 16px;
         flex-shrink: 0;
       }
 
@@ -1155,23 +1169,6 @@
         }
       }
 
-      /* ── Offline Banner ──────────────────────────────── */
-      .offline-banner {
-        display: none;
-        background: var(--yellow);
-        color: var(--black);
-        text-align: center;
-        padding: 8px 16px;
-        font-size: 13px;
-        font-weight: 700;
-        border-radius: var(--radius-sm);
-        margin-bottom: 16px;
-        width: 100%;
-      }
-
-      .offline-banner.visible {
-        display: block;
-      }
 
       :focus-visible {
         outline: 2px solid var(--red);
@@ -1575,9 +1572,6 @@
     </div>
 
     <div class="container">
-      <div class="offline-banner" id="offlineBanner" role="alert">
-        You're offline — check-in will sync when reconnected.
-      </div>
 
       <div class="kiosk-hero">
         <img class="kiosk-logo" src="logo.svg" alt="DeLeon Judo Club" />
@@ -1813,7 +1807,7 @@
       // ═══════════════════════════════════════════════════
       // CONFIG — paste your deployed Apps Script URL here
       // ═══════════════════════════════════════════════════
-      const APP_VERSION = "v1.4";
+      const APP_VERSION = "v1.2.1";
       const APPS_SCRIPT_URL =
         "https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec";
       const CHECKIN_TOKEN = "1970";
@@ -1910,6 +1904,55 @@
         } catch (e) {}
       }
 
+      // Seed local signed-today from server so pills reflect admin-marked
+      // attendance and sign-ins from other devices.
+      async function syncSignedTodayFromServer() {
+        var dateStr = fmtDate(activeDate);
+        try {
+          var ctrl = new AbortController();
+          var timer = setTimeout(function() { ctrl.abort(); }, 8000);
+          var res = await fetch(APPS_SCRIPT_URL + "?action=getAttendance&date=" + dateStr, { signal: ctrl.signal });
+          clearTimeout(timer);
+          if (!res.ok) return;
+          var data = await res.json();
+          // Admin-authored: data.present = { present:[...], removed:[...] }
+          // Checkins fallback: data.present = ["Last, First", ...]
+          var raw = data.present;
+          var names = Array.isArray(raw) ? raw
+                    : (raw && Array.isArray(raw.present) ? raw.present : []);
+          var changed = false;
+          names.forEach(function(name) {
+            var idx = name.indexOf(', ');
+            if (idx === -1) return;
+            var key = name.slice(idx + 2).trim() + "|" + name.slice(0, idx).trim();
+            if (!getSignedToday().includes(key)) { addSignedToday(key); changed = true; }
+          });
+          if (changed) populateDropdown(getCachedRoster());
+        } catch (e) {}
+      }
+
+      // Remove a sign-in (debug mode only). Clears localStorage and deletes
+      // any pending IDB queue entry so it never reaches the sheet.
+      async function removeSignIn(val) {
+        try {
+          var arr = getSignedToday().filter(function(v) { return v !== val; });
+          localStorage.setItem("deleon_signed_" + fmtDate(activeDate), JSON.stringify(arr));
+        } catch (e) {}
+        try {
+          var parts = val.split("|");
+          var firstName = parts[0], lastName = parts[1];
+          var dateStr = fmtDate(activeDate);
+          var items = await idbGetAll();
+          for (var i = 0; i < items.length; i++) {
+            var p = items[i].payload;
+            if (p && p.firstName === firstName && p.lastName === lastName && p.date === dateStr) {
+              await idbDelete(items[i].id);
+            }
+          }
+        } catch (e) {}
+        populateDropdown(getCachedRoster());
+      }
+
       function updateDateTime() {
         var now = activeDate;
         var dayIdx = now.getDay();
@@ -1939,11 +1982,11 @@
       // Debug nav arrows
       document.getElementById("debugPrev").addEventListener("click", function () {
         activeDate = new Date(activeDate); activeDate.setDate(activeDate.getDate() - 1);
-        updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster());
+        updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster()); syncSignedTodayFromServer();
       });
       document.getElementById("debugNext").addEventListener("click", function () {
         activeDate = new Date(activeDate); activeDate.setDate(activeDate.getDate() + 1);
-        updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster());
+        updateDateTime(); applyClassDayState(); populateDropdown(getCachedRoster()); syncSignedTodayFromServer();
       });
 
       // Logo long-press → opens menu
@@ -2039,8 +2082,20 @@
           if (signed.includes(val)) {
             var check = document.createElement("span");
             check.className = "custom-select__item-check";
-            check.textContent = "✓";
+            check.innerHTML = '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="8" fill="white" fill-opacity="0.25"/><path d="M4 8.5l2.5 2.5 5.5-5.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Signed In';
             btn.appendChild(check);
+            if (localStorage.getItem("deleon_debug") === "1") {
+              var removeBtn = document.createElement("button");
+              removeBtn.type = "button";
+              removeBtn.className = "custom-select__item-remove";
+              removeBtn.setAttribute("aria-label", "Remove sign-in");
+              removeBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="8" fill="rgba(255,60,60,0.7)"/><path d="M5 5l6 6M11 5l-6 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>';
+              removeBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                removeSignIn(val);
+              });
+              btn.appendChild(removeBtn);
+            }
           }
           btn.addEventListener("click", function () {
             selectStudent(val, s.firstName + " " + s.lastName);
@@ -2060,6 +2115,9 @@
         // Show cached roster immediately
         var cached = getCachedRoster();
         if (cached.length) populateDropdown(cached);
+
+        // Sync signed-today from server in parallel (no await — non-blocking)
+        syncSignedTodayFromServer();
 
         setStatus("green", "Updating\u2026", true);
 
@@ -2411,16 +2469,13 @@
 
       try {
         window.addEventListener("online", function () {
-          document.getElementById("offlineBanner").classList.remove("visible");
           setStatus("green", "Back online", false);
           flushQueue().catch(function () {});
         });
         window.addEventListener("offline", function () {
-          document.getElementById("offlineBanner").classList.add("visible");
           setStatus("red", "Offline \u2014 syncs when on WiFi", false);
         });
         if (!navigator.onLine) {
-          document.getElementById("offlineBanner").classList.add("visible");
           setStatus("red", "Offline \u2014 syncs when on WiFi", false);
         }
       } catch (e) {
