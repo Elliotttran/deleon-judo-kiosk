@@ -1911,7 +1911,7 @@
         try {
           var ctrl = new AbortController();
           var timer = setTimeout(function() { ctrl.abort(); }, 8000);
-          var res = await fetch(APPS_SCRIPT_URL + "?action=getAttendance&date=" + dateStr, { signal: ctrl.signal });
+          var res = await fetch(APPS_SCRIPT_URL + "?action=attendance&date=" + dateStr, { signal: ctrl.signal });
           clearTimeout(timer);
           if (!res.ok) return;
           var data = await res.json();
