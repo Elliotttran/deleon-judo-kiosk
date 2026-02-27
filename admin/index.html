@@ -1139,12 +1139,6 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
           <option value="senior">Senior (17+)</option>
         </select>
       </div>
-      <div class="ro-field">
-        <label class="ro-label">Sub-division</label>
-        <select class="ro-modal-input" id="rkSubdivision">
-          <option value="">— not set —</option>
-        </select>
-      </div>
       <div class="rk-profile-section-title" style="margin-top:4px">Rank</div>
       <div class="ro-field">
         <label class="ro-label">Grade</label>
@@ -1154,11 +1148,7 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
       </div>
       <div class="ro-field">
         <label class="ro-label">Date of Last Promotion</label>
-        <input class="ro-modal-input" id="rkPromotionDate" type="month">
-      </div>
-      <div class="ro-field">
-        <label class="ro-label">Join Date</label>
-        <input class="ro-modal-input" id="rkJoinDate" type="month">
+        <input class="ro-modal-input" id="rkPromotionDate" type="date">
       </div>
       <div class="rk-profile-section-title" style="margin-top:4px">Memberships</div>
       <div class="ro-field">
@@ -1172,6 +1162,10 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
       <div class="ro-field">
         <label class="ro-label">USA Judo # <span style="font-weight:500;color:var(--text-light)">(optional — national/intl)</span></label>
         <input class="ro-modal-input" id="rkUsaj" type="text" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">Join Date <span style="font-weight:500;color:var(--text-light)">(optional)</span></label>
+        <input class="ro-modal-input" id="rkJoinDate" type="date">
       </div>
     </div>
     <div class="rk-profile-actions">
@@ -1430,19 +1424,6 @@ var SENIOR_GRADES = [
   { key:'judan',     label:'10th Dan · Judan',           short:'Judan',      belt:'red' }
 ];
 
-var JUNIOR_SUBDIVISIONS = [
-  { key:'mite',   label:'Mite (7 & under)' },
-  { key:'youth',  label:'Youth (8–11)' },
-  { key:'cadet',  label:'Cadet (12–13)' },
-  { key:'junior', label:'Junior (14–16)' }
-];
-
-var SENIOR_SUBDIVISIONS = [
-  { key:'adult',    label:'Adult (17–29)' },
-  { key:'masters',  label:'Masters (30–49)' },
-  { key:'veterans', label:'Veterans (50+)' },
-  { key:'instructor', label:'Instructor' }
-];
 
 // Belt sort rank (higher = more senior)
 var BELT_SORT_RANK = {
@@ -1484,6 +1465,16 @@ function gradeSortKey(name) {
   }
   var beltRank = BELT_SORT_RANK[belt] || 0;
   return [beltRank, gradeIdx, p.promotionDate || '9999-99'];
+}
+
+function fmtDateShort(iso) {
+  // "2026-02-15" → "Feb '26"
+  if (!iso) return '';
+  var parts = iso.split('-');
+  if (parts.length < 2) return iso;
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var mo = months[parseInt(parts[1], 10) - 1] || parts[1];
+  return mo + ' \'' + parts[0].slice(2);
 }
 
 function fmtDate(d) {
@@ -2361,7 +2352,7 @@ function rkRender() {
     var rp = getRankProfile(name);
     var badge = gradeBadge(rp.grade, rp.division);
     var gradeLabel = rp.grade ? getGradeShort(rp.grade, rp.division) : '—';
-    var dateStr = rp.promotionDate ? rp.promotionDate : '';
+    var dateStr = rp.promotionDate ? fmtDateShort(rp.promotionDate) : '';
     return '<div class="rk-row" onclick="rkOpenProfile(\'' + escaped + '\')">' +
       badge +
       '<div class="rk-row-name">' + name + '</div>' +
@@ -2377,12 +2368,11 @@ function rkOpenProfile(name) {
   rkProfileCurrentName = name;
   var rp = getRankProfile(name);
   document.getElementById('rkProfileName').textContent = name;
-  // Division first — sets grade options and subdivision options
+  // Division first — sets grade options
   document.getElementById('rkDivision').value = rp.division || '';
   rkDivisionChange();
-  // Now set grade and subdivision values (after options are populated)
+  // Now set grade value (after options are populated)
   document.getElementById('rkGrade').value = rp.grade || '';
-  document.getElementById('rkSubdivision').value = rp.subdivision || '';
   document.getElementById('rkPromotionDate').value = rp.promotionDate || '';
   document.getElementById('rkJoinDate').value = rp.joinDate || '';
   document.getElementById('rkUsjf').value = rp.usjfNum || '';
@@ -2400,11 +2390,6 @@ function rkDivisionChange() {
   var gradeSelect = document.getElementById('rkGrade');
   gradeSelect.innerHTML = '<option value="">' + (division ? '— not set —' : '— select division first —') + '</option>' +
     grades.map(function(g) { return '<option value="' + g.key + '">' + g.label + '</option>'; }).join('');
-  // Populate subdivision select based on division
-  var subs = division === 'junior' ? JUNIOR_SUBDIVISIONS : (division === 'senior' ? SENIOR_SUBDIVISIONS : []);
-  var subSelect = document.getElementById('rkSubdivision');
-  subSelect.innerHTML = '<option value="">— not set —</option>' +
-    subs.map(function(s) { return '<option value="' + s.key + '">' + s.label + '</option>'; }).join('');
   rkGradeChange();
 }
 
@@ -2425,7 +2410,6 @@ function rkProfileSave() {
   var data = {
     grade:         document.getElementById('rkGrade').value || null,
     division:      document.getElementById('rkDivision').value || null,
-    subdivision:   document.getElementById('rkSubdivision').value || null,
     promotionDate: document.getElementById('rkPromotionDate').value || null,
     joinDate:      document.getElementById('rkJoinDate').value || null,
     usjfNum:       document.getElementById('rkUsjf').value.trim(),
