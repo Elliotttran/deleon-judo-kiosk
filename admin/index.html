@@ -1425,6 +1425,14 @@ var SENIOR_GRADES = [
 ];
 
 
+var BELT_NAMES = {
+  'white':'White','whiteyellow':'White/Yellow','yellow':'Yellow',
+  'yelloworange':'Yellow/Orange','orange':'Orange','orangegreen':'Orange/Green',
+  'green':'Green','greenblue':'Green/Blue','blue':'Blue',
+  'bluepurple':'Blue/Purple','purple':'Purple','brown':'Brown',
+  'black':'Black','redwhite':'Red/White','red':'Red'
+};
+
 // Belt sort rank (higher = more senior)
 var BELT_SORT_RANK = {
   'red':15,'redwhite':14,'black':13,'purple':12,'brown':11,
@@ -2351,7 +2359,8 @@ function rkRender() {
     var escaped = name.replace(/'/g, "\\'");
     var rp = getRankProfile(name);
     var badge = gradeBadge(rp.grade, rp.division);
-    var gradeLabel = rp.grade ? getGradeShort(rp.grade, rp.division) : '—';
+    var belt = getBeltForGrade(rp.grade, rp.division);
+    var gradeLabel = rp.grade ? (getGradeShort(rp.grade, rp.division) + ' · ' + (BELT_NAMES[belt] || '')) : '—';
     var dateStr = rp.promotionDate ? fmtDateShort(rp.promotionDate) : '';
     return '<div class="rk-row" onclick="rkOpenProfile(\'' + escaped + '\')">' +
       badge +
