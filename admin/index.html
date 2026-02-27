@@ -1468,13 +1468,13 @@ function gradeSortKey(name) {
 }
 
 function fmtDateShort(iso) {
-  // "2026-02-15" → "Feb '26"
+  // "2026-02-15" → "Feb 15, 2026"
   if (!iso) return '';
   var parts = iso.split('-');
-  if (parts.length < 2) return iso;
+  if (parts.length < 3) return iso;
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var mo = months[parseInt(parts[1], 10) - 1] || parts[1];
-  return mo + ' \'' + parts[0].slice(2);
+  return mo + ' ' + parseInt(parts[2], 10) + ', ' + parts[0];
 }
 
 function fmtDate(d) {
