@@ -1405,10 +1405,14 @@ var JUNIOR_GRADES = [
   { key:'nidan',     label:'2nd Dan · Nidan',          short:'Nidan',    belt:'black' }
 ];
 
-// Senior belt system (17+) — 16 grades
+// Senior belt system (17+) — 18 grades
+// rokkyuint + rokkyuadv are dojo-internal intermediates between 6th and 5th Kyu;
+// at federation level they are still white belt (Rokkyu) with distinction.
 var SENIOR_GRADES = [
-  { key:'rokkyu',    label:'6th Kyu · Rok-kyu',       short:'6th Kyu',    belt:'white' },
-  { key:'gokyu',     label:'5th Kyu · Go-kyu',         short:'5th Kyu',    belt:'green' },
+  { key:'rokkyu',    label:'6th Kyu · Rok-kyu',              short:'6th Kyu',      belt:'white' },
+  { key:'rokkyuint', label:'6th Kyu Intermediate · Yellow',  short:'6th Kyu Int.', belt:'yellow' },
+  { key:'rokkyuadv', label:'6th Kyu Advanced · Orange',      short:'6th Kyu Adv.', belt:'orange' },
+  { key:'gokyu',     label:'5th Kyu · Go-kyu',               short:'5th Kyu',      belt:'green' },
   { key:'yonkyu',    label:'4th Kyu · Yon-kyu',        short:'4th Kyu',    belt:'blue' },
   { key:'sankyu',    label:'3rd Kyu · San-kyu',         short:'3rd Kyu',    belt:'brown' },
   { key:'nikyu',     label:'2nd Kyu · Ni-kyu',          short:'2nd Kyu',    belt:'brown' },
