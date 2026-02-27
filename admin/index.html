@@ -408,9 +408,10 @@ body.past-mode .tab.active { color: #ccc; }
   cursor: pointer; transition: background 0.1s;
 }
 .rk-row:active { background: var(--bg); }
-.rk-row-info { flex: 1; min-width: 0; }
-.rk-row-name { font-size: 16px; font-weight: 700; }
-.rk-row-meta { font-size: 13px; color: var(--text-light); font-weight: 600; margin-top: 1px; }
+.rk-row-name { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; }
+.rk-row-right { text-align: right; flex-shrink: 0; }
+.rk-row-grade { font-size: 13px; font-weight: 700; color: var(--text); }
+.rk-row-date { font-size: 12px; color: var(--text-light); font-weight: 600; margin-top: 2px; }
 
 /* Rank profile sheet */
 .rk-profile-overlay {
@@ -1129,35 +1130,26 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
       <button class="rk-profile-close" onclick="rkProfileClose()">&#10005;</button>
     </div>
     <div class="rk-profile-fields" id="rkProfileFields">
-      <div class="rk-profile-section-title">Rank</div>
-      <div class="ro-field">
-        <label class="ro-label">Belt Rank</label>
-        <select class="ro-modal-input" id="rkBelt" onchange="rkBeltChange()">
-          <option value="">— not set —</option>
-          <option value="white">White</option>
-          <option value="yellow">Yellow</option>
-          <option value="orange">Orange</option>
-          <option value="green">Green</option>
-          <option value="blue">Blue</option>
-          <option value="brown">Brown</option>
-          <option value="black">Black</option>
-        </select>
-      </div>
-      <div class="ro-field" id="rkDanKyuField" style="display:none">
-        <label class="ro-label">Dan Grade</label>
-        <select class="ro-modal-input" id="rkDanKyu">
-          <option value="">— not set —</option>
-          <option value="1dan">1st Dan (Shodan)</option>
-          <option value="2dan">2nd Dan (Nidan)</option>
-          <option value="3dan">3rd Dan (Sandan)</option>
-        </select>
-      </div>
+      <div class="rk-profile-section-title">Division</div>
       <div class="ro-field">
         <label class="ro-label">Division</label>
-        <select class="ro-modal-input" id="rkDivision">
+        <select class="ro-modal-input" id="rkDivision" onchange="rkDivisionChange()">
           <option value="">— not set —</option>
-          <option value="junior">Junior (Kids)</option>
-          <option value="senior">Senior (Adult)</option>
+          <option value="junior">Junior (16 &amp; under)</option>
+          <option value="senior">Senior (17+)</option>
+        </select>
+      </div>
+      <div class="ro-field">
+        <label class="ro-label">Sub-division</label>
+        <select class="ro-modal-input" id="rkSubdivision">
+          <option value="">— not set —</option>
+        </select>
+      </div>
+      <div class="rk-profile-section-title" style="margin-top:4px">Rank</div>
+      <div class="ro-field">
+        <label class="ro-label">Grade</label>
+        <select class="ro-modal-input" id="rkGrade" onchange="rkGradeChange()">
+          <option value="">— select division first —</option>
         </select>
       </div>
       <div class="ro-field">
@@ -1382,32 +1374,116 @@ function setRankProfile(name, data) {
   setRankProfiles(obj);
 }
 
-// Belt rank system
-var BELT_ORDER = ['white','yellow','orange','green','blue','brown','black'];
-var BELT_COLORS = {
-  white:  { bg:'#f0f0f0', text:'#555',    border:'#ccc' },
-  yellow: { bg:'#fef08a', text:'#713f12', border:'#ca8a04' },
-  orange: { bg:'#fed7aa', text:'#7c2d12', border:'#ea580c' },
-  green:  { bg:'#bbf7d0', text:'#14532d', border:'#16a34a' },
-  blue:   { bg:'#bfdbfe', text:'#1e3a5f', border:'#2563eb' },
-  brown:  { bg:'#d6b8a0', text:'#3b1a0a', border:'#92400e' },
-  black:  { bg:'#111',    text:'#fff',    border:'#000' }
+// Grade rank system (USJF official)
+var BELT_STYLES = {
+  'white':       { bg:'#f5f5f5',   text:'#555',    border:'#ccc' },
+  'whiteyellow': { bg:'linear-gradient(90deg,#f5f5f5 38%,#fef08a 38%,#fef08a 62%,#f5f5f5 62%)', text:'#713f12', border:'#ca8a04' },
+  'yellow':      { bg:'#fef08a',   text:'#713f12', border:'#ca8a04' },
+  'yelloworange':{ bg:'linear-gradient(90deg,#fef08a 38%,#fed7aa 38%,#fed7aa 62%,#fef08a 62%)', text:'#7c2d12', border:'#ea580c' },
+  'orange':      { bg:'#fed7aa',   text:'#7c2d12', border:'#ea580c' },
+  'orangegreen': { bg:'linear-gradient(90deg,#fed7aa 38%,#bbf7d0 38%,#bbf7d0 62%,#fed7aa 62%)', text:'#14532d', border:'#16a34a' },
+  'green':       { bg:'#bbf7d0',   text:'#14532d', border:'#16a34a' },
+  'greenblue':   { bg:'linear-gradient(90deg,#bbf7d0 38%,#bfdbfe 38%,#bfdbfe 62%,#bbf7d0 62%)', text:'#1e3a5f', border:'#2563eb' },
+  'blue':        { bg:'#bfdbfe',   text:'#1e3a5f', border:'#2563eb' },
+  'bluepurple':  { bg:'linear-gradient(90deg,#bfdbfe 38%,#e9d5ff 38%,#e9d5ff 62%,#bfdbfe 62%)', text:'#581c87', border:'#7c3aed' },
+  'purple':      { bg:'#e9d5ff',   text:'#581c87', border:'#7c3aed' },
+  'brown':       { bg:'#d6b8a0',   text:'#3b1a0a', border:'#92400e' },
+  'black':       { bg:'#111111',   text:'#fff',    border:'#000' },
+  'redwhite':    { bg:'linear-gradient(90deg,#ef4444 38%,#f5f5f5 38%,#f5f5f5 62%,#ef4444 62%)', text:'#7f1d1d', border:'#dc2626' },
+  'red':         { bg:'#ef4444',   text:'#fff',    border:'#dc2626' }
 };
-function beltBadge(belt, danKyu, large) {
-  var b = belt || '';
-  if (!b) return '<span class="rk-belt-badge" style="background:#f5f5f5;color:#aaa;border-color:#e0e0e0">—</span>';
-  var c = BELT_COLORS[b] || BELT_COLORS.white;
-  var label = b.charAt(0).toUpperCase() + b.slice(1);
-  if (b === 'black' && danKyu) label += ' ' + danKyu.replace('dan', 'D').replace('1D','1D').replace('2D','2D').replace('3D','3D');
-  var size = large ? 'font-size:14px;padding:6px 14px;' : '';
-  return '<span class="rk-belt-badge" style="background:' + c.bg + ';color:' + c.text + ';border-color:' + c.border + ';' + size + '">' + label + '</span>';
+
+// Junior belt system (16 & under) — 13 grades
+var JUNIOR_GRADES = [
+  { key:'juichikyu', label:'11th Kyu · Juichi-kyu', short:'11th Kyu', belt:'white' },
+  { key:'jukyu',     label:'10th Kyu · Ju-kyu',     short:'10th Kyu', belt:'whiteyellow' },
+  { key:'kyukyu',    label:'9th Kyu · Kyu-kyu',      short:'9th Kyu',  belt:'yellow' },
+  { key:'hachikyu',  label:'8th Kyu · Hachi-kyu',    short:'8th Kyu',  belt:'yelloworange' },
+  { key:'nanakyu',   label:'7th Kyu · Nana-kyu',     short:'7th Kyu',  belt:'orange' },
+  { key:'rokkyu',    label:'6th Kyu · Rok-kyu',      short:'6th Kyu',  belt:'orangegreen' },
+  { key:'gokyu',     label:'5th Kyu · Go-kyu',       short:'5th Kyu',  belt:'green' },
+  { key:'yonkyu',    label:'4th Kyu · Yon-kyu',      short:'4th Kyu',  belt:'greenblue' },
+  { key:'sankyu',    label:'3rd Kyu · San-kyu',       short:'3rd Kyu',  belt:'blue' },
+  { key:'nikyu',     label:'2nd Kyu · Ni-kyu',        short:'2nd Kyu',  belt:'bluepurple' },
+  { key:'ikkyu',     label:'1st Kyu · Ik-kyu',        short:'1st Kyu',  belt:'purple' },
+  { key:'shodan',    label:'1st Dan · Shodan',         short:'Shodan',   belt:'black' },
+  { key:'nidan',     label:'2nd Dan · Nidan',          short:'Nidan',    belt:'black' }
+];
+
+// Senior belt system (17+) — 16 grades
+var SENIOR_GRADES = [
+  { key:'rokkyu',    label:'6th Kyu · Rok-kyu',       short:'6th Kyu',    belt:'white' },
+  { key:'gokyu',     label:'5th Kyu · Go-kyu',         short:'5th Kyu',    belt:'green' },
+  { key:'yonkyu',    label:'4th Kyu · Yon-kyu',        short:'4th Kyu',    belt:'blue' },
+  { key:'sankyu',    label:'3rd Kyu · San-kyu',         short:'3rd Kyu',    belt:'brown' },
+  { key:'nikyu',     label:'2nd Kyu · Ni-kyu',          short:'2nd Kyu',    belt:'brown' },
+  { key:'ikkyu',     label:'1st Kyu · Ik-kyu',          short:'1st Kyu',    belt:'brown' },
+  { key:'shodan',    label:'1st Dan · Shodan',           short:'Shodan',     belt:'black' },
+  { key:'nidan',     label:'2nd Dan · Nidan',            short:'Nidan',      belt:'black' },
+  { key:'sandan',    label:'3rd Dan · Sandan',           short:'Sandan',     belt:'black' },
+  { key:'yondan',    label:'4th Dan · Yondan',           short:'Yondan',     belt:'black' },
+  { key:'godan',     label:'5th Dan · Godan',            short:'Godan',      belt:'black' },
+  { key:'rokudan',   label:'6th Dan · Rokudan',          short:'Rokudan',    belt:'redwhite' },
+  { key:'shichidan', label:'7th Dan · Shichidan',        short:'Shichidan',  belt:'redwhite' },
+  { key:'hachidan',  label:'8th Dan · Hachidan',         short:'Hachidan',   belt:'redwhite' },
+  { key:'kudan',     label:'9th Dan · Kudan',            short:'Kudan',      belt:'red' },
+  { key:'judan',     label:'10th Dan · Judan',           short:'Judan',      belt:'red' }
+];
+
+var JUNIOR_SUBDIVISIONS = [
+  { key:'mite',   label:'Mite (7 & under)' },
+  { key:'youth',  label:'Youth (8–11)' },
+  { key:'cadet',  label:'Cadet (12–13)' },
+  { key:'junior', label:'Junior (14–16)' }
+];
+
+var SENIOR_SUBDIVISIONS = [
+  { key:'adult',    label:'Adult (17–29)' },
+  { key:'masters',  label:'Masters (30–49)' },
+  { key:'veterans', label:'Veterans (50+)' },
+  { key:'instructor', label:'Instructor' }
+];
+
+// Belt sort rank (higher = more senior)
+var BELT_SORT_RANK = {
+  'red':15,'redwhite':14,'black':13,'purple':12,'brown':11,
+  'bluepurple':10,'blue':9,'greenblue':8,'green':7,'orangegreen':6,
+  'orange':5,'yelloworange':4,'yellow':3,'whiteyellow':2,'white':1
+};
+
+function getGradeList(division) {
+  return division === 'junior' ? JUNIOR_GRADES : SENIOR_GRADES;
 }
-function beltSortKey(name) {
+function getBeltForGrade(grade, division) {
+  var list = getGradeList(division);
+  for (var i = 0; i < list.length; i++) { if (list[i].key === grade) return list[i].belt; }
+  return '';
+}
+function getGradeShort(grade, division) {
+  var list = getGradeList(division);
+  for (var i = 0; i < list.length; i++) { if (list[i].key === grade) return list[i].short; }
+  return '—';
+}
+function gradeBadge(grade, division, large) {
+  var belt = getBeltForGrade(grade, division);
+  var label = getGradeShort(grade, division);
+  var size = large ? 'font-size:14px;padding:6px 14px;' : '';
+  if (!grade || !belt) return '<span class="rk-belt-badge" style="background:#f5f5f5;color:#aaa;border-color:#e0e0e0;' + size + '">—</span>';
+  var s = BELT_STYLES[belt] || BELT_STYLES['white'];
+  return '<span class="rk-belt-badge" style="background:' + s.bg + ';color:' + s.text + ';border-color:' + s.border + ';' + size + '">' + label + '</span>';
+}
+function gradeSortKey(name) {
   var p = getRankProfile(name);
-  var bIdx = BELT_ORDER.indexOf(p.belt || '');
-  if (bIdx < 0) bIdx = -1;
-  var dan = p.danKyu ? parseInt(p.danKyu) || 0 : 0;
-  return [bIdx, dan, p.promotionDate || '9999-99'];
+  var division = p.division || '';
+  var grade = p.grade || '';
+  var grades = division === 'junior' ? JUNIOR_GRADES : SENIOR_GRADES;
+  var gradeIdx = -1;
+  var belt = '';
+  for (var i = 0; i < grades.length; i++) {
+    if (grades[i].key === grade) { gradeIdx = i; belt = grades[i].belt; break; }
+  }
+  var beltRank = BELT_SORT_RANK[belt] || 0;
+  return [beltRank, gradeIdx, p.promotionDate || '9999-99'];
 }
 
 function fmtDate(d) {
@@ -2270,7 +2346,7 @@ function rkAllNames() {
 
 function rkSortNames(names) {
   return names.slice().sort(function(a, b) {
-    var ka = beltSortKey(a), kb = beltSortKey(b);
+    var ka = gradeSortKey(a), kb = gradeSortKey(b);
     if (kb[0] !== ka[0]) return kb[0] - ka[0];
     if (kb[1] !== ka[1]) return kb[1] - ka[1];
     return ka[2].localeCompare(kb[2]);
@@ -2283,17 +2359,15 @@ function rkRender() {
   document.getElementById('rkList').innerHTML = names.map(function(name) {
     var escaped = name.replace(/'/g, "\\'");
     var rp = getRankProfile(name);
-    var badge = beltBadge(rp.belt, rp.danKyu);
-    var meta = [];
-    if (rp.usjfNum) meta.push('USJF #' + rp.usjfNum);
-    if (rp.division) meta.push(rp.division.charAt(0).toUpperCase() + rp.division.slice(1));
-    if (rp.promotionDate) meta.push('Since ' + rp.promotionDate);
-    var metaStr = meta.length ? meta.join(' · ') : '—';
+    var badge = gradeBadge(rp.grade, rp.division);
+    var gradeLabel = rp.grade ? getGradeShort(rp.grade, rp.division) : '—';
+    var dateStr = rp.promotionDate ? rp.promotionDate : '';
     return '<div class="rk-row" onclick="rkOpenProfile(\'' + escaped + '\')">' +
       badge +
-      '<div class="rk-row-info">' +
-        '<div class="rk-row-name">' + name + '</div>' +
-        '<div class="rk-row-meta">' + metaStr + '</div>' +
+      '<div class="rk-row-name">' + name + '</div>' +
+      '<div class="rk-row-right">' +
+        '<div class="rk-row-grade">' + gradeLabel + '</div>' +
+        (dateStr ? '<div class="rk-row-date">' + dateStr + '</div>' : '') +
       '</div>' +
     '</div>';
   }).join('') || '<div style="padding:40px;text-align:center;color:var(--text-light);font-weight:600">No members yet</div>';
@@ -2303,25 +2377,41 @@ function rkOpenProfile(name) {
   rkProfileCurrentName = name;
   var rp = getRankProfile(name);
   document.getElementById('rkProfileName').textContent = name;
-  document.getElementById('rkProfileBadge').innerHTML = beltBadge(rp.belt, rp.danKyu, true);
-  document.getElementById('rkBelt').value = rp.belt || '';
-  document.getElementById('rkDanKyu').value = rp.danKyu || '';
+  // Division first — sets grade options and subdivision options
   document.getElementById('rkDivision').value = rp.division || '';
+  rkDivisionChange();
+  // Now set grade and subdivision values (after options are populated)
+  document.getElementById('rkGrade').value = rp.grade || '';
+  document.getElementById('rkSubdivision').value = rp.subdivision || '';
   document.getElementById('rkPromotionDate').value = rp.promotionDate || '';
   document.getElementById('rkJoinDate').value = rp.joinDate || '';
   document.getElementById('rkUsjf').value = rp.usjfNum || '';
   document.getElementById('rkUsja').value = rp.usjaNum || '';
   document.getElementById('rkUsaj').value = rp.usajNum || '';
-  rkBeltChange();
+  // Update header badge with saved grade
+  document.getElementById('rkProfileBadge').innerHTML = gradeBadge(rp.grade, rp.division, true);
   document.getElementById('rkProfileOverlay').classList.add('show');
 }
 
-function rkBeltChange() {
-  var belt = document.getElementById('rkBelt').value;
-  document.getElementById('rkDanKyuField').style.display = belt === 'black' ? '' : 'none';
-  if (belt !== 'black') document.getElementById('rkDanKyu').value = '';
-  // Update header badge live
-  document.getElementById('rkProfileBadge').innerHTML = beltBadge(belt || '', belt === 'black' ? document.getElementById('rkDanKyu').value : null, true);
+function rkDivisionChange() {
+  var division = document.getElementById('rkDivision').value;
+  // Populate grade select based on division
+  var grades = division === 'junior' ? JUNIOR_GRADES : (division === 'senior' ? SENIOR_GRADES : []);
+  var gradeSelect = document.getElementById('rkGrade');
+  gradeSelect.innerHTML = '<option value="">' + (division ? '— not set —' : '— select division first —') + '</option>' +
+    grades.map(function(g) { return '<option value="' + g.key + '">' + g.label + '</option>'; }).join('');
+  // Populate subdivision select based on division
+  var subs = division === 'junior' ? JUNIOR_SUBDIVISIONS : (division === 'senior' ? SENIOR_SUBDIVISIONS : []);
+  var subSelect = document.getElementById('rkSubdivision');
+  subSelect.innerHTML = '<option value="">— not set —</option>' +
+    subs.map(function(s) { return '<option value="' + s.key + '">' + s.label + '</option>'; }).join('');
+  rkGradeChange();
+}
+
+function rkGradeChange() {
+  var division = document.getElementById('rkDivision').value;
+  var grade = document.getElementById('rkGrade').value;
+  document.getElementById('rkProfileBadge').innerHTML = gradeBadge(grade, division, true);
 }
 
 function rkProfileClose() {
@@ -2332,11 +2422,10 @@ function rkProfileClose() {
 function rkProfileSave() {
   if (!rkProfileCurrentName) return;
   var name = rkProfileCurrentName;
-  var belt = document.getElementById('rkBelt').value;
   var data = {
-    belt:          belt || null,
-    danKyu:        belt === 'black' ? (document.getElementById('rkDanKyu').value || null) : null,
+    grade:         document.getElementById('rkGrade').value || null,
     division:      document.getElementById('rkDivision').value || null,
+    subdivision:   document.getElementById('rkSubdivision').value || null,
     promotionDate: document.getElementById('rkPromotionDate').value || null,
     joinDate:      document.getElementById('rkJoinDate').value || null,
     usjfNum:       document.getElementById('rkUsjf').value.trim(),
