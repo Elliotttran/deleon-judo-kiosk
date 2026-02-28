@@ -905,6 +905,8 @@
       .confetti-canvas {
         position: fixed;
         inset: 0;
+        width: 100%;
+        height: 100%;
         z-index: 52;
         pointer-events: none;
       }
@@ -2621,11 +2623,13 @@
 
       function launchConfetti() {
         if (prefersReducedMotion) return;
+        var cw = confettiCanvas.clientWidth || window.innerWidth;
+        var ch = confettiCanvas.clientHeight || window.innerHeight;
         confettiPieces = [];
         for (var i = 0; i < 120; i++) {
           confettiPieces.push({
-            x: confettiCanvas.width * 0.5 + (Math.random() - 0.5) * 200,
-            y: confettiCanvas.height * 0.45,
+            x: cw * 0.5 + (Math.random() - 0.5) * 200,
+            y: ch * 0.45,
             vx: (Math.random() - 0.5) * 16,
             vy: -(Math.random() * 14 + 6),
             w: Math.random() * 8 + 4,
