@@ -415,6 +415,19 @@ body.past-mode .tab.active { color: #ccc; }
 .rk-row-grade { font-size: 20px; font-weight: 700; }
 .rk-row-date { font-size: 16px; color: var(--text-light); font-weight: 600; margin-top: 3px; }
 .rk-row-swatch { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; }
+.rk-row-swatch--outlined { border: 2px solid #d1d5db; }
+
+.rk-section-header {
+  display: flex; align-items: center;
+  padding: 10px 20px 8px;
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-light);
+  background: var(--bg); cursor: pointer;
+  border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider);
+}
+.rk-section-header:first-child { border-top: none; }
+.rk-section-count { font-weight: 500; }
+.rk-caret { margin-left: auto; font-size: 13px; }
 
 /* Rank profile modal */
 .rk-profile-overlay {
@@ -589,6 +602,7 @@ body.past-mode .tab.active { color: #ccc; }
 
 /* Per-student table */
 .st-table { padding: 10px 20px 20px; }
+.st-table .rk-section-header { margin: 0 -20px; }
 
 .st-table-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -624,18 +638,30 @@ body.past-mode .tab.active { color: #ccc; }
   border-radius: 6px; transition: width 0.4s;
 }
 
+.st-rank-swatch { width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; margin-right: 8px; }
+
+.st-student-row--header { padding-top: 4px; padding-bottom: 8px; cursor: default; }
+.st-student-row--header .st-bar-wrap { background: transparent; }
+.st-student-row--header .st-rank-swatch { background: transparent !important; }
+.st-student-row--header .st-student-count,
+.st-student-row--header .st-student-pct,
+.st-student-row--header .st-student-lastseen {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-light);
+}
+
 .st-student-count {
   font-size: 19px; font-weight: 800; min-width: 60px; text-align: right;
   color: var(--text);
 }
 
 .st-student-pct {
-  font-size: 15px; font-weight: 700; color: var(--text-light);
+  font-size: 16px; font-weight: 700; color: var(--text-light);
   min-width: 48px; text-align: right;
 }
 
 .st-student-lastseen {
-  font-size: 14px; font-weight: 600; color: var(--text-light);
+  font-size: 15px; font-weight: 600; color: var(--text-light);
   min-width: 62px; text-align: right; padding-left: 10px;
 }
 
@@ -649,6 +675,7 @@ body.past-mode .tab.active { color: #ccc; }
 }
 
 .st-section-title--inline { margin: 0; }
+
 
 
 /* Empty */
@@ -1113,6 +1140,7 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
   <div class="rk-header">
     <div class="rk-title-row">
       <div class="rk-title">Rank</div>
+      <button class="st-sort-btn" id="rkSortBtn" onclick="rkToggleSort()">Sort: rank</button>
     </div>
     <div class="rk-subtitle" id="rkSubtitle"></div>
   </div>
@@ -1456,10 +1484,10 @@ var BELT_EMOJI = {
 
 // Vivid solid colors per base belt — used for swatch and grade label color
 var BELT_SWATCH_COLORS = {
-  'white':       ['#c8c8c8'],
-  'whiteyellow': ['#c8c8c8','#d97706'],
-  'yellow':      ['#d97706'],
-  'yelloworange':['#d97706','#ea580c'],
+  'white':       ['#1a1a1a'],
+  'whiteyellow': ['#1a1a1a','#eab308'],
+  'yellow':      ['#eab308'],
+  'yelloworange':['#eab308','#ea580c'],
   'orange':      ['#ea580c'],
   'orangegreen': ['#ea580c','#16a34a'],
   'green':       ['#16a34a'],
@@ -1488,7 +1516,15 @@ function beltColor(belt) {
 }
 
 function beltSwatch(belt) {
-  return '<div class="rk-row-swatch" style="background:' + beltSwatchBg(belt) + '"></div>';
+  var bg, outlined = false;
+  if (belt === 'white') {
+    bg = '#ffffff'; outlined = true;
+  } else if (belt === 'whiteyellow') {
+    bg = 'linear-gradient(180deg,#ffffff 50%,#eab308 50%)'; outlined = true;
+  } else {
+    bg = beltSwatchBg(belt);
+  }
+  return '<div class="rk-row-swatch' + (outlined ? ' rk-row-swatch--outlined' : '') + '" style="background:' + bg + '"></div>';
 }
 
 // Belt sort rank (higher = more senior)
@@ -1534,13 +1570,11 @@ function gradeSortKey(name) {
 }
 
 function fmtDateShort(iso) {
-  // "2026-02-15" → "Feb 15, 2026"
+  // "2026-02-15" → "2/15/26"
   if (!iso) return '';
   var parts = iso.split('-');
   if (parts.length < 3) return iso;
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var mo = months[parseInt(parts[1], 10) - 1] || parts[1];
-  return mo + ' ' + parseInt(parts[2], 10) + ', ' + parts[0];
+  return parseInt(parts[1], 10) + '/' + parseInt(parts[2], 10) + '/' + parts[0].substring(2);
 }
 
 function fmtDate(d) {
@@ -1606,8 +1640,10 @@ function queueChange(change) {
   var q = getSyncQueue();
   if (change.action === 'saveAttendance') {
     var idx = q.findIndex(function(c) { return c.action === 'saveAttendance' && c.date === change.date; });
-    if (idx >= 0) q[idx] = change;
-    else q.push(change);
+    if (idx >= 0) q[idx] = change; else q.push(change);
+  } else if (change.action === 'saveProfile') {
+    var pidx = q.findIndex(function(c) { return c.action === 'saveProfile' && c.name === change.name; });
+    if (pidx >= 0) q[pidx] = change; else q.push(change);
   } else {
     q.push(change);
   }
@@ -1705,7 +1741,8 @@ async function loadFromServer() {
       timedFetch(APPS_SCRIPT_URL + '?action=allAttendance', 15000).catch(function() { return null; }),
       timedFetch(APPS_SCRIPT_URL + '?action=cancelled', 15000).catch(function() { return null; }),
       timedFetch(APPS_SCRIPT_URL + '?action=dues', 15000).catch(function() { return null; }),
-      timedFetch(APPS_SCRIPT_URL + '?action=settings', 15000).catch(function() { return null; })
+      timedFetch(APPS_SCRIPT_URL + '?action=settings', 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=profiles', 15000).catch(function() { return null; })
     ]);
 
     if (results[0] && results[0].ok) {
@@ -1775,6 +1812,31 @@ async function loadFromServer() {
       var sData = await results[4].json();
       if (sData.settings && sData.settings.duesEnabled !== undefined) {
         localStorage.setItem('deleon_dues_enabled', sData.settings.duesEnabled);
+      }
+    }
+
+    // Profiles (rank data + student status)
+    if (results[5] && results[5].ok) {
+      var pData = await results[5].json();
+      if (pData.profiles) {
+        var queue5 = getSyncQueue();
+        var dirtyProfileNames = {};
+        queue5.forEach(function(c) {
+          if (c.action === 'saveProfile' || c.action === 'saveRankProfile') {
+            dirtyProfileNames[c.name] = true;
+          }
+        });
+        Object.keys(pData.profiles).forEach(function(name) {
+          if (dirtyProfileNames[name]) return; // local pending write wins
+          var p = pData.profiles[name];
+          // Hydrate rank profile
+          var rankFields = { grade: p.grade || null, division: p.division || null,
+            promotionDate: p.promotionDate || null, joinDate: p.joinDate || null,
+            usjfNum: p.usjfNum || '', usjaNum: p.usjaNum || '', usajNum: p.usajNum || '' };
+          setRankProfile(name, rankFields);
+          // Hydrate student status
+          if (p.status) setStudentProfile(name, { status: p.status });
+        });
       }
     }
 
@@ -2364,6 +2426,10 @@ function roStatusSave() {
 
   setStudentProfile(name, { status: newStatus });
 
+  var rp = getRankProfile(name);
+  var merged = Object.assign({ status: newStatus }, rp);
+  queueChange({ action: 'saveProfile', name: name, data: merged });
+
   var roster = getRoster();
   var onRoster = roster.includes(name);
 
@@ -2389,6 +2455,20 @@ function roStatusSave() {
 // RANK PAGE
 // ═══════════════════════════════════
 var rkProfileCurrentName = null;
+var rkSort = 'rank';
+var rkCollapsed = {};
+
+function rkToggleSort() {
+  rkSort = rkSort === 'rank' ? 'name' : 'rank';
+  document.getElementById('rkSortBtn').textContent = 'Sort: ' + rkSort;
+  rkRender();
+}
+
+function rkToggleSection(key) {
+  rkCollapsed[key] = !rkCollapsed[key];
+  rkRender();
+}
+
 function rkAllNames() {
   // All roster students (active + inactive + teacher)
   var roster = getRoster();
@@ -2402,6 +2482,9 @@ function rkAllNames() {
 }
 
 function rkSortNames(names) {
+  if (rkSort === 'name') {
+    return names.slice().sort(function(a, b) { return a.localeCompare(b); });
+  }
   return names.slice().sort(function(a, b) {
     var ka = gradeSortKey(a), kb = gradeSortKey(b);
     if (kb[0] !== ka[0]) return kb[0] - ka[0];
@@ -2411,9 +2494,25 @@ function rkSortNames(names) {
 }
 
 function rkRender() {
-  var names = rkSortNames(rkAllNames());
-  document.getElementById('rkSubtitle').textContent = names.length + ' members';
-  document.getElementById('rkList').innerHTML = names.map(function(name) {
+  var allNames = rkAllNames();
+
+  // Group into sections
+  var sections = { teacher: [], senior: [], junior: [], none: [] };
+  allNames.forEach(function(name) {
+    var rp = getRankProfile(name);
+    var sp = getStudentProfile(name);
+    if (sp.status === 'teacher') sections.teacher.push(name);
+    else if (rp.division === 'senior') sections.senior.push(name);
+    else if (rp.division === 'junior') sections.junior.push(name);
+    else sections.none.push(name);
+  });
+
+  // Sort each section by grade
+  Object.keys(sections).forEach(function(k) { sections[k] = rkSortNames(sections[k]); });
+
+  document.getElementById('rkSubtitle').textContent = allNames.length + ' members';
+
+  function rowHtml(name) {
     var escaped = name.replace(/'/g, "\\'");
     var rp = getRankProfile(name);
     var belt = getBeltForGrade(rp.grade, rp.division);
@@ -2423,6 +2522,7 @@ function rkRender() {
     var subParts = [];
     if (divLabel) subParts.push(divLabel);
     if (rp.usjfNum) subParts.push('USJF #' + rp.usjfNum);
+    if (rp.joinDate) subParts.push('Since ' + fmtDateShort(rp.joinDate));
     var subStr = subParts.join(' · ');
     return '<div class="rk-row" onclick="rkOpenProfile(\'' + escaped + '\')">' +
       '<div class="rk-row-main">' +
@@ -2435,7 +2535,27 @@ function rkRender() {
       '</div>' +
       beltSwatch(belt) +
     '</div>';
-  }).join('') || '<div style="padding:40px;text-align:center;color:var(--text-light);font-weight:600">No members yet</div>';
+  }
+
+  function sectionHtml(label, key, names) {
+    if (!names.length) return '';
+    var collapsed = rkCollapsed[key];
+    var caret = collapsed ? '&#9656;' : '&#9662;';
+    return '<div class="rk-section-header" onclick="rkToggleSection(\'' + key + '\')">' +
+      label + ' <span class="rk-section-count">(' + names.length + ')</span>' +
+      '<span class="rk-caret">' + caret + '</span>' +
+    '</div>' +
+    (collapsed ? '' : names.map(rowHtml).join(''));
+  }
+
+  var html =
+    sectionHtml('Teachers', 'teacher', sections.teacher) +
+    sectionHtml('Seniors', 'senior', sections.senior) +
+    sectionHtml('Juniors', 'junior', sections.junior) +
+    sectionHtml('Unassigned', 'none', sections.none);
+
+  document.getElementById('rkList').innerHTML = html ||
+    '<div style="padding:40px;text-align:center;color:var(--text-light);font-weight:600">No members yet</div>';
 }
 
 function rkOpenProfile(name) {
@@ -2484,7 +2604,7 @@ function rkProfileClose() {
 function rkProfileSave() {
   if (!rkProfileCurrentName) return;
   var name = rkProfileCurrentName;
-  var data = {
+  var rankData = {
     grade:         document.getElementById('rkGrade').value || null,
     division:      document.getElementById('rkDivision').value || null,
     promotionDate: document.getElementById('rkPromotionDate').value || null,
@@ -2493,14 +2613,12 @@ function rkProfileSave() {
     usjaNum:       document.getElementById('rkUsja').value.trim(),
     usajNum:       document.getElementById('rkUsaj').value.trim()
   };
-  setRankProfile(name, data);
+  setRankProfile(name, rankData);
 
-  // Queue server sync (upsert-dedup)
-  var q = getSyncQueue();
-  var idx = q.findIndex(function(c) { return c.action === 'saveRankProfile' && c.name === name; });
-  var change = { action: 'saveRankProfile', name: name, profile: data };
-  if (idx >= 0) q[idx] = change; else q.push(change);
-  setSyncQueue(q);
+  // Merge with student status so the sheet row always has the full picture
+  var sp = getStudentProfile(name);
+  var merged = Object.assign({ status: sp.status || 'active' }, rankData);
+  queueChange({ action: 'saveProfile', name: name, data: merged });
 
   rkProfileClose();
   rkRender();
@@ -2518,6 +2636,12 @@ var now = new Date();
 var stYear = now.getFullYear(), stMonth = now.getMonth();
 var stDayDate = new Date();
 var stView = 'day', stSort = 'count';
+var stCollapsed = {};
+
+function stToggleSection(key) {
+  stCollapsed[key] = !stCollapsed[key];
+  stRenderMonth();
+}
 
 function stGetClassDays(year, month) {
   var days = [], d = new Date(year, month, 1), today = new Date(todayStr() + 'T23:59:59');
@@ -2624,8 +2748,11 @@ function stStudentRows(sorted, totalClasses, opts) {
     var barPct = opts.beltReadiness ? Math.min(100, Math.round(x.count / BELT_MIN_CLASSES * 100)) : x.pct;
     var countLabel = opts.beltReadiness ? x.count + '/' + BELT_MIN_CLASSES : x.count + '/' + totalClasses;
     var pctLabel = (opts.beltReadiness ? barPct : x.pct) + '%';
+    var rp = getRankProfile(x.name);
+    var belt = getBeltForGrade(rp.grade, rp.division);
 
     return '<div class="' + rowCls + '">' +
+      '<div class="st-rank-swatch" style="background:' + beltSwatchBg(belt) + '"></div>' +
       '<div class="st-student-name">' + x.name + '</div>' +
       '<div class="st-bar-wrap"><div class="st-bar-fill" style="width:' + barPct + '%"></div></div>' +
       '<div class="st-student-count">' + countLabel + '</div>' +
@@ -2661,6 +2788,32 @@ function stRenderMonth() {
     });
   }
 
+  // Group per-student rows by division
+  var stGroups = { teacher: [], senior: [], junior: [], none: [] };
+  sorted.forEach(function(x) {
+    var sp = getStudentProfile(x.name);
+    var rp = getRankProfile(x.name);
+    if (sp.status === 'teacher') stGroups.teacher.push(x);
+    else if (rp.division === 'senior') stGroups.senior.push(x);
+    else if (rp.division === 'junior') stGroups.junior.push(x);
+    else stGroups.none.push(x);
+  });
+  function renderStGroup(label, key, students) {
+    if (!students.length) return '';
+    var collapsed = stCollapsed[key];
+    var caret = collapsed ? '&#9656;' : '&#9662;';
+    return '<div class="rk-section-header" onclick="stToggleSection(\'' + key + '\')" style="cursor:pointer">' +
+      label + ' <span class="rk-section-count">(' + students.length + ')</span>' +
+      '<span class="rk-caret">' + caret + '</span>' +
+    '</div>' +
+    (collapsed ? '' : stStudentRows(students, s.cc));
+  }
+  var studentHtml =
+    renderStGroup('Teachers', 'teacher', stGroups.teacher) +
+    renderStGroup('Seniors', 'senior', stGroups.senior) +
+    renderStGroup('Juniors', 'junior', stGroups.junior) +
+    renderStGroup('Unassigned', 'none', stGroups.none);
+
   var mx = Math.max.apply(null, s.daily.map(function(d){return d.count;}).concat([1]));
   var bars = s.daily.map(function(d){
     var h = Math.max(4,(d.count/mx)*100);
@@ -2689,7 +2842,15 @@ function stRenderMonth() {
         '<div class="st-section-title st-section-title--inline">Per student ('+sorted.length+')</div>' +
         '<button class="st-sort-btn" onclick="stToggleSort()">Sort: '+stSortLabel()+'</button>' +
       '</div>' +
-      stStudentRows(sorted, s.cc) +
+      '<div class="st-student-row st-student-row--header">' +
+        '<div class="st-rank-swatch"></div>' +
+        '<div class="st-student-name"></div>' +
+        '<div class="st-bar-wrap"></div>' +
+        '<div class="st-student-count">Classes</div>' +
+        '<div class="st-student-pct">Rate</div>' +
+        '<div class="st-student-lastseen">Last seen</div>' +
+      '</div>' +
+      studentHtml +
     '</div>';
 }
 
@@ -2719,7 +2880,13 @@ function stRenderDay() {
   var rows = sorted.map(function(name) {
     var mc = monthCountMap[name] || 1;
     var monthLabel = mc + ' this month';
+    var rp = getRankProfile(name);
+    var belt = getBeltForGrade(rp.grade, rp.division);
+    var swatchBg = belt ? beltSwatchBg(belt) : 'transparent';
+    var swatchBorder = (!belt || belt === 'white') ? 'border:1.5px solid #d1d5db;' : '';
+    var swatchStyle = 'background:' + swatchBg + ';' + swatchBorder;
     return '<div class="st-student-row">' +
+      '<div class="st-rank-swatch" style="' + swatchStyle + '"></div>' +
       '<div class="st-student-name">' + name + '</div>' +
       '<div class="st-student-lastseen">' + monthLabel + '</div>' +
     '</div>';

@@ -5,7 +5,7 @@
 // Serves both signin (student kiosk) and admin (attendance tracker).
 //
 // SETUP:
-// 1. Create a Google Sheet with tabs: Roster, Attendance, Check-ins, New Students, Cancelled, Dues, Settings
+// 1. Create a Google Sheet with tabs: Roster, Attendance, Check-ins, New Students, Cancelled, Dues, Settings, Profiles
 // 2. Extensions > Apps Script > paste this code
 // 3. Project Settings > Script Properties > add WRITE_KEY (any secret string)
 // 4. Deploy > New Deployment > Web App > Execute as: Me, Access: Anyone
@@ -20,6 +20,7 @@ const TAB_NEW_STUDENTS = 'New Students';
 const TAB_CANCELLED = 'Cancelled';
 const TAB_DUES = 'Dues';
 const TAB_SETTINGS = 'Settings';
+const TAB_PROFILES = 'Profiles';
 
 // ── Helpers ──────────────────────────────────────────────
 
@@ -37,7 +38,8 @@ function getSheet(name) {
     'New Students': [['First Name', 'Last Name', 'Date', 'Time', 'Class', 'Status']],
     'Cancelled':    [['Date', 'Timestamp']],
     'Dues':         [['Month', 'Student Name', 'Paid', 'Date Confirmed', 'Source']],
-    'Settings':     [['Key', 'Value']]
+    'Settings':     [['Key', 'Value']],
+    'Profiles':     [['Name', 'Data']]
   };
   if (headers[name]) {
     sheet.getRange(1, 1, 1, headers[name][0].length).setValues(headers[name]);
@@ -80,6 +82,7 @@ function doGet(e) {
       case 'newstudents':    return handleGetNewStudents();
       case 'dues':           return handleGetDues();
       case 'settings':       return handleGetSettings();
+      case 'profiles':       return handleGetProfiles();
       case 'ping':           return json({ ok: true, ts: new Date().toISOString() });
       default:               return json({ error: 'Unknown action: ' + action });
     }
@@ -246,6 +249,7 @@ function doPost(e) {
     if (!verifyKey(body.key)) return json({ error: 'Invalid write key' });
 
     switch (action) {
+      case 'saveprofile':     return handleSaveProfile(body);
       case 'addstudent':      return handleAddStudent(body);
       case 'removestudent':   return handleRemoveStudent(body);
       case 'editstudent':     return handleEditStudent(body);
@@ -378,21 +382,49 @@ function handleEditStudent(body) {
     }
   }
 
+  // Rename in Profiles
+  var prof = getSheet(TAB_PROFILES);
+  var profLast = prof.getLastRow();
+  if (profLast >= 2) {
+    var profRows = prof.getRange(2, 1, profLast - 1, 1).getValues();
+    for (var p = 0; p < profRows.length; p++) {
+      if (profRows[p][0] === oldName) {
+        prof.getRange(p + 2, 1).setValue(newName);
+        break;
+      }
+    }
+  }
+
   return json({ ok: true, oldName: oldName, newName: newName });
 }
 
 function handleRemoveStudent(body) {
+  // Remove from Roster
   var sheet = getSheet(TAB_ROSTER);
   var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return json({ ok: true });
-
-  var data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-  for (var i = data.length - 1; i >= 0; i--) {
-    if (data[i][0] === body.name) {
-      sheet.deleteRow(i + 2);
-      break;
+  if (lastRow >= 2) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = data.length - 1; i >= 0; i--) {
+      if (data[i][0] === body.name) {
+        sheet.deleteRow(i + 2);
+        break;
+      }
     }
   }
+
+  // Remove from Profiles
+  var prof = getSheet(TAB_PROFILES);
+  var profLast = prof.getLastRow();
+  if (profLast >= 2) {
+    var profRows = prof.getRange(2, 1, profLast - 1, 1).getValues();
+    for (var j = profRows.length - 1; j >= 0; j--) {
+      if (profRows[j][0] === body.name) {
+        prof.deleteRow(j + 2);
+        break;
+      }
+    }
+  }
+
   return json({ ok: true });
 }
 
@@ -530,6 +562,51 @@ function handleToggleDues(body) {
   }
 
   sheet.appendRow([month, name, paid, body.date || new Date().toISOString(), 'admin']);
+  return json({ ok: true });
+}
+
+// ── Profiles (rank + status, JSON blob per student) ─────
+
+function handleGetProfiles() {
+  var sheet = getSheet(TAB_PROFILES);
+  var lastRow = sheet.getLastRow();
+  var profiles = {};
+
+  if (lastRow >= 2) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+    for (var i = 0; i < data.length; i++) {
+      var name = data[i][0];
+      if (!name) continue;
+      try { profiles[name] = JSON.parse(data[i][1]); }
+      catch (ex) { profiles[name] = {}; }
+    }
+  }
+
+  return json({ profiles: profiles });
+}
+
+function handleSaveProfile(body) {
+  var name = body.name;
+  var data = body.data;
+  if (!name || data === undefined) return json({ error: 'name and data required' });
+
+  var sheet = getSheet(TAB_PROFILES);
+  var lastRow = sheet.getLastRow();
+  var encoded = JSON.stringify(data);
+
+  // Update existing row
+  if (lastRow >= 2) {
+    var rows = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i][0] === name) {
+        sheet.getRange(i + 2, 2).setValue(encoded);
+        return json({ ok: true });
+      }
+    }
+  }
+
+  // New row
+  sheet.appendRow([name, encoded]);
   return json({ ok: true });
 }
 
