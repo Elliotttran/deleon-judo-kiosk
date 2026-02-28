@@ -8,7 +8,3 @@ PWA for attendance tracking.
 ## Stack
 - Static frontend (HTML/CSS/JS or React)
 - Google Sheets + Apps Script backend
-- Hosted on Netlify
-
-## Deployment
-Connected to Netlify via GitHub.
