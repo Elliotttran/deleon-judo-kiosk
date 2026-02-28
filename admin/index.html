@@ -171,8 +171,8 @@ body {
 .si-roster { background: var(--white); flex: 1; width: 100%; padding-bottom: 20px; transition: background 0.25s; }
 
 .si-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 18px 20px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--divider);
   cursor: pointer; user-select: none; -webkit-user-select: none;
   background: var(--white);
@@ -189,7 +189,7 @@ body {
 
 .si-num {
   font-size: 14px; font-weight: 600; color: var(--text-light);
-  min-width: 24px; text-align: right; flex-shrink: 0;
+  min-width: 16px; text-align: right; flex-shrink: 0;
   transition: color 0.25s;
 }
 
@@ -315,15 +315,15 @@ body.past-mode .tab.active { color: #ccc; }
 .ro-modal-input.error { border-color: var(--red); }
 
 .ro-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 18px 20px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--divider);
 }
 .ro-row:last-child { border-bottom: none; }
 
 .ro-num {
   font-size: 14px; font-weight: 600; color: var(--text-light);
-  min-width: 24px; text-align: right; flex-shrink: 0;
+  min-width: 16px; text-align: right; flex-shrink: 0;
 }
 
 .ro-name {
@@ -403,18 +403,18 @@ body.past-mode .tab.active { color: #ccc; }
 .rk-subtitle { font-size: 14px; color: var(--text-light); font-weight: 600; margin-bottom: 16px; }
 
 .rk-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 18px 20px; border-bottom: 1px solid var(--divider);
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--divider);
   cursor: pointer; transition: background 0.1s;
 }
 .rk-row:active { background: var(--bg); }
 .rk-row-main { flex: 1; min-width: 0; }
-.rk-row-name { font-size: 20px; font-weight: 700; }
-.rk-row-sub { font-size: 16px; color: var(--text-light); font-weight: 600; margin-top: 3px; }
+.rk-row-name { font-size: 20px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rk-row-sub { font-size: 14px; color: var(--text-light); font-weight: 600; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rk-row-right { text-align: right; flex-shrink: 0; }
-.rk-row-grade { font-size: 20px; font-weight: 700; }
-.rk-row-date { font-size: 16px; color: var(--text-light); font-weight: 600; margin-top: 3px; }
-.rk-row-swatch { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; }
+.rk-row-grade { font-size: 16px; font-weight: 700; }
+.rk-row-date { font-size: 14px; color: var(--text-light); font-weight: 600; margin-top: 2px; }
+.rk-row-swatch { width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0; }
 .rk-row-swatch--outlined { border: 2px solid #d1d5db; }
 
 .rk-section-header {
@@ -458,7 +458,7 @@ body.past-mode .tab.active { color: #ccc; }
 .rk-profile-close:active { background: var(--bg); }
 
 .rk-profile-fields {
-  overflow-y: auto; padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 16px;
+  overflow-y: auto; overflow-x: hidden; padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 16px;
 }
 .rk-profile-section-title {
   font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
@@ -2182,9 +2182,17 @@ function roStatusBadge(name) {
   return '<button class="ro-status ro-status-' + status + '" onclick="event.stopPropagation();roOpenStatus(\'' + name.replace(/'/g, "\\'") + '\')">' + (labels[status] || 'Active') + '</button>';
 }
 
+var roCollapsed = {};
+
+function roToggleSection(key) {
+  roCollapsed[key] = !roCollapsed[key];
+  roRender();
+}
+
 function roRender() {
   var activeRoster = getRoster();
   var profiles = getStudentProfiles();
+
   // Build full list: active roster + hidden students (inactive/teacher)
   var allNames = activeRoster.slice();
   Object.keys(profiles).forEach(function(name) {
@@ -2195,22 +2203,58 @@ function roRender() {
   });
   allNames.sort(function(a, b) { return a.localeCompare(b); });
 
-  var activeCount = activeRoster.length;
-  var totalCount = allNames.length;
-  document.getElementById('roSubtitle').textContent = activeCount + ' active' + (totalCount > activeCount ? ', ' + (totalCount - activeCount) + ' hidden' : '');
-
-  document.getElementById('roList').innerHTML = allNames.map(function(name, i) {
-    var escaped = name.replace(/'/g, "\\'");
+  var teachers = [], active = [], inactive = [];
+  allNames.forEach(function(name) {
     var status = (profiles[name] && profiles[name].status) || 'active';
-    var dimStyle = status !== 'active' ? ' style="opacity:0.55"' : '';
-    return '<div class="ro-row"' + dimStyle + '>' +
-      '<span class="ro-num">' + (i + 1) + '</span>' +
+    if (status === 'teacher') teachers.push(name);
+    else if (status === 'inactive') inactive.push(name);
+    else active.push(name);
+  });
+
+  var subtitleParts = [active.length + ' active'];
+  if (teachers.length) subtitleParts.push(teachers.length + ' instructor' + (teachers.length > 1 ? 's' : ''));
+  if (inactive.length) subtitleParts.push(inactive.length + ' inactive');
+  document.getElementById('roSubtitle').textContent = subtitleParts.join(', ');
+
+  function rowHtml(name, num) {
+    var escaped = name.replace(/'/g, "\\'");
+    return '<div class="ro-row">' +
+      '<span class="ro-num">' + num + '</span>' +
       '<span class="ro-name">' + name + '</span>' +
       roStatusBadge(name) +
       '<button class="ro-edit" onclick="roEdit(\'' + escaped + '\')">&#9998;</button>' +
       '<button class="ro-delete" onclick="roDelete(\'' + escaped + '\')">&#10005;</button>' +
     '</div>';
-  }).join('');
+  }
+
+  function teacherRowHtml(name, num) {
+    var escaped = name.replace(/'/g, "\\'");
+    var rp = getRankProfile(name);
+    return '<div class="ro-row">' +
+      '<span class="ro-num">' + num + '</span>' +
+      '<span class="ro-name">' + name + '</span>' +
+      gradeBadge(rp.grade, rp.division, false) +
+      '<button class="ro-edit" onclick="roEdit(\'' + escaped + '\')">&#9998;</button>' +
+      '<button class="ro-delete" onclick="roDelete(\'' + escaped + '\')">&#10005;</button>' +
+    '</div>';
+  }
+
+  function sectionHtml(label, key, names, renderFn) {
+    var collapsed = roCollapsed[key];
+    var caret = collapsed ? '&#9656;' : '&#9662;';
+    return '<div class="rk-section-header" onclick="roToggleSection(\'' + key + '\')">' +
+      label + ' <span class="rk-section-count">(' + names.length + ')</span>' +
+      '<span class="rk-caret">' + caret + '</span>' +
+    '</div>' +
+    (collapsed ? '' : names.map(function(name, i) { return renderFn(name, i + 1); }).join(''));
+  }
+
+  var html = '';
+  if (teachers.length) html += sectionHtml('Instructors', 'teacher', teachers, teacherRowHtml);
+  active.forEach(function(name, i) { html += rowHtml(name, i + 1); });
+  if (inactive.length) html += sectionHtml('Inactive', 'inactive', inactive, rowHtml);
+
+  document.getElementById('roList').innerHTML = html;
 }
 
 var editingStudent = null;
