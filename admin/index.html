@@ -1737,13 +1737,14 @@ function timedFetch(url, ms) {
 async function loadFromServer() {
   if (!navigator.onLine) return;
   try {
+    var cb = '&_t=' + Date.now();
     var results = await Promise.all([
-      timedFetch(APPS_SCRIPT_URL + '?action=roster', 15000).catch(function() { return null; }),
-      timedFetch(APPS_SCRIPT_URL + '?action=allAttendance', 15000).catch(function() { return null; }),
-      timedFetch(APPS_SCRIPT_URL + '?action=cancelled', 15000).catch(function() { return null; }),
-      timedFetch(APPS_SCRIPT_URL + '?action=dues', 15000).catch(function() { return null; }),
-      timedFetch(APPS_SCRIPT_URL + '?action=settings', 15000).catch(function() { return null; }),
-      timedFetch(APPS_SCRIPT_URL + '?action=profiles', 15000).catch(function() { return null; })
+      timedFetch(APPS_SCRIPT_URL + '?action=roster' + cb, 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=allAttendance' + cb, 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=cancelled' + cb, 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=dues' + cb, 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=settings' + cb, 15000).catch(function() { return null; }),
+      timedFetch(APPS_SCRIPT_URL + '?action=profiles' + cb, 15000).catch(function() { return null; })
     ]);
 
     if (results[0] && results[0].ok) {

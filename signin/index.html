@@ -2237,7 +2237,7 @@
           var timeout = setTimeout(function () {
             controller.abort();
           }, 10000);
-          var res = await fetch(APPS_SCRIPT_URL + "?action=roster", {
+          var res = await fetch(APPS_SCRIPT_URL + "?action=roster&_t=" + Date.now(), {
             signal: controller.signal,
           });
           clearTimeout(timeout);
