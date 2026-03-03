@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, interactive-widget=resizes-visual-viewport">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Judo Admin">
@@ -777,6 +777,7 @@ body.past-mode .tab.active { color: #ccc; }
   padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
 }
 .modal-overlay.show { opacity: 1; pointer-events: auto; }
+body.modal-open { overflow: hidden; }
 
 .modal {
   background: var(--white); border-radius: 20px;
@@ -2095,6 +2096,7 @@ function siToggleCancel() {
       triggerSync();
     };
   }
+  document.body.classList.add('modal-open');
   document.getElementById('modalOverlay').classList.add('show');
 }
 
@@ -2149,6 +2151,7 @@ function siToggleAll() {
         queueChange({ action: 'saveAttendance', date: key, names: [], removed: r });
         triggerSync();
       };
+      document.body.classList.add('modal-open');
       document.getElementById('modalOverlay').classList.add('show');
     } else {
       p.forEach(function(name) { if (r.indexOf(name) === -1) r.push(name); });
@@ -2270,6 +2273,7 @@ function roShowAdd() {
   document.getElementById('roAddBody').style.display = '';
   document.getElementById('roAddActions').style.display = '';
   document.getElementById('roAddSuccess').style.display = 'none';
+  document.body.classList.add('modal-open');
   document.getElementById('roAddOverlay').classList.add('show');
   setTimeout(function() { document.getElementById('roFirstName').focus(); }, 200);
 }
@@ -2286,6 +2290,7 @@ function roEdit(name) {
   document.getElementById('roAddBody').style.display = '';
   document.getElementById('roAddActions').style.display = '';
   document.getElementById('roAddSuccess').style.display = 'none';
+  document.body.classList.add('modal-open');
   document.getElementById('roAddOverlay').classList.add('show');
   setTimeout(function() { document.getElementById('roFirstName').focus(); }, 200);
 }
@@ -2353,6 +2358,7 @@ function roEditConfirm() {
 
 function roCloseAdd() {
   document.getElementById('roAddOverlay').classList.remove('show');
+  document.body.classList.remove('modal-open');
 }
 
 function roAddConfirm() {
@@ -2403,11 +2409,13 @@ function roDelete(name) {
   document.getElementById('modalConfirm').textContent = 'Remove';
   document.getElementById('modalConfirm').className = 'modal-btn modal-danger';
   document.getElementById('modalConfirm').onclick = roConfirmDelete;
+  document.body.classList.add('modal-open');
   document.getElementById('modalOverlay').classList.add('show');
 }
 
 function modalClose() {
   document.getElementById('modalOverlay').classList.remove('show');
+  document.body.classList.remove('modal-open');
   pendingDelete = null;
 }
 
@@ -2441,6 +2449,7 @@ function roOpenStatus(name) {
   statusSelectedValue = (getStudentProfile(name).status) || 'active';
   document.getElementById('roStatusName').textContent = name;
   roStatusUpdateUI();
+  document.body.classList.add('modal-open');
   document.getElementById('roStatusOverlay').classList.add('show');
 }
 
@@ -2458,6 +2467,7 @@ function roStatusSelect(val) {
 
 function roStatusClose() {
   document.getElementById('roStatusOverlay').classList.remove('show');
+  document.body.classList.remove('modal-open');
   statusEditingName = null;
 }
 
@@ -2618,6 +2628,7 @@ function rkOpenProfile(name) {
   document.getElementById('rkUsaj').value = rp.usajNum || '';
   // Update header badge with saved grade
   document.getElementById('rkProfileBadge').innerHTML = gradeBadge(rp.grade, rp.division, true);
+  document.body.classList.add('modal-open');
   document.getElementById('rkProfileOverlay').classList.add('show');
 }
 
@@ -2642,6 +2653,7 @@ function rkGradeChange() {
 
 function rkProfileClose() {
   document.getElementById('rkProfileOverlay').classList.remove('show');
+  document.body.classList.remove('modal-open');
   rkProfileCurrentName = null;
 }
 

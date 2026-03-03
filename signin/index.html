@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual-viewport"
     />
     <meta name="theme-color" content="#C41E3A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -351,7 +351,7 @@
         position: fixed;
         inset: 0;
         background: var(--white);
-        z-index: 40;
+        z-index: 300;
         flex-direction: column;
       }
 
@@ -420,6 +420,8 @@
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
       }
 
       .custom-select__item {
