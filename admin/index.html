@@ -1277,9 +1277,6 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
     </div>
   </div>
   <div id="duContent"></div>
-  <div style="text-align:center;padding:12px 0 4px">
-    <button id="duRefreshBtn" onclick="duFetchFresh()" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;text-decoration:underline">Refresh from server</button>
-  </div>
 </div>
 
 <!-- ════ TAB BAR ════ -->
@@ -3095,41 +3092,22 @@ function duNav(dir) {
 }
 
 async function duFetchFresh() {
-  var btn = document.getElementById('duRefreshBtn');
-  btn.textContent = 'Fetching…';
-  btn.disabled = true;
   try {
     var res = await fetch(APPS_SCRIPT_URL + '?action=dues&_t=' + Date.now(), { cache: 'no-store' });
     var data = await res.json();
-    var mk = duMonthKey(duYear, duMonth);
-    var rawKeys = data.dues ? Object.keys(data.dues).map(normalizeMonthKey) : [];
-    // Build normalized dues object
-    var normalizedDues = {};
-    if (data.dues) {
-      Object.keys(data.dues).forEach(function(rawMonth) {
-        var nm = normalizeMonthKey(rawMonth);
-        normalizedDues[nm] = data.dues[rawMonth];
-      });
-    }
-    var monthData = normalizedDues[mk] || {};
-    var paidNames = Object.keys(monthData).filter(function(n) { return monthData[n].paid; });
-    showToast(paidNames.length + ' paid: ' + (paidNames.join(', ') || 'none'));
     if (data.dues) {
       var localDues = getDues();
-      Object.keys(normalizedDues).forEach(function(month) {
+      Object.keys(data.dues).forEach(function(rawMonth) {
+        var month = normalizeMonthKey(rawMonth);
         if (!localDues[month]) localDues[month] = {};
-        Object.keys(normalizedDues[month]).forEach(function(name) {
-          localDues[month][name] = normalizedDues[month][name];
+        Object.keys(data.dues[rawMonth]).forEach(function(name) {
+          localDues[month][name] = data.dues[rawMonth][name];
         });
       });
       setDues(localDues);
       duesRender();
     }
-  } catch (e) {
-    showToast('Fetch error: ' + e.message);
-  }
-  btn.textContent = 'Refresh from server';
-  btn.disabled = false;
+  } catch (e) { /* silent — loadFromServer handles errors */ }
 }
 
 function duToggle(name) {
