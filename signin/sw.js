@@ -1,6 +1,6 @@
 // DeLeon Judo Club — Sign-In Service Worker
-const CACHE_NAME = 'deleon-signin-v45';
-const STATIC_ASSETS = ['./', './index.html', './logo.svg'];
+const CACHE_NAME = 'deleon-signin-v46';
+const STATIC_ASSETS = ['./', './index.html', './logo.svg', './logo.png'];
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 const CHECKIN_TOKEN = '1970';
