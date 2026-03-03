@@ -1959,7 +1959,7 @@ function switchTab(name) {
   if (name === 'roster') roRender();
   if (name === 'rank') rkRender();
   if (name === 'stats') stRender();
-  if (name === 'dues') { duesRender(); loadFromServer().catch(function(){}); }
+  if (name === 'dues') { duesRender(); duFetchFresh(); }
   window.scrollTo(0, 0);
 }
 
@@ -3062,8 +3062,12 @@ function duesRender() {
     var paid = entry && entry.paid;
     var dateStr = '';
     if (paid && entry.date) {
-      var d = new Date(entry.date + 'T12:00:00');
-      dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+      // Handle both "YYYY-MM-DD" and ISO "YYYY-MM-DDT..." date formats
+      var raw = String(entry.date).slice(0, 10);
+      var d = new Date(raw + 'T12:00:00');
+      if (!isNaN(d.getTime())) {
+        dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+      }
     }
     var overdue = 0;
     if (!paid) overdue = getConsecutiveUnpaid(name);

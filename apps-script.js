@@ -505,16 +505,20 @@ function handleGetDues() {
   var lastRow = sheet.getLastRow();
   var dues = {};
 
-  if (lastRow >= 2) {
-    var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+  if (lastRow >= 1) {
+    // Read ALL rows starting from row 1; skip header row if present
+    var data = sheet.getRange(1, 1, lastRow, 5).getValues();
     for (var i = 0; i < data.length; i++) {
-      var month = toMonthKey(data[i][0]);
+      var raw = data[i][0];
+      // Skip header row
+      if (raw === 'Month' || raw === 'month') continue;
+      var month = toMonthKey(raw);
       var name = data[i][1];
       if (!month || !name) continue;
       if (!dues[month]) dues[month] = {};
       dues[month][name] = {
         paid: data[i][2] === true || data[i][2] === 'TRUE',
-        date: data[i][3] || '',
+        date: toDateStr(data[i][3]),
         source: data[i][4] || ''
       };
     }
