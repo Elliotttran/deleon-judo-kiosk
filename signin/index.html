@@ -2259,6 +2259,7 @@
       }
 
       loadRoster();
+      if (navigator.onLine) flushQueue().catch(function() {});
 
       document.getElementById("statusRefresh").addEventListener("click", function () {
         var btn = this;

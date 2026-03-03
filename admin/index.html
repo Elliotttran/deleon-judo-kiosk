@@ -1954,7 +1954,7 @@ function switchTab(name) {
   if (name === 'roster') roRender();
   if (name === 'rank') rkRender();
   if (name === 'stats') stRender();
-  if (name === 'dues') duesRender();
+  if (name === 'dues') { duesRender(); loadFromServer().catch(function(){}); }
   window.scrollTo(0, 0);
 }
 
