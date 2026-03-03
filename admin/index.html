@@ -1277,6 +1277,9 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
     </div>
   </div>
   <div id="duContent"></div>
+  <div style="text-align:center;padding:12px 0 4px">
+    <button id="duRefreshBtn" onclick="duFetchFresh()" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;text-decoration:underline">Refresh from server</button>
+  </div>
 </div>
 
 <!-- ════ TAB BAR ════ -->
@@ -3073,6 +3076,35 @@ function duNav(dir) {
   duesRender();
 }
 
+async function duFetchFresh() {
+  var btn = document.getElementById('duRefreshBtn');
+  btn.textContent = 'Fetching…';
+  btn.disabled = true;
+  try {
+    var res = await fetch(APPS_SCRIPT_URL + '?action=dues&_t=' + Date.now(), { cache: 'no-store' });
+    var data = await res.json();
+    var mk = duMonthKey(duYear, duMonth);
+    var monthData = (data.dues && data.dues[mk]) || {};
+    var paidNames = Object.keys(monthData).filter(function(n) { return monthData[n].paid; });
+    showToast('Server: ' + paidNames.length + ' paid in ' + mk + (paidNames.length ? ' — ' + paidNames.join(', ') : ''));
+    if (data.dues) {
+      var localDues = getDues();
+      Object.keys(data.dues).forEach(function(month) {
+        if (!localDues[month]) localDues[month] = {};
+        Object.keys(data.dues[month]).forEach(function(name) {
+          localDues[month][name] = data.dues[month][name];
+        });
+      });
+      setDues(localDues);
+      duesRender();
+    }
+  } catch (e) {
+    showToast('Fetch error: ' + e.message);
+  }
+  btn.textContent = 'Refresh from server';
+  btn.disabled = false;
+}
+
 function duToggle(name) {
   var mk = duMonthKey(duYear, duMonth);
   var dues = getDues();
@@ -3250,6 +3282,10 @@ setInterval(function() {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(function(err) {
     console.warn('Service worker registration failed:', err);
+  });
+  // Auto-reload when a new service worker takes control (ensures latest code)
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    window.location.reload();
   });
 }
 </script>
