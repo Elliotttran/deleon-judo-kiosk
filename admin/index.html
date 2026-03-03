@@ -1800,11 +1800,12 @@ async function loadFromServer() {
         var dirtyDuesKeys = {};
         queue3.forEach(function(c) { if (c.action === 'toggleDues') dirtyDuesKeys[c.month + '|' + c.name] = true; });
         // Merge server data, keeping local overrides for queued changes
-        Object.keys(dData.dues).forEach(function(month) {
+        Object.keys(dData.dues).forEach(function(rawMonth) {
+          var month = normalizeMonthKey(rawMonth);
           if (!localDues[month]) localDues[month] = {};
-          Object.keys(dData.dues[month]).forEach(function(name) {
+          Object.keys(dData.dues[rawMonth]).forEach(function(name) {
             if (!dirtyDuesKeys[month + '|' + name]) {
-              localDues[month][name] = dData.dues[month][name];
+              localDues[month][name] = dData.dues[rawMonth][name];
             }
           });
         });
@@ -2985,6 +2986,19 @@ var DUES_KEY = 'dojo_dues';
 var duYear = new Date().getFullYear();
 var duMonth = new Date().getMonth(); // 0-indexed
 
+// Google Sheets auto-converts "YYYY-MM" to a Date object. GAS returns it as
+// a long date string like "Sun Mar 01 2026 00:00:00 GMT-0800 (...)".
+// Normalize back to "YYYY-MM".
+function normalizeMonthKey(key) {
+  if (typeof key === 'string' && key.length > 7) {
+    var d = new Date(key);
+    if (!isNaN(d.getTime())) {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+  }
+  return String(key);
+}
+
 function getDues() {
   try { return JSON.parse(localStorage.getItem(DUES_KEY) || '{}'); }
   catch (e) { return {}; }
@@ -3084,16 +3098,24 @@ async function duFetchFresh() {
     var res = await fetch(APPS_SCRIPT_URL + '?action=dues&_t=' + Date.now(), { cache: 'no-store' });
     var data = await res.json();
     var mk = duMonthKey(duYear, duMonth);
-    var rawKeys = data.dues ? Object.keys(data.dues) : [];
-    var monthData = (data.dues && data.dues[mk]) || {};
+    var rawKeys = data.dues ? Object.keys(data.dues).map(normalizeMonthKey) : [];
+    // Build normalized dues object
+    var normalizedDues = {};
+    if (data.dues) {
+      Object.keys(data.dues).forEach(function(rawMonth) {
+        var nm = normalizeMonthKey(rawMonth);
+        normalizedDues[nm] = data.dues[rawMonth];
+      });
+    }
+    var monthData = normalizedDues[mk] || {};
     var paidNames = Object.keys(monthData).filter(function(n) { return monthData[n].paid; });
-    alert('RAW KEYS: ' + JSON.stringify(rawKeys) + '\nLOOKING FOR: ' + mk + '\nFOUND: ' + paidNames.length + ' paid\nFULL RESPONSE: ' + JSON.stringify(data).slice(0, 500));
+    showToast(paidNames.length + ' paid: ' + (paidNames.join(', ') || 'none'));
     if (data.dues) {
       var localDues = getDues();
-      Object.keys(data.dues).forEach(function(month) {
+      Object.keys(normalizedDues).forEach(function(month) {
         if (!localDues[month]) localDues[month] = {};
-        Object.keys(data.dues[month]).forEach(function(name) {
-          localDues[month][name] = data.dues[month][name];
+        Object.keys(normalizedDues[month]).forEach(function(name) {
+          localDues[month][name] = normalizedDues[month][name];
         });
       });
       setDues(localDues);

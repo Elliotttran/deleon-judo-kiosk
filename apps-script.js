@@ -489,6 +489,17 @@ function handleRestoreClass(body) {
 
 // ── Dues ────────────────────────────────────────────────
 
+// Google Sheets auto-converts "YYYY-MM" to a Date object.
+// Normalize it back to a "YYYY-MM" string.
+function toMonthKey(val) {
+  if (val instanceof Date) {
+    var y = val.getFullYear();
+    var m = val.getMonth() + 1;
+    return y + '-' + (m < 10 ? '0' : '') + m;
+  }
+  return val ? String(val) : '';
+}
+
 function handleGetDues() {
   var sheet = getSheet(TAB_DUES);
   var lastRow = sheet.getLastRow();
@@ -497,12 +508,12 @@ function handleGetDues() {
   if (lastRow >= 2) {
     var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
     for (var i = 0; i < data.length; i++) {
-      var month = data[i][0];
+      var month = toMonthKey(data[i][0]);
       var name = data[i][1];
       if (!month || !name) continue;
       if (!dues[month]) dues[month] = {};
       dues[month][name] = {
-        paid: data[i][2] === true || data[i][2] === 'TRUE' || data[i][2] === true,
+        paid: data[i][2] === true || data[i][2] === 'TRUE',
         date: data[i][3] || '',
         source: data[i][4] || ''
       };
@@ -525,7 +536,7 @@ function handleRecordDues(body) {
   if (lastRow >= 2) {
     var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
     for (var i = 0; i < data.length; i++) {
-      if (data[i][0] === month && data[i][1] === name) {
+      if (toMonthKey(data[i][0]) === month && data[i][1] === name) {
         sheet.getRange(i + 2, 3).setValue(true);
         sheet.getRange(i + 2, 4).setValue(body.date || new Date().toISOString());
         sheet.getRange(i + 2, 5).setValue('self');
@@ -552,7 +563,7 @@ function handleToggleDues(body) {
   if (lastRow >= 2) {
     var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
     for (var i = 0; i < data.length; i++) {
-      if (data[i][0] === month && data[i][1] === name) {
+      if (toMonthKey(data[i][0]) === month && data[i][1] === name) {
         sheet.getRange(i + 2, 3).setValue(paid);
         sheet.getRange(i + 2, 4).setValue(body.date || new Date().toISOString());
         sheet.getRange(i + 2, 5).setValue('admin');
