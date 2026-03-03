@@ -2239,6 +2239,7 @@
           }, 10000);
           var res = await fetch(APPS_SCRIPT_URL + "?action=roster&_t=" + Date.now(), {
             signal: controller.signal,
+            cache: 'no-store',
           });
           clearTimeout(timeout);
           if (!res.ok) throw new Error("Network error");
