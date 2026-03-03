@@ -3084,9 +3084,10 @@ async function duFetchFresh() {
     var res = await fetch(APPS_SCRIPT_URL + '?action=dues&_t=' + Date.now(), { cache: 'no-store' });
     var data = await res.json();
     var mk = duMonthKey(duYear, duMonth);
+    var rawKeys = data.dues ? Object.keys(data.dues) : [];
     var monthData = (data.dues && data.dues[mk]) || {};
     var paidNames = Object.keys(monthData).filter(function(n) { return monthData[n].paid; });
-    showToast('Server: ' + paidNames.length + ' paid in ' + mk + (paidNames.length ? ' — ' + paidNames.join(', ') : ''));
+    alert('RAW KEYS: ' + JSON.stringify(rawKeys) + '\nLOOKING FOR: ' + mk + '\nFOUND: ' + paidNames.length + ' paid\nFULL RESPONSE: ' + JSON.stringify(data).slice(0, 500));
     if (data.dues) {
       var localDues = getDues();
       Object.keys(data.dues).forEach(function(month) {
