@@ -3285,7 +3285,7 @@ setInterval(function() {
 }, 60 * 1000);
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(function(err) {
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function(err) {
     console.warn('Service worker registration failed:', err);
   });
   // Auto-reload when a new service worker takes control (ensures latest code)
