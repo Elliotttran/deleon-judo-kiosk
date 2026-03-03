@@ -2921,12 +2921,12 @@
         });
       document
         .getElementById("duesPaidYes")
-        .addEventListener("click", function () {
+        .addEventListener("click", async function () {
           if (pendingDuesEntry) {
             var fn = pendingDuesEntry.firstName;
             var ln = pendingDuesEntry.lastName;
             setDuesPaid(fn, ln, getCurrentMonthKey());
-            saveToQueue({
+            await saveToQueue({
               action: "recordDues",
               firstName: fn,
               lastName: ln,
