@@ -1240,7 +1240,7 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
     </div>
     <div class="st-day-filter" id="stDayFilter">
       <label class="du-toggle">
-        <input type="checkbox" id="stClassDaysOnly">
+        <input type="checkbox" id="stClassDaysOnly" checked>
         <span class="du-toggle-slider"></span>
         <span class="du-toggle-label">Class days only</span>
       </label>
@@ -3113,6 +3113,13 @@ document.getElementById('duesEnabledToggle').addEventListener('change', function
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'hidden') {
     flushSyncQueue().catch(function() {});
+  } else if (document.visibilityState === 'visible') {
+    // Re-pull from server when app returns to foreground, but only if data
+    // is stale (>2 min) so we pick up dues/attendance recorded on the kiosk.
+    var staleMs = 2 * 60 * 1000;
+    if (!lastSavedTime || (Date.now() - lastSavedTime.getTime() > staleMs)) {
+      loadFromServer().catch(function() {});
+    }
   }
 });
 
