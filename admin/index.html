@@ -528,7 +528,7 @@ body.past-mode .tab.active { color: #ccc; }
 .st-nav-center { text-align: center; min-width: 200px; }
 
 .st-nav-label {
-  font-size: 22px; font-weight: 800; text-transform: uppercase;
+  font-size: 26px; font-weight: 800; text-transform: uppercase;
 }
 
 .st-nav-range {
@@ -592,6 +592,11 @@ body.past-mode .tab.active { color: #ccc; }
   white-space: nowrap; z-index: 10;
 }
 
+.st-bar--future {
+  background: var(--divider); opacity: 0.5;
+}
+.st-bar--future:hover { background: var(--divider); }
+
 .st-labels {
   display: flex; gap: 3px; padding-top: 6px;
 }
@@ -599,6 +604,7 @@ body.past-mode .tab.active { color: #ccc; }
   flex: 1; text-align: center;
   font-size: 13px; font-weight: 600; color: var(--text-light);
 }
+.st-label--future { opacity: 0.4; }
 
 /* Per-student table */
 .st-table { padding: 10px 16px 20px; }
@@ -724,16 +730,75 @@ body.past-mode .tab.active { color: #ccc; }
   font-size: 14px; font-weight: 700; color: var(--text-light);
 }
 
-/* Summary bar */
-.du-summary {
-  padding: 12px 16px; display: flex; align-items: center; gap: 16px;
+/* Year view */
+.du-year-row {
+  padding: 16px 0; border-bottom: 1px solid var(--divider);
+  cursor: pointer;
 }
-.du-summary-text {
-  font-size: 16px; font-weight: 700; color: var(--text);
-  white-space: nowrap;
+.du-year-row:last-child { border-bottom: none; }
+.du-year-row:active { background: var(--bg); }
+.du-year-summary {
+  display: flex; align-items: center; gap: 12px;
+}
+.du-year-name {
+  font-size: 20px; font-weight: 700;
+  min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; flex: 1;
+}
+.du-year-count {
+  font-size: 18px; font-weight: 900; flex-shrink: 0;
+  color: var(--text);
+}
+.du-year-chevron {
+  font-size: 20px; color: var(--text-light); flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.du-year-chevron--open { transform: rotate(90deg); }
+.du-year-bar {
+  width: 80px; height: 10px; background: #e5e7eb;
+  border-radius: 5px; overflow: hidden; flex-shrink: 0;
+}
+.du-year-bar-fill {
+  height: 100%; border-radius: 5px; background: #16a34a;
+  transition: width 0.3s;
+}
+.du-year-detail {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px;
+  margin-top: 12px; padding: 14px 12px 8px;
+  background: #f8f9fa; border-radius: 12px;
+}
+.du-year-month {
+  font-size: 18px; font-weight: 700; padding: 5px 0;
+}
+.du-year-status { font-weight: 800; }
+.du-year-status--paid { color: #16a34a; }
+.du-year-status--unpaid { color: var(--red); }
+.du-year-expand-btn {
+  border: 1.5px solid var(--divider); background: var(--white);
+  font-size: 13px; font-weight: 700; color: var(--text);
+  cursor: pointer; padding: 8px 16px; border-radius: 10px;
+}
+.du-year-expand-btn:active { background: var(--bg); }
+
+/* Summary card */
+.du-summary-card {
+  margin: 16px; padding: 20px;
+  background: var(--white); border-radius: 14px;
+  border: 1px solid var(--divider);
+}
+.du-summary-top {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.du-summary-value {
+  font-size: 32px; font-weight: 900;
+}
+.du-summary-label {
+  font-size: 14px; font-weight: 700; color: var(--text-light);
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
 .du-summary-bar {
-  flex: 1; height: 12px; background: var(--bg);
+  height: 12px; background: var(--bg);
   border-radius: 6px; overflow: hidden;
 }
 .du-summary-fill {
@@ -759,15 +824,16 @@ body.past-mode .tab.active { color: #ccc; }
 }
 
 .du-badge {
-  font-size: 14px; font-weight: 800; padding: 5px 14px;
+  font-size: 14px; font-weight: 800; padding: 5px 0;
   border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em;
+  width: 80px; text-align: center; flex-shrink: 0;
 }
 .du-badge--paid { background: var(--green-row); color: var(--green); }
 .du-badge--unpaid { background: rgba(196,25,25,0.08); color: var(--red); }
 
 .du-date {
   font-size: 14px; font-weight: 600; color: var(--text-light);
-  min-width: 60px; text-align: right;
+  width: 50px; text-align: right; flex-shrink: 0;
 }
 
 /* ── Modal ── */
@@ -1262,18 +1328,24 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
   <div class="du-header">
     <div class="du-title-row">
       <div class="du-title">Dues</div>
-      <label class="du-toggle">
-        <input type="checkbox" id="duesEnabledToggle" checked>
-        <span class="du-toggle-slider"></span>
-        <span class="du-toggle-label">Reminders</span>
-      </label>
     </div>
-    <div class="st-nav">
-      <button class="st-arrow" id="duPrev" onclick="duNav(-1)">&#8249;</button>
+    <div class="st-view-toggle">
+      <button class="st-view-btn active" id="duMonthBtn" onclick="duSetView('month')">Month</button>
+      <button class="st-view-btn" id="duYearBtn" onclick="duSetView('year')">Year</button>
+    </div>
+    <div class="st-nav" id="duMonthNav">
+      <button class="st-arrow" id="duPrev" onclick="duNavMonth(-1)">&#8249;</button>
       <div class="st-nav-center">
         <div class="st-nav-label" id="duNavLabel"></div>
       </div>
-      <button class="st-arrow" id="duNext" onclick="duNav(1)">&#8250;</button>
+      <button class="st-arrow" id="duNext" onclick="duNavMonth(1)">&#8250;</button>
+    </div>
+    <div class="st-nav" id="duYearNav" style="display:none">
+      <button class="st-arrow" id="duYearPrev" onclick="duNavYear(-1)">&#8249;</button>
+      <div class="st-nav-center">
+        <div class="st-nav-label" id="duYearLabel"></div>
+      </div>
+      <button class="st-arrow" id="duYearNext" onclick="duNavYear(1)">&#8250;</button>
     </div>
   </div>
   <div id="duContent"></div>
@@ -1320,7 +1392,7 @@ body.past-mode .si-sync-retry { color: #f87171; background: rgba(248,113,113,0.1
 // ═══════════════════════════════════
 // SHARED STATE & HELPERS
 // ═══════════════════════════════════
-const APP_VERSION = 'v1.4.2';
+const APP_VERSION = 'v1.5';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec';
 const WRITE_KEY = '1970';
 
@@ -1813,9 +1885,7 @@ async function loadFromServer() {
     // Settings
     if (results[4] && results[4].ok) {
       var sData = await results[4].json();
-      if (sData.settings && sData.settings.duesEnabled !== undefined) {
-        localStorage.setItem('deleon_dues_enabled', sData.settings.duesEnabled);
-      }
+      // Settings loaded (duesEnabled removed)
     }
 
     // Profiles (rank data + student status)
@@ -1955,7 +2025,7 @@ function switchTab(name) {
   if (name === 'signin') siRender();
   if (name === 'roster') roRender();
   if (name === 'rank') rkRender();
-  if (name === 'stats') stRender();
+  if (name === 'stats') { stSnapToRecentClassDay(); stRender(); }
   if (name === 'dues') { duesRender(); duFetchFresh(); }
   window.scrollTo(0, 0);
 }
@@ -2702,11 +2772,11 @@ function stToggleSection(key) {
 }
 
 function stGetClassDays(year, month) {
-  var days = [], d = new Date(year, month, 1), today = new Date(todayStr() + 'T23:59:59');
+  var days = [], d = new Date(year, month, 1);
   var cancelled = getCancelled();
   while (d.getMonth() === month) {
     var k = fmtDate(d);
-    if (CLASS_DAYS.includes(d.getDay()) && d <= today && !cancelled.includes(k)) days.push(k);
+    if (CLASS_DAYS.includes(d.getDay()) && !cancelled.includes(k)) days.push(k);
     d.setDate(d.getDate() + 1);
   }
   return days;
@@ -2714,20 +2784,21 @@ function stGetClassDays(year, month) {
 
 function stCompute(year, month) {
   var att = getAtt(), days = stGetClassDays(year, month), cc = days.length;
-  if (!cc) return { cc:0, total:0, avg:0, uniq:0, per:[], daily:[] };
-  var sc = {}; var ls = {}; var us = new Set(); var total = 0; var daily = [];
+  if (!cc) return { cc:0, held:0, total:0, avg:0, uniq:0, per:[], daily:[] };
+  var today = todayStr();
+  var sc = {}; var ls = {}; var us = new Set(); var total = 0; var daily = []; var held = 0;
   days.forEach(function(d) {
     var p = att[d]||[]; daily.push({date:d,count:p.length});
-    total += p.length;
+    if (d <= today) { held++; total += p.length; }
     p.forEach(function(n) {
       us.add(n); sc[n]=(sc[n]||0)+1;
       if (!ls[n] || d > ls[n]) ls[n] = d;
     });
   });
   var per = Object.entries(sc).map(function(e) {
-    return {name:e[0], count:e[1], pct:Math.round(e[1]/cc*100), lastSeen:ls[e[0]]||null};
+    return {name:e[0], count:e[1], pct: held ? Math.round(e[1]/held*100) : 0, lastSeen:ls[e[0]]||null};
   });
-  return { cc:cc, total:total, avg: Math.round(total/cc*10)/10, uniq:us.size, per:per, daily:daily };
+  return { cc:cc, held:held, total:total, avg: held ? Math.round(total/held*10)/10 : 0, uniq:us.size, per:per, daily:daily };
 }
 
 function stRender() {
@@ -2754,6 +2825,16 @@ function stRender() {
     document.getElementById('stPrev').disabled = false;
     stRenderMonth();
   }
+}
+
+function stSnapToRecentClassDay() {
+  var d = new Date();
+  var limit = 0;
+  while (!stIsClassDay(d) && limit < 14) {
+    d.setDate(d.getDate() - 1);
+    limit++;
+  }
+  if (stIsClassDay(d)) stDayDate = d;
 }
 
 function stIsClassDay(d) {
@@ -2827,10 +2908,10 @@ function stRenderMonth() {
 
   if(!s.cc){ document.getElementById('stContent').innerHTML='<div class="st-empty">No class data for this month yet.</div>'; return; }
 
-  var td = ps.cc>0 ? s.total - ps.total : null;
-  var ud = ps.cc>0 ? s.uniq - ps.uniq : null;
-  var cd = ps.cc>0 ? s.cc - ps.cc : null;
-  var ad = ps.cc>0 ? Math.round((s.avg-ps.avg)*10)/10 : null;
+  var td = ps.held>0 ? s.total - ps.total : null;
+  var ud = ps.held>0 ? s.uniq - ps.uniq : null;
+  var cd = ps.held>0 ? s.held - ps.held : null;
+  var ad = ps.held>0 ? Math.round((s.avg-ps.avg)*10)/10 : null;
 
   var sorted = s.per.slice();
   if (stSort === 'count') {
@@ -2864,7 +2945,7 @@ function stRenderMonth() {
       label + ' <span class="rk-section-count">(' + students.length + ')</span>' +
       '<span class="rk-caret">' + caret + '</span>' +
     '</div>' +
-    (collapsed ? '' : stStudentRows(students, s.cc));
+    (collapsed ? '' : stStudentRows(students, s.held));
   }
   var studentHtml =
     renderStGroup('Teachers', 'teacher', stGroups.teacher) +
@@ -2872,22 +2953,26 @@ function stRenderMonth() {
     renderStGroup('Juniors', 'junior', stGroups.junior) +
     renderStGroup('Unassigned', 'none', stGroups.none);
 
+  var today = todayStr();
   var mx = Math.max.apply(null, s.daily.map(function(d){return d.count;}).concat([1]));
   var bars = s.daily.map(function(d){
-    var h = Math.max(4,(d.count/mx)*100);
+    var isFuture = d.date > today;
+    var h = isFuture ? 4 : Math.max(4,(d.count/mx)*100);
     var l = new Date(d.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',day:'numeric'});
-    return '<div class="st-bar" style="height:'+h+'%" data-tip="'+l+': '+d.count+'"></div>';
+    var cls = 'st-bar' + (isFuture ? ' st-bar--future' : '');
+    return '<div class="'+cls+'" style="height:'+h+'%" data-tip="'+l+': '+(isFuture ? '\u2014' : d.count)+'"></div>';
   }).join('');
   var labels = s.daily.map(function(d,i){
     if(s.daily.length>8&&i%2!==0)return'<div class="st-label"></div>';
-    return'<div class="st-label">'+new Date(d.date+'T12:00:00').getDate()+'</div>';
+    var cls = d.date > today ? ' st-label--future' : '';
+    return'<div class="st-label'+cls+'">'+new Date(d.date+'T12:00:00').getDate()+'</div>';
   }).join('');
 
   document.getElementById('stContent').innerHTML =
     '<div class="st-cards">' +
       '<div class="st-card"><div class="st-card-label">Total Check-ins</div><div class="st-card-value">'+s.total+'</div>'+dh(td)+'</div>' +
       '<div class="st-card"><div class="st-card-label">Students</div><div class="st-card-value">'+s.uniq+'</div>'+dh(ud)+'</div>' +
-      '<div class="st-card"><div class="st-card-label">Classes Held</div><div class="st-card-value">'+s.cc+'</div>'+dh(cd)+'</div>' +
+      '<div class="st-card"><div class="st-card-label">Classes Held</div><div class="st-card-value">'+s.held+'</div>'+dh(cd)+'</div>' +
       '<div class="st-card"><div class="st-card-label">Avg Class Size</div><div class="st-card-value">'+s.avg+'</div>'+dh(ad)+'</div>' +
     '</div>' +
     '<div class="st-trend">' +
@@ -3009,18 +3094,36 @@ function duMonthKey(y, m) {
   return y + '-' + String(m + 1).padStart(2, '0');
 }
 
+var duView = 'month';
+
+function duSetView(v) {
+  duView = v;
+  duesRender();
+}
+
 function duesRender() {
+  document.getElementById('duMonthBtn').classList.toggle('active', duView === 'month');
+  document.getElementById('duYearBtn').classList.toggle('active', duView === 'year');
+  document.getElementById('duMonthNav').style.display = duView === 'month' ? 'flex' : 'none';
+  document.getElementById('duYearNav').style.display = duView === 'year' ? 'flex' : 'none';
+
+  if (duView === 'month') {
+    var mk = duMonthKey(duYear, duMonth);
+    var label = new Date(duYear, duMonth).toLocaleDateString('en-US', {month:'long', year:'numeric'}).toUpperCase();
+    document.getElementById('duNavLabel').textContent = label;
+    var isNow = duYear === new Date().getFullYear() && duMonth === new Date().getMonth();
+    document.getElementById('duNext').disabled = isNow;
+    duRenderMonth();
+  } else {
+    document.getElementById('duYearLabel').textContent = duYear;
+    document.getElementById('duYearNext').disabled = duYear >= new Date().getFullYear();
+    document.getElementById('duYearPrev').disabled = duYear <= 2026;
+    duRenderYear();
+  }
+}
+
+function duRenderMonth() {
   var mk = duMonthKey(duYear, duMonth);
-  var label = new Date(duYear, duMonth).toLocaleDateString('en-US', {month:'long', year:'numeric'}).toUpperCase();
-  document.getElementById('duNavLabel').textContent = label;
-
-  var isNow = duYear === new Date().getFullYear() && duMonth === new Date().getMonth();
-  document.getElementById('duNext').disabled = isNow;
-
-  // Load toggle state
-  var enabled = localStorage.getItem('deleon_dues_enabled') !== 'false';
-  document.getElementById('duesEnabledToggle').checked = enabled;
-
   var roster = getRoster();
   var dues = getDues();
   var monthDues = dues[mk] || {};
@@ -3030,64 +3133,140 @@ function duesRender() {
     return;
   }
 
-  // Count paid
   var paidCount = 0;
   roster.forEach(function(name) {
     if (monthDues[name] && monthDues[name].paid) paidCount++;
   });
   var pct = Math.round(paidCount / roster.length * 100);
 
-  // Calculate consecutive unpaid months per student
-  function getConsecutiveUnpaid(name) {
-    var count = 0;
-    var y = new Date().getFullYear();
-    var m = new Date().getMonth();
-    for (var i = 0; i < 12; i++) {
-      m--;
-      if (m < 0) { m = 11; y--; }
-      var k = duMonthKey(y, m);
-      var md = dues[k] || {};
-      if (md[name] && md[name].paid) break;
-      count++;
-    }
-    return count;
-  }
-
-  // Build rows
   var rows = roster.map(function(name) {
     var entry = monthDues[name];
     var paid = entry && entry.paid;
     var dateStr = '';
     if (paid && entry.date) {
-      // Handle both "YYYY-MM-DD" and ISO "YYYY-MM-DDT..." date formats
       var raw = String(entry.date).slice(0, 10);
       var d = new Date(raw + 'T12:00:00');
       if (!isNaN(d.getTime())) {
         dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
       }
     }
-    var overdue = 0;
-    if (!paid) overdue = getConsecutiveUnpaid(name);
-
     return '<div class="du-row" onclick="duToggle(\'' + name.replace(/'/g, "\\'") + '\')">' +
       '<div class="du-name">' + name + '</div>' +
+      '<div class="du-date">' + dateStr + '</div>' +
       '<div class="du-badge ' + (paid ? 'du-badge--paid' : 'du-badge--unpaid') + '">' + (paid ? 'Paid' : 'Unpaid') + '</div>' +
-      (dateStr ? '<div class="du-date">' + dateStr + '</div>' : '') +
     '</div>';
   }).join('');
 
   document.getElementById('duContent').innerHTML =
-    '<div class="du-summary">' +
-      '<div class="du-summary-text">' + paidCount + ' of ' + roster.length + ' paid</div>' +
+    '<div class="du-summary-card">' +
+      '<div class="du-summary-top">' +
+        '<div class="du-summary-value">' + paidCount + ' / ' + roster.length + '</div>' +
+        '<div class="du-summary-label">Paid</div>' +
+      '</div>' +
       '<div class="du-summary-bar"><div class="du-summary-fill" style="width:' + pct + '%"></div></div>' +
     '</div>' +
     '<div class="du-list">' + rows + '</div>';
 }
 
-function duNav(dir) {
+var duYearExpanded = {};
+var duYearExpandAll = false;
+
+function duToggleYearRow(name) {
+  duYearExpanded[name] = !duYearExpanded[name];
+  duRenderYear();
+}
+
+function duToggleExpandAll() {
+  duYearExpandAll = !duYearExpandAll;
+  var roster = getRoster();
+  roster.forEach(function(n) { duYearExpanded[n] = duYearExpandAll; });
+  duRenderYear();
+}
+
+function duRenderYear() {
+  var roster = getRoster();
+  var dues = getDues();
+  var nowY = new Date().getFullYear(), nowM = new Date().getMonth();
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  if (!roster.length) {
+    document.getElementById('duContent').innerHTML = '<div class="st-empty">No students on roster.</div>';
+    return;
+  }
+
+  // Compute year totals
+  var totalPaid = 0;
+  var totalPossible = roster.length * 12;
+  roster.forEach(function(name) {
+    for (var i = 0; i < 12; i++) {
+      var mk = duMonthKey(duYear, i);
+      var entry = dues[mk] && dues[mk][name];
+      if (entry && entry.paid) totalPaid++;
+    }
+  });
+  var totalPct = Math.round(totalPaid / totalPossible * 100);
+
+  var expandLabel = duYearExpandAll ? 'Collapse All' : 'Expand All';
+  var card = '<div class="du-summary-card">' +
+    '<div class="du-summary-top">' +
+      '<div class="du-summary-value">' + totalPaid + ' / ' + totalPossible + '</div>' +
+      '<div class="du-summary-label">Paid</div>' +
+    '</div>' +
+    '<div class="du-summary-bar"><div class="du-summary-fill" style="width:' + totalPct + '%"></div></div>' +
+    '<div style="margin-top:14px;text-align:right">' +
+      '<button class="du-year-expand-btn" onclick="duToggleExpandAll()">' + expandLabel + '</button>' +
+    '</div>' +
+  '</div>';
+
+  var rows = roster.map(function(name) {
+    var paidCount = 0;
+    for (var i = 0; i < 12; i++) {
+      var mk = duMonthKey(duYear, i);
+      var entry = dues[mk] && dues[mk][name];
+      if (entry && entry.paid) paidCount++;
+    }
+    var pct = Math.round(paidCount / 12 * 100);
+    var escapedName = name.replace(/'/g, "\\'");
+
+    var detail = '';
+    if (duYearExpanded[name]) {
+      var cells = monthNames.map(function(m, i) {
+        var mk = duMonthKey(duYear, i);
+        var entry = dues[mk] && dues[mk][name];
+        var paid = entry && entry.paid;
+        var num = (i + 1) + '. ' + m;
+        if (paid) return '<div class="du-year-month">' + num + ' <span class="du-year-status du-year-status--paid">\u2713 Paid</span></div>';
+        return '<div class="du-year-month">' + num + ' <span class="du-year-status du-year-status--unpaid">\u2014 Unpaid</span></div>';
+      }).join('');
+      detail = '<div class="du-year-detail">' + cells + '</div>';
+    }
+
+    return '<div class="du-year-row" onclick="duToggleYearRow(\'' + escapedName + '\')">' +
+      '<div class="du-year-summary">' +
+        '<div class="du-year-name">' + name + '</div>' +
+        '<div class="du-year-bar"><div class="du-year-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="du-year-count">' + paidCount + '/12</div>' +
+        '<div class="du-year-chevron' + (duYearExpanded[name] ? ' du-year-chevron--open' : '') + '">&#9656;</div>' +
+      '</div>' +
+      detail +
+    '</div>';
+  }).join('');
+
+  document.getElementById('duContent').innerHTML = card + '<div class="du-list">' + rows + '</div>';
+}
+
+function duNavMonth(dir) {
   duMonth += dir;
   if (duMonth > 11) { duMonth = 0; duYear++; }
   if (duMonth < 0) { duMonth = 11; duYear--; }
+  duesRender();
+}
+
+function duNavYear(dir) {
+  var nowY = new Date().getFullYear();
+  duYear += dir;
+  if (duYear < 2026) duYear = 2026;
+  if (duYear > nowY) duYear = nowY;
   duesRender();
 }
 
@@ -3133,17 +3312,6 @@ function duToggle(name) {
   duesRender();
 }
 
-// Toggle handler
-document.getElementById('duesEnabledToggle').addEventListener('change', function() {
-  var enabled = this.checked;
-  localStorage.setItem('deleon_dues_enabled', enabled ? 'true' : 'false');
-  queueChange({
-    action: 'setSetting',
-    settingKey: 'duesEnabled',
-    settingValue: enabled ? 'true' : 'false'
-  });
-  triggerSync();
-});
 
 // ═══════════════════════════════════
 // EVENT LISTENERS

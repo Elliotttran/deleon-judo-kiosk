@@ -64,7 +64,7 @@
 
       .container {
         width: 100%;
-        max-width: 440px;
+        max-width: 520px;
         flex: 1;
         padding: 72px 24px 60px;
         display: flex;
@@ -124,6 +124,10 @@
         color: var(--black);
         letter-spacing: -0.5px;
         text-transform: uppercase;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1.1;
       }
 
       /* ── App Bar ─────────────────────────────────────── */
@@ -279,6 +283,7 @@
       /* ── Form ────────────────────────────────────────── */
       .form-area {
         width: 100%;
+        zoom: 1.15;
       }
 
       .form-group {
@@ -303,7 +308,7 @@
 
       .custom-select__trigger {
         width: 100%;
-        height: 58px;
+        height: 64px;
         padding: 0 44px 0 24px;
         font-family: var(--font);
         font-size: 18px;
@@ -1262,8 +1267,8 @@
           font-size: 12px;
         }
         .custom-select__trigger {
-          height: 52px;
-          font-size: 16px;
+          height: 64px;
+          font-size: 18px;
         }
         .custom-select__item {
           height: 64px;
@@ -1271,12 +1276,12 @@
           padding: 0 16px;
         }
         input[type="text"] {
-          height: 52px;
-          font-size: 16px;
+          height: 60px;
+          font-size: 18px;
         }
         .submit-btn {
-          height: 56px;
-          font-size: 17px;
+          height: 64px;
+          font-size: 20px;
         }
         .sheet {
           padding: 16px 24px 36px;
@@ -1617,12 +1622,11 @@
         <img class="kiosk-logo" id="kioskLogo" src="logo.svg" alt="DeLeon Judo Club" />
         <h2 class="kiosk-title">Class Sign In</h2>
         <div class="kiosk-date" id="dateDisplay"></div>
-      </div>
-
-      <div class="debug-nav" id="debugNav" style="display:none">
-        <button class="debug-nav__btn" id="debugPrev" aria-label="Previous day">&#8592;</button>
-        <div class="debug-nav__label" id="debugLabel">Debug Mode</div>
-        <button class="debug-nav__btn" id="debugNext" aria-label="Next day">&#8594;</button>
+        <div class="debug-nav" id="debugNav" style="display:none">
+          <button class="debug-nav__btn" id="debugPrev" aria-label="Previous day">&#8592;</button>
+          <div class="debug-nav__label" id="debugLabel">Debug Mode</div>
+          <button class="debug-nav__btn" id="debugNext" aria-label="Next day">&#8594;</button>
+        </div>
       </div>
 
       <div class="no-class-msg" id="noClassMsg" style="display:none">No class today.</div>
@@ -1847,7 +1851,7 @@
       // ═══════════════════════════════════════════════════
       // CONFIG — paste your deployed Apps Script URL here
       // ═══════════════════════════════════════════════════
-      const APP_VERSION = "v1.4.2";
+      const APP_VERSION = "v1.5";
       const APPS_SCRIPT_URL =
         "https://script.google.com/macros/s/AKfycbyJkdlFVVemzTplXx-6oA3c3EAcrhwjV6eCYe011gWj62DLBImc2WE29mRc4s828kCFMA/exec";
       const CHECKIN_TOKEN = "1970";
@@ -2000,7 +2004,7 @@
         var date = now.getDate();
         var month3 = MONTHS_EN[monthIdx].slice(0, 3);
         var day = DAYS_EN[dayIdx].toUpperCase();
-        document.getElementById("dateDisplay").textContent = month3 + " " + date + ", " + day;
+        document.getElementById("dateDisplay").innerHTML = "<span>" + month3 + " " + date + "</span><span>" + day + "</span>";
         if (DEBUG_MODE) {
           document.getElementById("debugLabel").textContent =
             "Debug \u00b7 " + DAYS_EN[dayIdx] + " " + (monthIdx + 1) + "/" + date;
@@ -2703,7 +2707,10 @@
       // ═══════════════════════════════════════════════════
       // MODAL LOGIC
       // ═══════════════════════════════════════════════════
+      var autoCloseTimer = null;
+
       function showSheet(state, name) {
+        clearTimeout(autoCloseTimer);
         document.getElementById("sheetWaiting").classList.remove("active");
         document.getElementById("sheetSuccess").classList.remove("active");
         document.getElementById("sheetError").classList.remove("active");
@@ -2724,6 +2731,7 @@
           setTimeout(function () {
             launchConfetti();
           }, 150);
+          autoCloseTimer = setTimeout(hideSheet, 4000);
         } else if (state === "error") {
           document.getElementById("sheetError").classList.add("active");
           sheet.classList.remove("visible", "subtle");
@@ -2732,10 +2740,12 @@
           setTimeout(function () {
             sheet.classList.add("shake");
           }, 400);
+          autoCloseTimer = setTimeout(hideSheet, 6000);
         }
       }
 
       function hideSheet() {
+        clearTimeout(autoCloseTimer);
         sheet.classList.add("closing");
         sheetOverlay.classList.remove("visible");
         setTimeout(function () {
