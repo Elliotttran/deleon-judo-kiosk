@@ -2327,6 +2327,7 @@
         customSelect.classList.add("open");
         selectTrigger.setAttribute("aria-expanded", "true");
         document.body.classList.add("picker-open");
+        document.getElementById("selectList").scrollTop = 0;
       }
 
       function closeDropdown() {
